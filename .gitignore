@@ -1,0 +1,28 @@
+# Secrets
+.env
+*.env
+secrets.yaml
+credentials*
+token*
+*.key
+*.pem
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Backups and exports
+backups/
+exports/
+*.tar
+*.tar.gz
+*.zip
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+.DS_Store

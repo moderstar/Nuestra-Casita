@@ -1,0 +1,29 @@
+import os
+import requests
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv("/opt/Nuestra-Casita/.env")
+
+BASE_URL = os.getenv("GROCY_URL")
+API_KEY = os.getenv("GROCY_API_KEY")
+
+if not BASE_URL or not API_KEY:
+    raise RuntimeError("Missing GROCY_URL or GROCY_API_KEY in .env")
+
+HEADERS = {
+    "GROCY-API-KEY": API_KEY,
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+}
+
+
+def get(endpoint):
+    """GET request to the Grocy API."""
+    response = requests.get(
+        f"{BASE_URL}/api{endpoint}",
+        headers=HEADERS,
+        timeout=10,
+    )
+    response.raise_for_status()
+    return response.json()

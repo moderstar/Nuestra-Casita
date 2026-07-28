@@ -19,4 +19,6 @@ for item in get("/objects/product_groups"):
 for item in get("/objects/shopping_locations"):
     lookups["stores"][item["name"]] = item["id"]
 
-print(lookups)
+if __name__ == "__main__":
+    from pprint import pprint
+    pprint(lookups)

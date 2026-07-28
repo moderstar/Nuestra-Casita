@@ -27,3 +27,17 @@ def get(endpoint):
     )
     response.raise_for_status()
     return response.json()
+def post(endpoint, payload):
+    response = requests.post(
+        f"{BASE_URL}/api{endpoint}",
+        headers=HEADERS,
+        json=payload,
+        timeout=10,
+    )
+
+    response.raise_for_status()
+
+    if response.text:
+        return response.json()
+
+    return None

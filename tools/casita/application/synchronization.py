@@ -178,6 +178,7 @@ class SynchronizationApplicationService:
         apply: bool = False,
         on_resource: Callable[[str], None] | None = None,
         on_plan: Callable[[SynchronizationPlan], None] | None = None,
+        on_result: Callable[[SynchronizationResult], None] | None = None,
     ) -> SynchronizationRun:
         """Plan and optionally execute selected resources in order."""
 
@@ -205,7 +206,11 @@ class SynchronizationApplicationService:
                 on_plan(plan)
 
             if apply:
-                results.append(self._executor.execute(plan))
+                result = self._executor.execute(plan)
+                results.append(result)
+
+                if on_result is not None:
+                    on_result(result)
 
         return SynchronizationRun(
             plans=tuple(plans),

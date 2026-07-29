@@ -1,6 +1,7 @@
 """Integration contracts for external Nuestra Casita systems."""
 
 from casita.integrations.base import (
+    AppliedChange,
     ApplyResult,
     Capability,
     CapabilityData,
@@ -26,6 +27,7 @@ from casita.integrations.base import (
 )
 
 __all__ = [
+    "AppliedChange",
     "ApplyResult",
     "Capability",
     "CapabilityData",

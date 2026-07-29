@@ -1,5 +1,7 @@
 """Tests for Grocy structured synchronization translation."""
 
+from contextlib import redirect_stdout
+from io import StringIO
 from unittest import TestCase
 
 from casita.integrations import (
@@ -90,3 +92,14 @@ class GrocyStructuredSyncTests(TestCase):
             "not prepared by this Grocy adapter",
         ):
             self.adapter.apply(modified)
+
+    def test_planning_and_applying_produce_no_terminal_output(self):
+        output = StringIO()
+
+        with redirect_stdout(output):
+            plan = self.adapter.plan(
+                SyncRequest("household", "products")
+            )
+            self.adapter.apply(plan)
+
+        self.assertEqual(output.getvalue(), "")

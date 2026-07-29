@@ -146,6 +146,9 @@ class FieldDifference:
     field: str
     current_value: object
     desired_value: object
+    label: str = ""
+    current_display: str = ""
+    desired_display: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -175,6 +178,18 @@ class SynchronizationPlan:
     generated_at: datetime
     changes: tuple[PlannedChange, ...]
     plan_id: str = ""
+    resource_label: str = ""
+    catalog_count: int = 0
+    backend_count: int = 0
+    lookups_loaded: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class AppliedChange:
+    """Describe one successfully applied synchronization change."""
+
+    display_name: str
+    action: SyncAction
 
 
 @dataclass(frozen=True, slots=True)
@@ -187,6 +202,9 @@ class SynchronizationResult:
     updated: int
     matched: int
     completed_at: datetime
+    changes: tuple[AppliedChange, ...] = ()
+    resource_label: str = ""
+    lookups_loaded: bool = False
 
 
 # Backward-compatible name retained while callers migrate to the structured

@@ -174,8 +174,8 @@ def apply_items(
     operation: str,
     items: list[dict[str, Any]],
     lookups: dict[str, dict[Any, Any]],
-) -> int:
-    """Apply all items for one supported operation and return the count."""
+) -> list[dict[str, str]]:
+    """Apply items and return structured successful operation details."""
 
     handlers = {
         "create": apply_create,
@@ -187,7 +187,7 @@ def apply_items(
     if handler is None:
         raise ValueError(f"Unsupported apply operation {operation!r}.")
 
-    completed = 0
+    completed = []
 
     for item in items:
         if not isinstance(item, dict):
@@ -196,17 +196,11 @@ def apply_items(
             )
 
         item_name = normalize_item_name(item, resource)
-        print(f"{operation_symbol(operation)} {operation.upper():9} {item_name}")
-
-        try:
-            handler(resource, item, lookups)
-        except Exception as error:
-            print(f"    FAILED: {error}")
-            raise
-
-        completed += 1
-        print(f"    {operation.capitalize()}d successfully.")
-        print()
+        handler(resource, item, lookups)
+        completed.append({
+            "operation": operation,
+            "display_name": item_name,
+        })
 
     return completed
 
@@ -223,7 +217,7 @@ def operation_symbol(operation: str) -> str:
 def apply_plan(
     resource: dict[str, Any],
     plan: dict[str, Any],
-) -> dict[str, int]:
+) -> dict[str, Any]:
     """
     Apply a synchronization plan for any registered resource.
 
@@ -244,54 +238,40 @@ def apply_plan(
 
     plural_name = require_resource_text(resource, "plural_name")
 
-    print()
-    print("=" * 40)
-    print(f"Applying {plural_name.title()} Plan")
-    print("=" * 40)
-    print()
-    print(f"{len(create_items)} {plural_name} to create")
-    print(f"{len(update_items)} {plural_name} to update")
-    print()
-
     if not create_items and not update_items:
         return {
             "created": 0,
             "updated": 0,
             "matched": len(match_items),
+            "changes": [],
+            "resource_label": plural_name,
+            "lookups_loaded": False,
         }
 
     lookups: dict[str, dict[Any, Any]] = {}
 
     if resource.get("requires_lookups", False):
-        print("Loading lookup tables...")
         lookups = build_lookups()
-        print("Lookup tables loaded.")
-        print()
 
-    created_count = apply_items(
+    created_changes = apply_items(
         resource=resource,
         operation="create",
         items=create_items,
         lookups=lookups,
     )
 
-    updated_count = apply_items(
+    updated_changes = apply_items(
         resource=resource,
         operation="update",
         items=update_items,
         lookups=lookups,
     )
 
-    print("=" * 40)
-    print("Apply Summary")
-    print("=" * 40)
-    print()
-    print(f"Matched: {len(match_items)}")
-    print(f"Created: {created_count}")
-    print(f"Updated: {updated_count}")
-
     return {
-        "created": created_count,
-        "updated": updated_count,
+        "created": len(created_changes),
+        "updated": len(updated_changes),
         "matched": len(match_items),
+        "changes": created_changes + updated_changes,
+        "resource_label": plural_name,
+        "lookups_loaded": bool(resource.get("requires_lookups", False)),
     }

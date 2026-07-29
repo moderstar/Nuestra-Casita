@@ -8,6 +8,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from casita.integrations import (
+    AppliedChange,
     Capability,
     CapabilityData,
     CommandSyncResult,
@@ -174,6 +175,7 @@ class GrocyReadAdapter:
             )
 
         resource, native_plan = self._sync_planner(request.resource)
+        metadata = native_plan.get("_metadata", {})
         plan_id = uuid4().hex
         plan = SynchronizationPlan(
             integration_key=self.descriptor.key,
@@ -181,6 +183,10 @@ class GrocyReadAdapter:
             generated_at=datetime.now(timezone.utc),
             changes=self._map_native_changes(native_plan),
             plan_id=plan_id,
+            resource_label=str(metadata.get("resource_label", "")),
+            catalog_count=int(metadata.get("catalog_count", 0)),
+            backend_count=int(metadata.get("backend_count", 0)),
+            lookups_loaded=bool(metadata.get("lookups_loaded", False)),
         )
         self._native_plans[plan_id] = (
             plan,
@@ -217,6 +223,15 @@ class GrocyReadAdapter:
             updated=counts["updated"],
             matched=counts["matched"],
             completed_at=datetime.now(timezone.utc),
+            changes=tuple(
+                AppliedChange(
+                    display_name=change["display_name"],
+                    action=SyncAction(change["operation"]),
+                )
+                for change in counts.get("changes", ())
+            ),
+            resource_label=str(counts.get("resource_label", "")),
+            lookups_loaded=bool(counts.get("lookups_loaded", False)),
         )
 
     @staticmethod
@@ -241,6 +256,18 @@ class GrocyReadAdapter:
                         ),
                         current_value=difference.get("grocy_value"),
                         desired_value=difference.get("catalog_value"),
+                        label=str(
+                            difference.get(
+                                "label",
+                                difference.get("api_field", "Field"),
+                            )
+                        ),
+                        current_display=str(
+                            difference.get("grocy_display", "")
+                        ),
+                        desired_display=str(
+                            difference.get("catalog_display", "")
+                        ),
                     )
                     for difference in item.get("changes", ())
                 )

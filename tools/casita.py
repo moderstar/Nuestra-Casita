@@ -8,6 +8,7 @@ from casita.bootstrap import (
     load_configuration,
 )
 from casita.domain import Household
+from casita.integrations import SyncAction
 from casita.registry import SYNC_ALL_COMMAND
 
 
@@ -110,11 +111,11 @@ def main():
             args.sync_command or SYNC_ALL_COMMAND,
             apply=args.apply,
             on_resource=_print_sync_resource_header,
-            on_plan=(
-                None
-                if args.apply
-                else lambda plan: _print_sync_dry_run(plan.resource)
+            on_plan=lambda plan: _print_sync_plan(
+                plan,
+                dry_run=not args.apply,
             ),
+            on_result=_print_sync_result if args.apply else None,
         )
     elif args.command == "lookups":
         _require_maintenance(application).lookups()
@@ -209,6 +210,95 @@ def _print_sync_dry_run(resource_name):
     print("Run again with:")
     print()
     print(f"    python tools/casita.py sync {resource_name} --apply")
+
+
+def _print_sync_plan(plan, *, dry_run):
+    print("Loading catalog...")
+    print(f"Catalog {plan.resource_label}: {plan.catalog_count}")
+    print()
+    print("Loading Grocy...")
+    print(f"Grocy {plan.resource_label}: {plan.backend_count}")
+    print()
+
+    if plan.lookups_loaded:
+        print("Loading lookup tables...")
+        print("Lookup tables loaded.")
+        print()
+
+    print("Execution Plan")
+    print("=" * 40)
+    print()
+
+    for change in plan.changes:
+        if change.action == SyncAction.UPDATE:
+            print(f"~ UPDATE    {change.display_name}")
+
+            for difference in change.differences:
+                print(f"    {difference.label}")
+                print(f"      Grocy:   {difference.current_display}")
+                print(f"      Catalog: {difference.desired_display}")
+
+            print()
+
+    creates = tuple(
+        change
+        for change in plan.changes
+        if change.action == SyncAction.CREATE
+    )
+
+    for change in creates:
+        print(f"+ CREATE    {change.display_name}")
+
+    if creates:
+        print()
+
+    print("=" * 40)
+    print("Summary")
+    print("=" * 40)
+    print(
+        "Match : "
+        f"{sum(change.action == SyncAction.MATCH for change in plan.changes)}"
+    )
+    print(
+        "Update: "
+        f"{sum(change.action == SyncAction.UPDATE for change in plan.changes)}"
+    )
+    print(f"Create: {len(creates)}")
+
+    if dry_run:
+        _print_sync_dry_run(plan.resource)
+
+
+def _print_sync_result(result):
+    print()
+    print("=" * 40)
+    print(f"Applying {result.resource_label.title()} Plan")
+    print("=" * 40)
+    print()
+    print(f"{result.created} {result.resource_label} to create")
+    print(f"{result.updated} {result.resource_label} to update")
+    print()
+
+    if result.lookups_loaded:
+        print("Loading lookup tables...")
+        print("Lookup tables loaded.")
+        print()
+
+    for change in result.changes:
+        operation = change.action.value
+        symbol = "+" if change.action == SyncAction.CREATE else "~"
+        print(f"{symbol} {operation.upper():9} {change.display_name}")
+        print(f"    {operation.capitalize()}d successfully.")
+        print()
+
+    if result.created or result.updated:
+        print("=" * 40)
+        print("Apply Summary")
+        print("=" * 40)
+        print()
+        print(f"Matched: {result.matched}")
+        print(f"Created: {result.created}")
+        print(f"Updated: {result.updated}")
 
 
 def _require_maintenance(application):

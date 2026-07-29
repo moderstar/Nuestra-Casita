@@ -175,6 +175,7 @@ class SynchronizationApplicationServiceTests(TestCase):
         )
         announced = []
         planned = []
+        applied = []
 
         run = service.synchronize(
             "household",
@@ -182,6 +183,7 @@ class SynchronizationApplicationServiceTests(TestCase):
             apply=True,
             on_resource=announced.append,
             on_plan=lambda plan: planned.append(plan.resource),
+            on_result=lambda result: applied.append(result.resource),
         )
 
         self.assertTrue(run.applied)
@@ -195,6 +197,7 @@ class SynchronizationApplicationServiceTests(TestCase):
         )
         self.assertEqual(announced, ["groups", "products"])
         self.assertEqual(planned, ["groups", "products"])
+        self.assertEqual(applied, ["groups", "products"])
 
     def test_dry_run_plans_without_executing(self):
         class ApplyForbiddenIntegration(FakeSynchronizingIntegration):

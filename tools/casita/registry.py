@@ -8,6 +8,7 @@ catalog resources such as products, stores, chores, and recipes.
 from typing import Any
 
 from casita.resources import (
+    CHORE_RESOURCE,
     LOCATION_RESOURCE,
     PRODUCT_GROUP_RESOURCE,
     PRODUCT_RESOURCE,
@@ -18,6 +19,7 @@ from casita.resources import (
 
 
 RESOURCES: dict[str, dict[str, Any]] = {
+    CHORE_RESOURCE["name"]: CHORE_RESOURCE,
     LOCATION_RESOURCE["name"]: LOCATION_RESOURCE,
     PRODUCT_GROUP_RESOURCE["name"]: PRODUCT_GROUP_RESOURCE,
     PRODUCT_RESOURCE["name"]: PRODUCT_RESOURCE,
@@ -35,6 +37,7 @@ SYNC_RESOURCE_ORDER = (
     "shopping-locations",
     "products",
     "task-categories",
+    "chores",
 )
 
 

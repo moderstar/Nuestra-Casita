@@ -16,7 +16,7 @@ Status meanings:
 | Grocy entity | Status | Notes |
 | --- | --- | --- |
 | `products` | Implemented | Product master data |
-| `chores` | Planned | Recurring chore definitions |
+| `chores` | Implemented | Recurring chore definitions; execution state is excluded |
 | `product_barcodes` | Planned | Product barcode mappings |
 | `batteries` | Planned | Battery master data |
 | `locations` | Implemented | Stock locations |

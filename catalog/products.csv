@@ -1,5 +1,5 @@
 Product,Product Group,Default Location,Stock Unit,Minimum Stock,Notes
-Milk,Dairy,Fridge,Each,1,
+Milk,Dairy,Fridge,Each,2,
 Eggs,Dairy,Fridge,Each,1,
 Butter,Dairy,Fridge,Each,1,
 Cheese,Dairy,Fridge,Each,1,
@@ -24,3 +24,4 @@ Orange Juice,Beverages,Fridge,Bottle,1,
 Apple Juice,Beverages,Fridge,Bottle,1,
 Soda,Beverages,Fridge,Each,6,
 Sparkling Water,Beverages,Fridge,Each,6,
+PC,pantry,Fridge,Each,1

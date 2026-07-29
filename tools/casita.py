@@ -1,7 +1,8 @@
 import argparse
 
 from casita.exporter import export_products
-from casita.lookups import build_lookups
+from casita.lookups import show
+from casita.sync import sync_products
 from casita.validator import validate
 
 
@@ -55,10 +56,31 @@ def main():
         help="Export products to catalog/products.csv"
     )
 
+    sync_parser = subparsers.add_parser(
+        "sync",
+        help="Synchronize catalog with Grocy"
+    )
+
+    sync_subparsers = sync_parser.add_subparsers(
+        dest="sync_command",
+        required=True
+    )
+
+    sync_products_parser = sync_subparsers.add_parser(
+        "products",
+        help="Synchronize products with Grocy"
+    )
+
+    sync_products_parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="Apply changes to Grocy"
+    )
+
     args = parser.parse_args()
 
     if args.command == "lookups":
-        print(build_lookups())
+        show()
 
     elif args.command == "validate":
         validate()
@@ -70,6 +92,10 @@ def main():
     elif args.command == "export":
         if args.export_command == "products":
             export_products()
+
+    elif args.command == "sync":
+        if args.sync_command == "products":
+            sync_products(apply=args.apply)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,24 @@
+# Default values used only when Nuestra Casita creates a new Grocy product.
+
+active: 1
+
+# Purchase unit defaults to the stock unit.
+qu_factor_purchase_to_stock: 1
+
+# Shelf life defaults.
+default_best_before_days: 0
+default_best_before_days_after_open: 0
+default_best_before_days_after_freezing: 0
+default_best_before_days_after_thawing: 0
+
+# Product behavior.
+enable_tare_weight_handling: 0
+tare_weight: 0
+not_check_stock_fulfillment_for_recipes: 0
+cumulate_min_stock_amount_of_sub_products: 0
+hide_on_stock_overview: 0
+move_on_open: 0
+
+# Optional relationships.
+parent_product_id: null
+default_consume_location_id: null

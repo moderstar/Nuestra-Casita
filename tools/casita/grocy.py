@@ -1,4 +1,3 @@
-import json
 import os
 
 import requests
@@ -21,38 +20,6 @@ HEADERS = {
 }
 
 
-def _debug_response(response, payload=None):
-    """Print detailed request/response information when Grocy returns an error."""
-
-    if response.ok:
-        return
-
-    print("\n" + "=" * 80)
-    print("GROCY API ERROR")
-    print("=" * 80)
-    print(f"Status : {response.status_code}")
-    print(f"Method : {response.request.method}")
-    print(f"URL    : {response.request.url}")
-
-    if payload is not None:
-        print("\nPayload:")
-        print(json.dumps(payload, indent=4, sort_keys=True))
-
-    print("\nResponse Headers:")
-    for key, value in response.headers.items():
-        print(f"{key}: {value}")
-
-    print("\nResponse Body:")
-    if response.text:
-        print(response.text)
-    else:
-        print("<empty>")
-
-    print("=" * 80 + "\n")
-
-    response.raise_for_status()
-
-
 def get(endpoint):
     """Perform a GET request."""
 
@@ -62,7 +29,7 @@ def get(endpoint):
         timeout=10,
     )
 
-    _debug_response(response)
+    response.raise_for_status()
 
     return response.json()
 
@@ -77,7 +44,7 @@ def post(endpoint, payload):
         timeout=10,
     )
 
-    _debug_response(response, payload)
+    response.raise_for_status()
 
     if response.text:
         return response.json()
@@ -95,7 +62,7 @@ def put(endpoint, payload):
         timeout=10,
     )
 
-    _debug_response(response, payload)
+    response.raise_for_status()
 
     if response.text:
         return response.json()
@@ -112,7 +79,7 @@ def delete(endpoint):
         timeout=10,
     )
 
-    _debug_response(response)
+    response.raise_for_status()
 
     if response.text:
         return response.json()

@@ -7,10 +7,14 @@ catalog resources such as products, stores, chores, and recipes.
 
 from typing import Any
 
-from casita.resources import PRODUCT_RESOURCE
+from casita.resources import (
+    PRODUCT_GROUP_RESOURCE,
+    PRODUCT_RESOURCE,
+)
 
 
 RESOURCES: dict[str, dict[str, Any]] = {
+    PRODUCT_GROUP_RESOURCE["name"]: PRODUCT_GROUP_RESOURCE,
     PRODUCT_RESOURCE["name"]: PRODUCT_RESOURCE,
 }
 

@@ -1,10 +1,9 @@
 """
 Generic synchronization engine.
 
-This module builds an execution plan for any registered resource. Resource
-definitions provide catalog, Grocy, comparison, and lookup configuration.
-The engine contains no product-specific logic and does not print or apply
-changes.
+A resource definition supplies catalog and Grocy mapping details. The engine
+loads both sides, compares matching objects, and returns a generic execution
+plan. It contains no product-specific logic and never applies changes itself.
 """
 
 import csv
@@ -20,109 +19,79 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CATALOG_ROOT = PROJECT_ROOT / "catalog"
 
 
-def validate_resource(resource: dict[str, Any]) -> None:
-    """Validate the fields required by the synchronization engine."""
-
-    if not isinstance(resource, dict):
-        raise ValueError(
-            "The resource definition must be a dictionary."
-        )
-
-    required_fields = (
-        "catalog_file",
-        "catalog_name_field",
-        "grocy_endpoint",
-        "grocy_name_field",
-        "grocy_id_field",
-        "compare",
-        "requires_lookups",
-    )
-
-    missing_fields = [
-        field
-        for field in required_fields
-        if field not in resource
-    ]
-
-    if missing_fields:
-        missing_text = ", ".join(missing_fields)
-        raise ValueError(
-            "Resource definition is missing required fields: "
-            f"{missing_text}"
-        )
-
-    if not callable(resource["compare"]):
-        raise ValueError(
-            "Resource 'compare' must be callable."
-        )
-
-
-def load_catalog(
+def require_resource_text(
     resource: dict[str, Any],
-) -> list[dict[str, Any]]:
-    """Load the resource's catalog CSV file."""
+    field_name: str,
+) -> str:
+    """Read one required non-empty string from a resource definition."""
 
-    path = CATALOG_ROOT / str(resource["catalog_file"])
+    value = str(resource.get(field_name, "")).strip()
+
+    if value == "":
+        resource_name = str(resource.get("name", "Unknown resource")).strip()
+        raise ValueError(
+            f"{resource_name}: resource field {field_name!r} "
+            "must be a non-empty string."
+        )
+
+    return value
+
+
+def load_catalog(resource: dict[str, Any]) -> list[dict[str, str]]:
+    """Load the CSV catalog configured for one resource."""
+
+    catalog_file = require_resource_text(resource, "catalog_file")
+    path = CATALOG_ROOT / catalog_file
 
     if not path.exists():
-        raise FileNotFoundError(
-            f"Catalog file was not found: {path}"
-        )
+        raise FileNotFoundError(f"Catalog file was not found: {path}")
 
-    with path.open(
-        newline="",
-        encoding="utf-8",
-    ) as file:
+    with path.open(newline="", encoding="utf-8") as file:
         return list(csv.DictReader(file))
 
 
-def load_grocy(
-    resource: dict[str, Any],
-) -> list[dict[str, Any]]:
-    """Load all Grocy objects for one resource."""
+def load_grocy(resource: dict[str, Any]) -> list[dict[str, Any]]:
+    """Load all Grocy objects configured for one resource."""
 
-    objects = get(resource["grocy_endpoint"])
+    endpoint = require_resource_text(resource, "grocy_endpoint")
+    rows = get(endpoint)
 
-    if not isinstance(objects, list):
+    if not isinstance(rows, list):
         raise ValueError(
-            "Grocy resource response must be a list."
+            f"Grocy endpoint {endpoint!r} did not return a list."
         )
 
-    return objects
+    return rows
 
 
-def normalize_index_name(value: Any) -> str:
-    """Normalize a name used for case-insensitive matching."""
+def normalize_name(value: Any) -> str:
+    """Normalize an object name for case-insensitive matching."""
 
-    if value is None:
-        return ""
-
-    return str(value).strip().casefold()
+    return str(value or "").strip().casefold()
 
 
 def build_name_index(
     rows: list[dict[str, Any]],
     name_field: str,
 ) -> dict[str, dict[str, Any]]:
-    """Build a case-insensitive lookup by the configured name field."""
+    """Build a case-insensitive object index and reject duplicate names."""
 
     index: dict[str, dict[str, Any]] = {}
 
     for row in rows:
         if not isinstance(row, dict):
-            raise ValueError(
-                "Every Grocy object must be a dictionary."
-            )
+            raise ValueError("Every Grocy object must be a dictionary.")
 
-        name = normalize_index_name(row.get(name_field))
+        name = normalize_name(row.get(name_field))
 
         if name == "":
-            continue
+            raise ValueError(
+                f"A Grocy object is missing name field {name_field!r}."
+            )
 
         if name in index:
             raise ValueError(
-                f"Grocy contains duplicate names for field {name_field!r}: "
-                f"{row.get(name_field)!r}"
+                f"Grocy contains duplicate names for {row.get(name_field)!r}."
             )
 
         index[name] = row
@@ -130,50 +99,53 @@ def build_name_index(
     return index
 
 
-def sync_resource(
+def build_resource_plan(
     resource: dict[str, Any],
+    catalog: list[dict[str, Any]],
+    grocy: list[dict[str, Any]],
+    lookups: dict[str, dict[Any, Any]],
 ) -> dict[str, list[dict[str, Any]]]:
-    """Compare one catalog resource with Grocy and return an execution plan."""
+    """Build an execution plan from already-loaded resource data."""
 
-    validate_resource(resource)
+    if not isinstance(resource, dict):
+        raise ValueError("The resource definition must be a dictionary.")
 
-    catalog_rows = load_catalog(resource)
-    grocy_rows = load_grocy(resource)
-
-    lookups: dict[str, dict[Any, Any]] = {}
-
-    if resource["requires_lookups"]:
-        lookups = build_lookups()
-
-    plan = build_plan()
-
-    grocy_by_name = build_name_index(
-        grocy_rows,
-        str(resource["grocy_name_field"]),
+    catalog_name_field = require_resource_text(
+        resource,
+        "catalog_name_field",
+    )
+    grocy_name_field = require_resource_text(
+        resource,
+        "grocy_name_field",
+    )
+    grocy_id_field = require_resource_text(
+        resource,
+        "grocy_id_field",
     )
 
-    compare = resource["compare"]
-    catalog_name_field = str(resource["catalog_name_field"])
-    grocy_id_field = str(resource["grocy_id_field"])
+    compare = resource.get("compare")
 
-    for catalog_row in catalog_rows:
-        if not isinstance(catalog_row, dict):
+    if not callable(compare):
+        raise ValueError("Resource field 'compare' must be callable.")
+
+    plan = build_plan()
+    grocy_by_name = build_name_index(grocy, grocy_name_field)
+    seen_catalog_names: set[str] = set()
+
+    for catalog_row in catalog:
+        name = str(catalog_row.get(catalog_name_field, "")).strip()
+        name_key = normalize_name(name)
+
+        if name_key == "":
             raise ValueError(
-                "Every catalog row must be a dictionary."
+                f"A catalog row is missing {catalog_name_field!r}."
             )
 
-        name = str(
-            catalog_row.get(catalog_name_field, "")
-        ).strip()
+        if name_key in seen_catalog_names:
+            raise ValueError(f"Catalog contains duplicate name {name!r}.")
 
-        if name == "":
-            raise ValueError(
-                f"Catalog field {catalog_name_field!r} cannot be blank."
-            )
-
-        grocy_row = grocy_by_name.get(
-            normalize_index_name(name)
-        )
+        seen_catalog_names.add(name_key)
+        grocy_row = grocy_by_name.get(name_key)
 
         if grocy_row is None:
             plan["create"].append(
@@ -188,15 +160,11 @@ def sync_resource(
 
         if object_id is None:
             raise ValueError(
-                f"{name}: Grocy object is missing ID field "
+                f"Grocy object {name!r} is missing ID field "
                 f"{grocy_id_field!r}."
             )
 
-        differences = compare(
-            catalog_row,
-            grocy_row,
-            lookups,
-        )
+        differences = compare(catalog_row, grocy_row, lookups)
 
         plan_item = {
             "name": name,
@@ -212,3 +180,16 @@ def sync_resource(
             plan["match"].append(plan_item)
 
     return plan
+
+
+def sync_resource(resource: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+    """Load, compare, and return the execution plan for one resource."""
+
+    catalog = load_catalog(resource)
+    grocy = load_grocy(resource)
+    lookups: dict[str, dict[Any, Any]] = {}
+
+    if resource.get("requires_lookups", False):
+        lookups = build_lookups()
+
+    return build_resource_plan(resource, catalog, grocy, lookups)

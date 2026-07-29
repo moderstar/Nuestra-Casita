@@ -1,294 +1,252 @@
 """
 Generic execution engine for Nuestra Casita synchronization plans.
 
-This module applies create and update operations for any registered resource.
-Resource definitions provide the Grocy endpoint, object ID field, payload
-builders, and lookup requirements. The engine contains no product-specific
-logic.
-
-Nothing in this module runs automatically. Changes are sent to Grocy only
-when apply_plan() is called by an explicit --apply command.
+The apply engine contains no resource-specific behavior. A registered resource
+provides its Grocy endpoint, object-ID field, display names, and payload
+builders. Nothing in this module runs automatically; changes are sent to Grocy
+only when apply_plan() is called after an explicit --apply command.
 """
 
-from typing import Any
+from typing import Any, Callable
 
 from casita.grocy import post, put
 from casita.lookups import build_lookups
 
 
-def normalize_name(value: Any, resource: dict[str, Any]) -> str:
-    """Return a clean display name for one plan item."""
+PayloadBuilder = Callable[
+    [dict[str, Any], dict[str, dict[Any, Any]]],
+    dict[str, Any],
+]
 
-    name = "" if value is None else str(value).strip()
+
+def normalize_text(value: Any) -> str:
+    """Convert a value to a trimmed string."""
+
+    if value is None:
+        return ""
+
+    return str(value).strip()
+
+
+def require_resource_text(
+    resource: dict[str, Any],
+    field_name: str,
+) -> str:
+    """Read one required non-empty text field from a resource definition."""
+
+    value = normalize_text(resource.get(field_name))
+
+    if value == "":
+        resource_name = normalize_text(resource.get("name")) or "Unknown resource"
+        raise ValueError(
+            f"{resource_name}: resource field {field_name!r} "
+            "must be a non-empty string."
+        )
+
+    return value
+
+
+def require_payload_builder(
+    resource: dict[str, Any],
+    field_name: str,
+) -> PayloadBuilder:
+    """Read and validate one payload-builder function from a resource."""
+
+    builder = resource.get(field_name)
+
+    if not callable(builder):
+        resource_name = normalize_text(resource.get("name")) or "Unknown resource"
+        raise ValueError(
+            f"{resource_name}: resource field {field_name!r} "
+            "must be callable."
+        )
+
+    return builder
+
+
+def normalize_item_name(
+    item: dict[str, Any],
+    resource: dict[str, Any],
+) -> str:
+    """Return a safe display name for one execution-plan item."""
+
+    name = normalize_text(item.get("name"))
 
     if name:
         return name
 
-    singular_name = str(
-        resource.get("singular_name", "object")
-    ).strip() or "object"
-
+    singular_name = normalize_text(resource.get("singular_name")) or "object"
     return f"Unknown {singular_name}"
 
 
-def validate_resource(resource: dict[str, Any]) -> None:
-    """Validate the fields required by the generic apply engine."""
-
-    if not isinstance(resource, dict):
-        raise ValueError(
-            "The resource definition must be a dictionary."
-        )
-
-    required_fields = (
-        "name",
-        "singular_name",
-        "plural_name",
-        "grocy_endpoint",
-        "grocy_id_field",
-        "build_create_payload",
-        "build_update_payload",
-        "requires_lookups",
-    )
-
-    missing_fields = [
-        field
-        for field in required_fields
-        if field not in resource
-    ]
-
-    if missing_fields:
-        missing_text = ", ".join(missing_fields)
-        raise ValueError(
-            "Resource definition is missing required fields: "
-            f"{missing_text}"
-        )
-
-    endpoint = str(resource["grocy_endpoint"]).strip()
-
-    if not endpoint.startswith("/"):
-        raise ValueError(
-            "Resource grocy_endpoint must begin with '/'."
-        )
-
-    for builder_name in (
-        "build_create_payload",
-        "build_update_payload",
-    ):
-        if not callable(resource[builder_name]):
-            raise ValueError(
-                f"Resource {builder_name!r} must be callable."
-            )
-
-
 def validate_plan(plan: dict[str, Any]) -> None:
-    """Validate the common execution-plan structure."""
+    """Validate the top-level structure of an execution plan."""
 
     if not isinstance(plan, dict):
-        raise ValueError(
-            "The execution plan must be a dictionary."
-        )
+        raise ValueError("The execution plan must be a dictionary.")
 
-    for section_name in ("create", "update", "match"):
-        section = plan.get(section_name, [])
-
-        if not isinstance(section, list):
+    for operation in ("create", "update", "match"):
+        if not isinstance(plan.get(operation, []), list):
             raise ValueError(
-                f"Execution plan {section_name!r} must be a list."
+                f"Execution plan {operation!r} must be a list."
             )
 
 
-def parse_object_id(
+def get_object_id(
     item: dict[str, Any],
     resource: dict[str, Any],
 ) -> int:
-    """Read and validate the Grocy object ID from a plan item."""
+    """Read and validate the Grocy object ID for an update operation."""
 
-    display_name = normalize_name(
-        item.get("name"),
-        resource,
-    )
+    item_name = normalize_item_name(item, resource)
+    id_field = require_resource_text(resource, "grocy_id_field")
 
     object_id = item.get("object_id")
 
-    # Backward compatibility for plans produced before the generic engine.
     if object_id is None:
-        legacy_id_field = str(
-            resource.get("legacy_plan_id_field", "")
-        ).strip()
+        object_id = item.get(id_field)
+
+    if object_id is None:
+        legacy_id_field = normalize_text(
+            resource.get("legacy_plan_id_field")
+        )
 
         if legacy_id_field:
             object_id = item.get(legacy_id_field)
 
     if object_id is None:
-        grocy_id_field = str(resource["grocy_id_field"])
-        grocy_object = item.get("grocy")
-
-        if isinstance(grocy_object, dict):
-            object_id = grocy_object.get(grocy_id_field)
-
-    if object_id is None:
         raise ValueError(
-            f"{display_name}: update plan item is missing object_id."
+            f"{item_name}: update plan item is missing object_id."
         )
 
     try:
         return int(object_id)
     except (TypeError, ValueError) as error:
         raise ValueError(
-            f"{display_name}: invalid object_id {object_id!r}."
+            f"{item_name}: invalid object_id {object_id!r}."
         ) from error
 
 
 def apply_create(
-    item: dict[str, Any],
     resource: dict[str, Any],
+    item: dict[str, Any],
     lookups: dict[str, dict[Any, Any]],
 ) -> Any:
-    """Create one Grocy object described by a plan item."""
+    """Create one Grocy object described by an execution-plan item."""
 
-    display_name = normalize_name(
-        item.get("name"),
-        resource,
-    )
-
-    if not isinstance(item, dict):
-        raise ValueError(
-            "Every create plan item must be a dictionary."
-        )
-
-    payload_builder = resource["build_create_payload"]
-    payload = payload_builder(item, lookups)
+    endpoint = require_resource_text(resource, "grocy_endpoint")
+    builder = require_payload_builder(resource, "build_create_payload")
+    payload = builder(item, lookups)
 
     if not isinstance(payload, dict) or not payload:
+        item_name = normalize_item_name(item, resource)
         raise ValueError(
-            f"{display_name}: create payload must be a non-empty dictionary."
+            f"{item_name}: create payload must be a non-empty dictionary."
         )
 
-    return post(
-        resource["grocy_endpoint"],
-        payload,
-    )
+    return post(endpoint, payload)
 
 
 def apply_update(
-    item: dict[str, Any],
     resource: dict[str, Any],
+    item: dict[str, Any],
     lookups: dict[str, dict[Any, Any]],
 ) -> Any:
     """Update one existing Grocy object described by a plan item."""
 
-    if not isinstance(item, dict):
-        raise ValueError(
-            "Every update plan item must be a dictionary."
-        )
-
-    display_name = normalize_name(
-        item.get("name"),
-        resource,
-    )
-    object_id = parse_object_id(item, resource)
-
-    payload_builder = resource["build_update_payload"]
-    payload = payload_builder(item, lookups)
+    endpoint = require_resource_text(resource, "grocy_endpoint").rstrip("/")
+    object_id = get_object_id(item, resource)
+    builder = require_payload_builder(resource, "build_update_payload")
+    payload = builder(item, lookups)
 
     if not isinstance(payload, dict) or not payload:
+        item_name = normalize_item_name(item, resource)
         raise ValueError(
-            f"{display_name}: update payload must be a non-empty dictionary."
+            f"{item_name}: update payload must be a non-empty dictionary."
         )
 
-    endpoint = str(resource["grocy_endpoint"]).rstrip("/")
-
-    return put(
-        f"{endpoint}/{object_id}",
-        payload,
-    )
+    return put(f"{endpoint}/{object_id}", payload)
 
 
-def apply_creates(
-    create_items: list[dict[str, Any]],
+def apply_items(
+    *,
     resource: dict[str, Any],
+    operation: str,
+    items: list[dict[str, Any]],
     lookups: dict[str, dict[Any, Any]],
 ) -> int:
-    """Apply all create operations and return the success count."""
+    """Apply all items for one supported operation and return the count."""
 
-    created_count = 0
+    handlers = {
+        "create": apply_create,
+        "update": apply_update,
+    }
 
-    for item in create_items:
-        display_name = normalize_name(
-            item.get("name") if isinstance(item, dict) else None,
-            resource,
-        )
+    handler = handlers.get(operation)
 
-        print(f"+ CREATE    {display_name}")
+    if handler is None:
+        raise ValueError(f"Unsupported apply operation {operation!r}.")
+
+    completed = 0
+
+    for item in items:
+        if not isinstance(item, dict):
+            raise ValueError(
+                f"Every {operation} plan item must be a dictionary."
+            )
+
+        item_name = normalize_item_name(item, resource)
+        print(f"{operation_symbol(operation)} {operation.upper():9} {item_name}")
 
         try:
-            apply_create(item, resource, lookups)
+            handler(resource, item, lookups)
         except Exception as error:
             print(f"    FAILED: {error}")
             raise
 
-        created_count += 1
-        print("    Created successfully.")
+        completed += 1
+        print(f"    {operation.capitalize()}d successfully.")
         print()
 
-    return created_count
+    return completed
 
 
-def apply_updates(
-    update_items: list[dict[str, Any]],
-    resource: dict[str, Any],
-    lookups: dict[str, dict[Any, Any]],
-) -> int:
-    """Apply all update operations and return the success count."""
+def operation_symbol(operation: str) -> str:
+    """Return the terminal symbol used for one plan operation."""
 
-    updated_count = 0
-
-    for item in update_items:
-        display_name = normalize_name(
-            item.get("name") if isinstance(item, dict) else None,
-            resource,
-        )
-
-        print(f"~ UPDATE    {display_name}")
-
-        try:
-            apply_update(item, resource, lookups)
-        except Exception as error:
-            print(f"    FAILED: {error}")
-            raise
-
-        updated_count += 1
-        print("    Updated successfully.")
-        print()
-
-    return updated_count
+    return {
+        "create": "+",
+        "update": "~",
+    }.get(operation, "?")
 
 
 def apply_plan(
-    plan: dict[str, Any],
     resource: dict[str, Any],
+    plan: dict[str, Any],
 ) -> dict[str, int]:
     """
-    Apply a complete synchronization plan for one registered resource.
+    Apply a synchronization plan for any registered resource.
 
-    Matching objects require no action. Create and update payloads are built
-    by the resource definition, then sent to the resource's Grocy endpoint.
-    Processing stops immediately if any operation fails.
+    The resource definition drives endpoint selection, payload generation,
+    display names, object-ID handling, and whether lookup tables are needed.
+    Processing stops on the first failed API operation so partial failure is
+    never reported as a successful synchronization.
     """
 
-    validate_resource(resource)
+    if not isinstance(resource, dict):
+        raise ValueError("The resource definition must be a dictionary.")
+
     validate_plan(plan)
 
     create_items = plan.get("create", [])
     update_items = plan.get("update", [])
     match_items = plan.get("match", [])
 
-    singular_name = str(resource["singular_name"]).strip()
-    plural_name = str(resource["plural_name"]).strip()
+    plural_name = require_resource_text(resource, "plural_name")
 
     print()
     print("=" * 40)
-    print("Applying Plan")
+    print(f"Applying {plural_name.title()} Plan")
     print("=" * 40)
     print()
     print(f"{len(create_items)} {plural_name} to create")
@@ -304,22 +262,24 @@ def apply_plan(
 
     lookups: dict[str, dict[Any, Any]] = {}
 
-    if resource["requires_lookups"]:
-        print(f"Loading lookup tables for {singular_name} changes...")
+    if resource.get("requires_lookups", False):
+        print("Loading lookup tables...")
         lookups = build_lookups()
         print("Lookup tables loaded.")
         print()
 
-    created_count = apply_creates(
-        create_items,
-        resource,
-        lookups,
+    created_count = apply_items(
+        resource=resource,
+        operation="create",
+        items=create_items,
+        lookups=lookups,
     )
 
-    updated_count = apply_updates(
-        update_items,
-        resource,
-        lookups,
+    updated_count = apply_items(
+        resource=resource,
+        operation="update",
+        items=update_items,
+        lookups=lookups,
     )
 
     print("=" * 40)

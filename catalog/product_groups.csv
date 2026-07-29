@@ -1,11 +1,6 @@
-Product Group,Description
-Bakery,
-Beverages,
-Canned Food,
-Condiments,
-Dairy,
-Frozen,
-Meat,
-Pantry,
-Produce,
-Snacks,
+Product Group,Description,Active
+Dairy,Milk eggs cheese and other refrigerated dairy products,1
+Produce,Fruits vegetables and fresh produce,1
+Meat,Fresh cured and packaged meat products,1
+Beverages,Juices soda water and other drinks,1
+Pantry,Shelf-stable pantry products,1

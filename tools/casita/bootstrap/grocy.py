@@ -26,7 +26,11 @@ from casita.registry import (
     list_sync_commands,
     list_sync_resources,
 )
-from casita.sync import sync_command
+from casita.apply import apply_plan
+from casita.sync import (
+    plan_registered_resource,
+    sync_command,
+)
 from casita.sync_engine import CATALOG_ROOT
 from casita.validator import validate
 from casita.dashboard import (
@@ -67,6 +71,8 @@ def build_grocy_application(
         client,
         timezone_name=timezone_name,
         sync_runner=sync_command,
+        sync_planner=plan_registered_resource,
+        sync_applier=apply_plan,
     )
     capabilities = (
         Capability.SHOPPING,

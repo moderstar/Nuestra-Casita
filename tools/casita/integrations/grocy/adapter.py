@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Any, Callable, Protocol
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from casita.integrations import (
@@ -16,7 +17,13 @@ from casita.integrations import (
     IntegrationHealth,
     IntegrationRuntime,
     IntegrationSnapshot,
+    FieldDifference,
+    PlannedChange,
     ReadRequest,
+    SyncAction,
+    SyncRequest,
+    SynchronizationPlan,
+    SynchronizationResult,
 )
 from casita.integrations.grocy.client import GrocyApiClient
 from casita.integrations.grocy.mapping import (
@@ -58,10 +65,18 @@ class GrocyReadAdapter:
         *,
         timezone_name: str = "UTC",
         sync_runner: Callable[..., Any] | None = None,
+        sync_planner: Callable[..., Any] | None = None,
+        sync_applier: Callable[..., Any] | None = None,
     ) -> None:
         self._client = client
         self._timezone = ZoneInfo(timezone_name)
         self._sync_runner = sync_runner
+        self._sync_planner = sync_planner
+        self._sync_applier = sync_applier
+        self._native_plans: dict[
+            str,
+            tuple[SynchronizationPlan, Any, Any],
+        ] = {}
 
     @classmethod
     def from_credentials(
@@ -149,6 +164,96 @@ class GrocyReadAdapter:
             applied=apply,
             plans=plans,
         )
+
+    def plan(self, request: SyncRequest) -> SynchronizationPlan:
+        """Translate one native Grocy plan into the platform contract."""
+
+        if self._sync_planner is None:
+            raise RuntimeError(
+                "Grocy structured synchronization planning is not configured."
+            )
+
+        resource, native_plan = self._sync_planner(request.resource)
+        plan_id = uuid4().hex
+        plan = SynchronizationPlan(
+            integration_key=self.descriptor.key,
+            resource=request.resource,
+            generated_at=datetime.now(timezone.utc),
+            changes=self._map_native_changes(native_plan),
+            plan_id=plan_id,
+        )
+        self._native_plans[plan_id] = (
+            plan,
+            resource,
+            native_plan,
+        )
+        return plan
+
+    def apply(
+        self,
+        plan: SynchronizationPlan,
+    ) -> SynchronizationResult:
+        """Apply the exact native Grocy plan represented by a public plan."""
+
+        if self._sync_applier is None:
+            raise RuntimeError(
+                "Grocy structured synchronization execution is not configured."
+            )
+
+        prepared = self._native_plans.get(plan.plan_id)
+
+        if prepared is None or prepared[0] != plan:
+            raise ValueError(
+                "Synchronization plan was not prepared by this Grocy adapter."
+            )
+
+        _, resource, native_plan = prepared
+        counts = self._sync_applier(resource, native_plan)
+        del self._native_plans[plan.plan_id]
+        return SynchronizationResult(
+            integration_key=self.descriptor.key,
+            resource=plan.resource,
+            created=counts["created"],
+            updated=counts["updated"],
+            matched=counts["matched"],
+            completed_at=datetime.now(timezone.utc),
+        )
+
+    @staticmethod
+    def _map_native_changes(
+        native_plan: dict[str, list[dict[str, Any]]],
+    ) -> tuple[PlannedChange, ...]:
+        changes = []
+
+        for operation, action in (
+            ("update", SyncAction.UPDATE),
+            ("create", SyncAction.CREATE),
+            ("match", SyncAction.MATCH),
+        ):
+            for item in native_plan[operation]:
+                display_name = str(item["name"])
+                differences = tuple(
+                    FieldDifference(
+                        field=str(
+                            difference.get("api_field")
+                            or difference.get("label")
+                            or "field"
+                        ),
+                        current_value=difference.get("grocy_value"),
+                        desired_value=difference.get("catalog_value"),
+                    )
+                    for difference in item.get("changes", ())
+                )
+                changes.append(
+                    PlannedChange(
+                        identity=display_name.strip().casefold(),
+                        display_name=display_name,
+                        action=action,
+                        differences=differences,
+                    )
+                )
+
+        return tuple(changes)
 
     def runtime(self) -> IntegrationRuntime:
         """Return dashboard-safe Grocy status and aggregate counts."""

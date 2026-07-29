@@ -174,6 +174,7 @@ class SynchronizationPlan:
     resource: str
     generated_at: datetime
     changes: tuple[PlannedChange, ...]
+    plan_id: str = ""
 
 
 @dataclass(frozen=True, slots=True)

@@ -25,7 +25,7 @@ Status meanings:
 | `shopping_list` | Not Applicable | Runtime shopping-list items |
 | `shopping_lists` | Planned | Named shopping lists |
 | `shopping_locations` | Implemented | Shopping stores and locations |
-| `recipes` | Planned | Recipe definitions |
+| `recipes` | Implemented | Declarative Recipe definitions; ingredients and runtime serving state are excluded |
 | `recipes_pos` | Planned | Recipe ingredients and positions |
 | `recipes_nestings` | Planned | Nested recipe relationships |
 | `tasks` | Planned | Household task definitions |

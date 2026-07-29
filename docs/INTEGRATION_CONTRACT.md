@@ -49,12 +49,6 @@ Delete operations are not in the initial contract because the current Grocy
 engine intentionally supports create, update, and match only. Deletion should
 be added after project-wide ownership and safety rules are designed.
 
-The command framework also defines
-`CommandSynchronizingIntegration` for adapters that compose an established
-native synchronization workflow. This keeps the CLI and application service
-backend-neutral while preserving the proven Grocy plan output and explicit
-apply semantics.
-
 `DiagnosableIntegration` supplies actionable adapter-owned checks.
 `RuntimeInspectableIntegration` supplies normalized integration version,
 database description, aggregate metrics, connectivity, and errors for

@@ -27,8 +27,8 @@ usage output.
 | --- | --- | --- |
 | `casita dashboard` | `DashboardService` | Platform, integration, inventory, and health summary |
 | `casita doctor` | `DoctorService` | Ordered actionable diagnostic checks |
-| `casita sync [resource]` | `SyncService` | Existing dry-run synchronization plan |
-| `casita sync [resource] --apply` | `SyncService` | Existing explicit apply workflow |
+| `casita sync [resource]` | `SynchronizationApplicationService` | Structured dry-run synchronization plan |
+| `casita sync [resource] --apply` | `SynchronizationApplicationService` | Structured explicit apply workflow |
 | `casita inventory` | `InventoryService` | Backend-neutral inventory items |
 | `casita recipes` | `RecipeService` | Backend-neutral Recipe definitions |
 
@@ -42,11 +42,12 @@ directly.
 
 ## Application Services
 
-`SyncService` discovers its explicitly configured owner through
-`IntegrationDirectory` and invokes the `CommandSynchronizingIntegration`
-contract. The production Grocy adapter composes the established generic sync
-workflow, preserving resource order, payload builders, comparisons, plan
-format, and apply behavior.
+`SynchronizationApplicationService` coordinates `SynchronizationPlanner` and
+`SynchronizationExecutor`. Both resolve the explicitly configured owner
+through `IntegrationDirectory` and invoke the `SynchronizingIntegration`
+contract. The production Grocy adapter translates native plans and results
+into structured contracts while preserving resource order, payload builders,
+comparisons, plan formatting, and apply behavior.
 
 `DoctorService` owns platform diagnostics. Local checks validate:
 

@@ -9,7 +9,6 @@ from casita.application.commands import (
     DoctorReport,
     DoctorService,
     MaintenanceService,
-    SyncService,
 )
 from casita.application.dashboard import DashboardService
 from casita.application.services import (
@@ -49,7 +48,6 @@ __all__ = [
     "RecipeService",
     "ServiceResult",
     "ShoppingService",
-    "SyncService",
     "SynchronizationPlanner",
     "SynchronizationExecutor",
     "SynchronizationApplicationService",

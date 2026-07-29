@@ -2,11 +2,8 @@
 
 from casita.integrations.base import (
     AppliedChange,
-    ApplyResult,
     Capability,
     CapabilityData,
-    CommandSyncResult,
-    CommandSynchronizingIntegration,
     DiagnosableIntegration,
     DiagnosticCheck,
     FieldDifference,
@@ -28,11 +25,8 @@ from casita.integrations.base import (
 
 __all__ = [
     "AppliedChange",
-    "ApplyResult",
     "Capability",
     "CapabilityData",
-    "CommandSyncResult",
-    "CommandSynchronizingIntegration",
     "DiagnosableIntegration",
     "DiagnosticCheck",
     "FieldDifference",

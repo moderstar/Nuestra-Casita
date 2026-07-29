@@ -8,8 +8,6 @@ from typing import Callable, Mapping
 
 from casita.application.coordination import IntegrationDirectory
 from casita.integrations import (
-    CommandSyncResult,
-    CommandSynchronizingIntegration,
     DiagnosableIntegration,
     DiagnosticCheck,
 )
@@ -26,44 +24,6 @@ class DoctorReport:
         """Return whether every diagnostic check passed."""
 
         return all(check.passed for check in self.checks)
-
-
-class SyncService:
-    """Coordinate declarative synchronization through integration contracts."""
-
-    def __init__(
-        self,
-        integrations: IntegrationDirectory,
-        *,
-        owner: str,
-        resources: tuple[str, ...],
-    ) -> None:
-        self._integrations = integrations
-        self._owner = owner
-        self._resources = resources
-
-    @property
-    def resources(self) -> tuple[str, ...]:
-        """Return accepted resource names in orchestration order."""
-
-        return self._resources
-
-    def synchronize(
-        self,
-        resource: str,
-        *,
-        apply: bool = False,
-    ) -> CommandSyncResult:
-        """Run one synchronization command through its owning integration."""
-
-        integration = self._integrations.get(self._owner)
-
-        if not isinstance(integration, CommandSynchronizingIntegration):
-            raise RuntimeError(
-                f"Integration {self._owner!r} does not support synchronization."
-            )
-
-        return integration.synchronize(resource, apply=apply)
 
 
 class MaintenanceService:

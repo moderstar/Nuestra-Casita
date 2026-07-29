@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Protocol, TypeAlias, runtime_checkable
+from typing import Protocol, TypeAlias, runtime_checkable
 
 from casita.domain import (
     BudgetSummary,
@@ -207,11 +207,6 @@ class SynchronizationResult:
     lookups_loaded: bool = False
 
 
-# Backward-compatible name retained while callers migrate to the structured
-# synchronization framework.
-ApplyResult = SynchronizationResult
-
-
 @runtime_checkable
 class SynchronizingIntegration(Integration, Protocol):
     """Optional contract for integrations with declarative sync resources."""
@@ -221,30 +216,6 @@ class SynchronizingIntegration(Integration, Protocol):
 
     def apply(self, plan: SynchronizationPlan) -> SynchronizationResult:
         """Apply a previously generated plan through the owning integration."""
-
-
-@dataclass(frozen=True, slots=True)
-class CommandSyncResult:
-    """Return one integration-owned synchronization command result."""
-
-    integration_key: str
-    resource: str
-    applied: bool
-    plans: Any
-
-
-@runtime_checkable
-class CommandSynchronizingIntegration(Integration, Protocol):
-    """Execute an integration's established declarative sync workflow."""
-
-    def synchronize(
-        self,
-        resource: str,
-        *,
-        apply: bool = False,
-    ) -> CommandSyncResult:
-        """Plan or apply one registered integration resource."""
-
 
 @dataclass(frozen=True, slots=True)
 class DiagnosticCheck:

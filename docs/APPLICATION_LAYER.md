@@ -108,8 +108,9 @@ injection. `casita.bootstrap` owns the default application wiring.
 
 Command services keep terminal transport separate from household workflows:
 
-- `SyncService` resolves its configured integration owner and invokes the
-  integration synchronization contract.
+- `SynchronizationApplicationService` coordinates backend-neutral planning
+  and optional execution through `SynchronizationPlanner` and
+  `SynchronizationExecutor`.
 - `DoctorService` coordinates local platform validation and adapter-owned
   connectivity diagnostics.
 - `MaintenanceService` preserves lookup, catalog validation, and export

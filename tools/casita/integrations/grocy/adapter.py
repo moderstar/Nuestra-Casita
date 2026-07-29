@@ -11,7 +11,6 @@ from casita.integrations import (
     AppliedChange,
     Capability,
     CapabilityData,
-    CommandSyncResult,
     DiagnosticCheck,
     HealthStatus,
     IntegrationDescriptor,
@@ -65,13 +64,11 @@ class GrocyReadAdapter:
         client: GrocyReader,
         *,
         timezone_name: str = "UTC",
-        sync_runner: Callable[..., Any] | None = None,
         sync_planner: Callable[..., Any] | None = None,
         sync_applier: Callable[..., Any] | None = None,
     ) -> None:
         self._client = client
         self._timezone = ZoneInfo(timezone_name)
-        self._sync_runner = sync_runner
         self._sync_planner = sync_planner
         self._sync_applier = sync_applier
         self._native_plans: dict[
@@ -145,25 +142,6 @@ class GrocyReadAdapter:
             DiagnosticCheck("Grocy Connection", True),
             DiagnosticCheck("API Authentication", True),
             DiagnosticCheck("Adapter Connectivity", True),
-        )
-
-    def synchronize(
-        self,
-        resource: str,
-        *,
-        apply: bool = False,
-    ) -> CommandSyncResult:
-        """Delegate declarative synchronization to the established workflow."""
-
-        if self._sync_runner is None:
-            raise RuntimeError("Grocy synchronization is not configured.")
-
-        plans = self._sync_runner(resource, apply=apply)
-        return CommandSyncResult(
-            integration_key=self.descriptor.key,
-            resource=resource,
-            applied=apply,
-            plans=plans,
         )
 
     def plan(self, request: SyncRequest) -> SynchronizationPlan:

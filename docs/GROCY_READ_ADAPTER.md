@@ -89,12 +89,13 @@ Synchronization remains declarative and catalog-driven. Reading remains
 runtime projection-driven. They are independently testable and do not invoke
 one another.
 
-## Command and Runtime Contracts
+## Synchronization and Runtime Contracts
 
-The composition root injects the established synchronization workflow into
-the Grocy adapter. `SyncService` reaches that workflow only through the
-backend-neutral command synchronization contract. Existing resource
-definitions, ordering, plans, payloads, and apply behavior are unchanged.
+The composition root injects native planning and apply operations into the
+Grocy adapter. `SynchronizationApplicationService` reaches them only through
+the backend-neutral `SynchronizingIntegration` contract, planner, and
+executor. Existing resource definitions, ordering, plans, payloads, and apply
+behavior are unchanged.
 
 The adapter also owns Grocy diagnostics and dashboard runtime inspection. It
 normalizes `/system/info` plus Product, Recipe, and Location counts into

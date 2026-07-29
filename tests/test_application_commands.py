@@ -8,11 +8,9 @@ from unittest import TestCase
 from casita.application import (
     DoctorService,
     IntegrationDirectory,
-    SyncService,
 )
 from casita.integrations import (
     Capability,
-    CommandSyncResult,
     DiagnosticCheck,
     HealthStatus,
     IntegrationDescriptor,
@@ -45,27 +43,8 @@ class FakeCommandIntegration:
             data=(),
         )
 
-    def synchronize(self, resource, *, apply=False):
-        return CommandSyncResult("fake", resource, apply, {"match": []})
-
     def diagnose(self):
         return (DiagnosticCheck("Fake Connection", True),)
-
-
-class SyncServiceTests(TestCase):
-    def test_routes_through_integration_contract(self):
-        directory = IntegrationDirectory((FakeCommandIntegration(),))
-        service = SyncService(
-            directory,
-            owner="fake",
-            resources=("all", "products"),
-        )
-
-        result = service.synchronize("products", apply=True)
-
-        self.assertEqual(result.integration_key, "fake")
-        self.assertEqual(result.resource, "products")
-        self.assertTrue(result.applied)
 
 
 class DoctorServiceTests(TestCase):

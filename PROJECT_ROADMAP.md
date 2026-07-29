@@ -98,8 +98,8 @@ The current priority is completing a robust synchronization framework for
 Grocy 4.6.
 
 Products, Product Groups, Quantity Units, Locations, Shopping Locations,
-Task Categories, Chores, and Batteries are implemented through the generic
-synchronization framework.
+Task Categories, Chores, Batteries, and Recipe Definitions are implemented
+through the generic synchronization framework.
 
 ### Grocy Roadmap
 
@@ -112,11 +112,12 @@ synchronization framework.
 - [x] Task Categories
 - [x] Chores
 - [x] Batteries
+- [x] Recipe Definitions
 - [ ] Shopping Lists
 - [ ] Quantity Unit Conversions
 - [ ] Product Barcodes
 - [ ] Tasks
-- [ ] Recipes and Recipe Positions
+- [ ] Recipe Positions
 - [ ] Meal Plan Sections and Meal Plan
 - [ ] Equipment
 - [ ] Userfields and User Entities

@@ -28,13 +28,13 @@ class ApplicationConfiguration:
     def exists(self) -> bool:
         """Return whether configuration came from a file or environment."""
 
-        return self.source is not None or bool(
-            os.getenv("GROCY_URL") and os.getenv("GROCY_API_KEY")
-        )
+        return bool(self.grocy_url and self.grocy_api_key)
 
 
 def load_configuration(
     source: Path | None = None,
+    *,
+    strict: bool = True,
 ) -> ApplicationConfiguration:
     """Load and validate Nuestra Casita deployment configuration."""
 
@@ -66,7 +66,7 @@ def load_configuration(
         if not value
     ]
 
-    if missing:
+    if missing and strict:
         raise RuntimeError(
             f"Missing {', '.join(missing)} in Nuestra Casita configuration."
         )

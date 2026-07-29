@@ -5,6 +5,11 @@ from casita.application.coordination import (
     IntegrationDirectory,
     IntegrationFailure,
 )
+from casita.application.commands import (
+    DoctorReport,
+    DoctorService,
+    SyncService,
+)
 from casita.application.dashboard import DashboardService
 from casita.application.services import (
     BudgetService,
@@ -26,6 +31,8 @@ __all__ = [
     "ChoreService",
     "DashboardService",
     "DeviceService",
+    "DoctorReport",
+    "DoctorService",
     "IntegrationDirectory",
     "IntegrationFailure",
     "InventoryService",
@@ -34,4 +41,5 @@ __all__ = [
     "RecipeService",
     "ServiceResult",
     "ShoppingService",
+    "SyncService",
 ]

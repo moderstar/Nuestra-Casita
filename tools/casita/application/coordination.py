@@ -131,6 +131,16 @@ class IntegrationDirectory:
             if capability in integration.descriptor.capabilities
         )
 
+    def get(self, integration_key: str) -> Integration:
+        """Return one explicitly registered integration by stable key."""
+
+        try:
+            return self._by_key[integration_key]
+        except KeyError as error:
+            raise ValueError(
+                f"Integration {integration_key!r} is not registered."
+            ) from error
+
     def read(
         self,
         household_id: str,

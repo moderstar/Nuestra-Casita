@@ -33,7 +33,7 @@ Status meanings:
 | `product_groups` | Implemented | Product group master data |
 | `equipment` | Planned | Equipment master data |
 | `api_keys` | Not Applicable | Security credentials |
-| `userfields` | Planned | Custom field definitions |
+| `userfields` | Implemented | Declarative custom field definitions; per-object values are excluded |
 | `userentities` | Planned | Custom entity definitions |
 | `userobjects` | Planned | Custom entity records |
 | `meal_plan` | Planned | Meal-plan entries |

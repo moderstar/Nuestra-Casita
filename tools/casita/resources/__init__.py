@@ -14,6 +14,7 @@ from casita.resources.recipes import RECIPE_RESOURCE
 from casita.resources.recipe_positions import RECIPE_POSITION_RESOURCE
 from casita.resources.shopping_locations import SHOPPING_LOCATION_RESOURCE
 from casita.resources.task_categories import TASK_CATEGORY_RESOURCE
+from casita.resources.userfields import USERFIELD_RESOURCE
 
 __all__ = [
     "BATTERY_RESOURCE",
@@ -26,4 +27,5 @@ __all__ = [
     "RECIPE_POSITION_RESOURCE",
     "SHOPPING_LOCATION_RESOURCE",
     "TASK_CATEGORY_RESOURCE",
+    "USERFIELD_RESOURCE",
 ]

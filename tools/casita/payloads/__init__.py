@@ -68,6 +68,18 @@ from casita.payloads.task_categories import (
     build_task_category_update_payload,
     parse_active as parse_task_category_active,
 )
+from casita.payloads.userfields import (
+    build_userfield_create_payload,
+    build_userfield_update_payload,
+    parse_boolean as parse_userfield_boolean,
+    parse_caption as parse_userfield_caption,
+    parse_default_value as parse_userfield_default_value,
+    parse_entity as parse_userfield_entity,
+    parse_name as parse_userfield_name,
+    parse_sort_number as parse_userfield_sort_number,
+    parse_type as parse_userfield_type,
+    userfield_name as userfield_display_name,
+)
 
 __all__ = [
     "build_battery_create_payload",
@@ -90,6 +102,8 @@ __all__ = [
     "build_shopping_location_update_payload",
     "build_task_category_create_payload",
     "build_task_category_update_payload",
+    "build_userfield_create_payload",
+    "build_userfield_update_payload",
     "load_product_template",
     "parse_battery_active",
     "parse_battery_charge_interval_days",
@@ -106,6 +120,14 @@ __all__ = [
     "resolve_recipe_product_id",
     "parse_shopping_location_active",
     "parse_task_category_active",
+    "parse_userfield_boolean",
+    "parse_userfield_caption",
+    "parse_userfield_default_value",
+    "parse_userfield_entity",
+    "parse_userfield_name",
+    "parse_userfield_sort_number",
+    "parse_userfield_type",
+    "userfield_display_name",
     "parse_chore_active",
     "parse_chore_boolean",
     "parse_chore_period_config",

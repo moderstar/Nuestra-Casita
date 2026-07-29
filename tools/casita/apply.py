@@ -1,9 +1,12 @@
 """
-Execution engine for Nuestra Casita synchronization plans.
+Generic execution engine for Nuestra Casita synchronization plans.
 
-This module applies product creation and update operations to Grocy.
+This module applies create and update operations for any registered resource.
+Resource definitions provide the Grocy endpoint, object ID field, payload
+builders, and lookup requirements. The engine contains no product-specific
+logic.
 
-Nothing in this module runs automatically. Changes are only sent to Grocy
+Nothing in this module runs automatically. Changes are sent to Grocy only
 when apply_plan() is called by an explicit --apply command.
 """
 
@@ -11,135 +14,215 @@ from typing import Any
 
 from casita.grocy import post, put
 from casita.lookups import build_lookups
-from casita.payloads import (
-    build_product_create_payload,
-    build_product_update_payload,
-)
 
 
-def normalize_name(value: Any) -> str:
-    """
-    Convert a value into a clean display name.
-    """
+def normalize_name(value: Any, resource: dict[str, Any]) -> str:
+    """Return a clean display name for one plan item."""
 
-    if value is None:
-        return "Unknown product"
+    name = "" if value is None else str(value).strip()
 
-    name = str(value).strip()
+    if name:
+        return name
 
-    if name == "":
-        return "Unknown product"
+    singular_name = str(
+        resource.get("singular_name", "object")
+    ).strip() or "object"
 
-    return name
+    return f"Unknown {singular_name}"
 
 
-def apply_product_create(
-    item: dict[str, Any],
-    lookups: dict[str, dict[Any, Any]],
-) -> Any:
-    """
-    Create one product in Grocy.
+def validate_resource(resource: dict[str, Any]) -> None:
+    """Validate the fields required by the generic apply engine."""
 
-    Args:
-        item:
-            One create item from the execution plan.
-
-        lookups:
-            Grocy lookup tables used to resolve product groups,
-            locations, and quantity units.
-
-    Returns:
-        The response returned by the Grocy API client.
-
-    Raises:
-        ValueError:
-            If the execution-plan item does not contain valid catalog data.
-    """
-
-    product_name = normalize_name(item.get("name"))
-    catalog_product = item.get("catalog")
-
-    if not isinstance(catalog_product, dict):
+    if not isinstance(resource, dict):
         raise ValueError(
-            f"{product_name}: create plan item does not contain "
-            "a valid catalog product."
+            "The resource definition must be a dictionary."
         )
 
-    payload = build_product_create_payload(
-        catalog_product,
-        lookups,
+    required_fields = (
+        "name",
+        "singular_name",
+        "plural_name",
+        "grocy_endpoint",
+        "grocy_id_field",
+        "build_create_payload",
+        "build_update_payload",
+        "requires_lookups",
     )
 
+    missing_fields = [
+        field
+        for field in required_fields
+        if field not in resource
+    ]
+
+    if missing_fields:
+        missing_text = ", ".join(missing_fields)
+        raise ValueError(
+            "Resource definition is missing required fields: "
+            f"{missing_text}"
+        )
+
+    endpoint = str(resource["grocy_endpoint"]).strip()
+
+    if not endpoint.startswith("/"):
+        raise ValueError(
+            "Resource grocy_endpoint must begin with '/'."
+        )
+
+    for builder_name in (
+        "build_create_payload",
+        "build_update_payload",
+    ):
+        if not callable(resource[builder_name]):
+            raise ValueError(
+                f"Resource {builder_name!r} must be callable."
+            )
+
+
+def validate_plan(plan: dict[str, Any]) -> None:
+    """Validate the common execution-plan structure."""
+
+    if not isinstance(plan, dict):
+        raise ValueError(
+            "The execution plan must be a dictionary."
+        )
+
+    for section_name in ("create", "update", "match"):
+        section = plan.get(section_name, [])
+
+        if not isinstance(section, list):
+            raise ValueError(
+                f"Execution plan {section_name!r} must be a list."
+            )
+
+
+def parse_object_id(
+    item: dict[str, Any],
+    resource: dict[str, Any],
+) -> int:
+    """Read and validate the Grocy object ID from a plan item."""
+
+    display_name = normalize_name(
+        item.get("name"),
+        resource,
+    )
+
+    object_id = item.get("object_id")
+
+    # Backward compatibility for plans produced before the generic engine.
+    if object_id is None:
+        legacy_id_field = str(
+            resource.get("legacy_plan_id_field", "")
+        ).strip()
+
+        if legacy_id_field:
+            object_id = item.get(legacy_id_field)
+
+    if object_id is None:
+        grocy_id_field = str(resource["grocy_id_field"])
+        grocy_object = item.get("grocy")
+
+        if isinstance(grocy_object, dict):
+            object_id = grocy_object.get(grocy_id_field)
+
+    if object_id is None:
+        raise ValueError(
+            f"{display_name}: update plan item is missing object_id."
+        )
+
+    try:
+        return int(object_id)
+    except (TypeError, ValueError) as error:
+        raise ValueError(
+            f"{display_name}: invalid object_id {object_id!r}."
+        ) from error
+
+
+def apply_create(
+    item: dict[str, Any],
+    resource: dict[str, Any],
+    lookups: dict[str, dict[Any, Any]],
+) -> Any:
+    """Create one Grocy object described by a plan item."""
+
+    display_name = normalize_name(
+        item.get("name"),
+        resource,
+    )
+
+    if not isinstance(item, dict):
+        raise ValueError(
+            "Every create plan item must be a dictionary."
+        )
+
+    payload_builder = resource["build_create_payload"]
+    payload = payload_builder(item, lookups)
+
+    if not isinstance(payload, dict) or not payload:
+        raise ValueError(
+            f"{display_name}: create payload must be a non-empty dictionary."
+        )
+
     return post(
-        "/objects/products",
+        resource["grocy_endpoint"],
         payload,
     )
 
 
-def apply_product_update(
+def apply_update(
     item: dict[str, Any],
+    resource: dict[str, Any],
+    lookups: dict[str, dict[Any, Any]],
 ) -> Any:
-    """
-    Update one existing product in Grocy.
+    """Update one existing Grocy object described by a plan item."""
 
-    Args:
-        item:
-            One update item from the execution plan.
-
-    Returns:
-        The response returned by the Grocy API client.
-
-    Raises:
-        ValueError:
-            If the product ID is missing or invalid.
-    """
-
-    product_name = normalize_name(item.get("name"))
-    product_id = item.get("product_id")
-
-    if product_id is None:
+    if not isinstance(item, dict):
         raise ValueError(
-            f"{product_name}: update plan item is missing product_id."
+            "Every update plan item must be a dictionary."
         )
 
-    try:
-        product_id = int(product_id)
-    except (TypeError, ValueError) as error:
-        raise ValueError(
-            f"{product_name}: invalid product_id {product_id!r}."
-        ) from error
+    display_name = normalize_name(
+        item.get("name"),
+        resource,
+    )
+    object_id = parse_object_id(item, resource)
 
-    payload = build_product_update_payload(item)
+    payload_builder = resource["build_update_payload"]
+    payload = payload_builder(item, lookups)
+
+    if not isinstance(payload, dict) or not payload:
+        raise ValueError(
+            f"{display_name}: update payload must be a non-empty dictionary."
+        )
+
+    endpoint = str(resource["grocy_endpoint"]).rstrip("/")
 
     return put(
-        f"/objects/products/{product_id}",
+        f"{endpoint}/{object_id}",
         payload,
     )
 
 
 def apply_creates(
     create_items: list[dict[str, Any]],
+    resource: dict[str, Any],
     lookups: dict[str, dict[Any, Any]],
 ) -> int:
-    """
-    Apply every product creation operation.
-
-    Returns:
-        The number of products successfully created.
-    """
+    """Apply all create operations and return the success count."""
 
     created_count = 0
 
     for item in create_items:
-        product_name = normalize_name(item.get("name"))
+        display_name = normalize_name(
+            item.get("name") if isinstance(item, dict) else None,
+            resource,
+        )
 
-        print(f"+ CREATE    {product_name}")
+        print(f"+ CREATE    {display_name}")
 
         try:
-            apply_product_create(
-                item,
-                lookups,
-            )
+            apply_create(item, resource, lookups)
         except Exception as error:
             print(f"    FAILED: {error}")
             raise
@@ -153,23 +236,23 @@ def apply_creates(
 
 def apply_updates(
     update_items: list[dict[str, Any]],
+    resource: dict[str, Any],
+    lookups: dict[str, dict[Any, Any]],
 ) -> int:
-    """
-    Apply every product update operation.
-
-    Returns:
-        The number of products successfully updated.
-    """
+    """Apply all update operations and return the success count."""
 
     updated_count = 0
 
     for item in update_items:
-        product_name = normalize_name(item.get("name"))
+        display_name = normalize_name(
+            item.get("name") if isinstance(item, dict) else None,
+            resource,
+        )
 
-        print(f"~ UPDATE    {product_name}")
+        print(f"~ UPDATE    {display_name}")
 
         try:
-            apply_product_update(item)
+            apply_update(item, resource, lookups)
         except Exception as error:
             print(f"    FAILED: {error}")
             raise
@@ -183,79 +266,33 @@ def apply_updates(
 
 def apply_plan(
     plan: dict[str, Any],
+    resource: dict[str, Any],
 ) -> dict[str, int]:
     """
-    Apply a complete product synchronization plan.
+    Apply a complete synchronization plan for one registered resource.
 
-    The plan is expected to contain these lists:
-
-        match
-        update
-        create
-
-    Matching products require no action.
-
-    Missing products are created with:
-
-        POST /api/objects/products
-
-    Changed products are updated with:
-
-        PUT /api/objects/products/{product_id}
-
-    Args:
-        plan:
-            Execution plan generated by sync_products().
-
-    Returns:
-        A summary dictionary containing:
-
-            created
-            updated
-            matched
-
-    Raises:
-        ValueError:
-            If the execution plan is invalid.
-
-        Exception:
-            Any payload-building or Grocy API error is printed and
-            re-raised. Processing stops immediately so a failed operation
-            cannot be mistaken for a successful synchronization.
+    Matching objects require no action. Create and update payloads are built
+    by the resource definition, then sent to the resource's Grocy endpoint.
+    Processing stops immediately if any operation fails.
     """
 
-    if not isinstance(plan, dict):
-        raise ValueError(
-            "The execution plan must be a dictionary."
-        )
+    validate_resource(resource)
+    validate_plan(plan)
 
     create_items = plan.get("create", [])
     update_items = plan.get("update", [])
     match_items = plan.get("match", [])
 
-    if not isinstance(create_items, list):
-        raise ValueError(
-            "Execution plan 'create' must be a list."
-        )
-
-    if not isinstance(update_items, list):
-        raise ValueError(
-            "Execution plan 'update' must be a list."
-        )
-
-    if not isinstance(match_items, list):
-        raise ValueError(
-            "Execution plan 'match' must be a list."
-        )
+    singular_name = str(resource["singular_name"]).strip()
+    plural_name = str(resource["plural_name"]).strip()
 
     print()
     print("=" * 40)
     print("Applying Plan")
     print("=" * 40)
     print()
-
-    print(f"{len(create_items)} products to create")
-    print(f"{len(update_items)} products to update")
+    print(f"{len(create_items)} {plural_name} to create")
+    print(f"{len(update_items)} {plural_name} to update")
     print()
 
     if not create_items and not update_items:
@@ -267,19 +304,22 @@ def apply_plan(
 
     lookups: dict[str, dict[Any, Any]] = {}
 
-    if create_items:
-        print("Loading lookup tables for product creation...")
+    if resource["requires_lookups"]:
+        print(f"Loading lookup tables for {singular_name} changes...")
         lookups = build_lookups()
         print("Lookup tables loaded.")
         print()
 
     created_count = apply_creates(
         create_items,
+        resource,
         lookups,
     )
 
     updated_count = apply_updates(
         update_items,
+        resource,
+        lookups,
     )
 
     print("=" * 40)

@@ -2,9 +2,6 @@
 
 active: 1
 
-# Purchase unit defaults to the stock unit.
-qu_factor_purchase_to_stock: 1
-
 # Shelf life defaults.
 default_best_before_days: 0
 default_best_before_days_after_open: 0

@@ -42,14 +42,15 @@ directly.
 
 ## Application Services
 
-`SynchronizationApplicationService` coordinates `SynchronizationPlanner` and
-`SynchronizationExecutor` through `CatalogApplicationService`. The catalog
-service validates each resource command and returns a structured
-`CatalogOperationResult`. The planner and executor resolve the explicitly
-configured owner through `IntegrationDirectory` and invoke the
-`SynchronizingIntegration` contract. The production Grocy adapter translates
-native plans and results into structured contracts while preserving resource
-order, payload builders, comparisons, plan formatting, and apply behavior.
+`SynchronizationApplicationService` delegates each resource to
+`CatalogApplicationService`. The catalog service depends on the
+`CatalogPlanner` and `CatalogExecutor` protocols and returns a structured
+`CatalogOperationResult`. `IntegrationCatalogPlanner` and
+`IntegrationCatalogExecutor` resolve the explicitly configured owner through
+`IntegrationDirectory` and invoke only the `SynchronizingIntegration`
+contract. The production Grocy adapter translates native plans and results
+into integration contracts while preserving resource order, payload builders,
+comparisons, plan formatting, and apply behavior.
 
 `DoctorService` owns platform diagnostics. Local checks validate:
 

@@ -4,11 +4,11 @@ from dataclasses import replace
 
 from casita.application import (
     CatalogApplicationService,
+    IntegrationCatalogExecutor,
+    IntegrationCatalogPlanner,
     DoctorService,
     MaintenanceService,
     SynchronizationApplicationService,
-    SynchronizationExecutor,
-    SynchronizationPlanner,
 )
 from casita.bootstrap.application import (
     NuestraCasitaApplication,
@@ -90,11 +90,11 @@ def build_grocy_application(
     )
     synchronization_owner = grocy.descriptor.key
     catalog_service = CatalogApplicationService(
-        SynchronizationPlanner(
+        IntegrationCatalogPlanner(
             application.integrations,
             owner=synchronization_owner,
         ),
-        SynchronizationExecutor(
+        IntegrationCatalogExecutor(
             application.integrations,
             owner=synchronization_owner,
         ),

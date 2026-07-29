@@ -34,7 +34,8 @@ containing:
 - One instance of every household capability service
 - One `DashboardService`
 - One `CatalogApplicationService`
-- One `SynchronizationApplicationService` with its planner and executor
+- One `SynchronizationApplicationService`
+- One integration-backed `CatalogPlanner` and `CatalogExecutor`
 - One `DoctorService`
 - One `MaintenanceService` for backward-compatible commands
 - Validated `ApplicationConfiguration`

@@ -7,7 +7,14 @@ from casita.application.coordination import (
 )
 from casita.application.catalog import (
     CatalogApplicationService,
+    CatalogExecutionResult,
+    CatalogExecutor,
+    CatalogOperation,
     CatalogOperationResult,
+    CatalogPlan,
+    CatalogPlanner,
+    IntegrationCatalogExecutor,
+    IntegrationCatalogPlanner,
 )
 from casita.application.commands import (
     DoctorReport,
@@ -29,15 +36,18 @@ from casita.application.services import (
 )
 from casita.application.synchronization import (
     SynchronizationApplicationService,
-    SynchronizationExecutor,
-    SynchronizationPlanner,
     SynchronizationRun,
 )
 
 __all__ = [
     "BudgetService",
     "CatalogApplicationService",
+    "CatalogExecutionResult",
+    "CatalogExecutor",
+    "CatalogOperation",
     "CatalogOperationResult",
+    "CatalogPlan",
+    "CatalogPlanner",
     "CalendarService",
     "CapabilityRead",
     "ChoreService",
@@ -48,14 +58,14 @@ __all__ = [
     "MaintenanceService",
     "IntegrationDirectory",
     "IntegrationFailure",
+    "IntegrationCatalogExecutor",
+    "IntegrationCatalogPlanner",
     "InventoryService",
     "MediaService",
     "NotificationService",
     "RecipeService",
     "ServiceResult",
     "ShoppingService",
-    "SynchronizationPlanner",
-    "SynchronizationExecutor",
     "SynchronizationApplicationService",
     "SynchronizationRun",
 ]

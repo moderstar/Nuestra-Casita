@@ -108,9 +108,8 @@ injection. `casita.bootstrap` owns the default application wiring.
 
 Command services keep terminal transport separate from household workflows:
 
-- `SynchronizationApplicationService` coordinates backend-neutral planning
-  and optional execution through `SynchronizationPlanner` and
-  `SynchronizationExecutor`.
+- `SynchronizationApplicationService` coordinates backend-neutral catalog
+  planning and optional execution through `CatalogApplicationService`.
 - `DoctorService` coordinates local platform validation and adapter-owned
   connectivity diagnostics.
 - `MaintenanceService` preserves lookup, catalog validation, and export
@@ -122,10 +121,17 @@ without Grocy or process environment state.
 ### `application.catalog`
 
 `CatalogApplicationService` owns one declarative catalog operation. It
-validates the registered resource name, requests a structured plan through
-`SynchronizationPlanner`, optionally applies that plan through
-`SynchronizationExecutor`, and returns an explicit
+validates the registered resource name, requests a structured `CatalogPlan`
+through the `CatalogPlanner` protocol, optionally applies that plan through
+the `CatalogExecutor` protocol, and returns an explicit
 `CatalogOperationResult`.
+
+The production composition root supplies `IntegrationCatalogPlanner` and
+`IntegrationCatalogExecutor`. They communicate only through
+`SynchronizingIntegration`, translate integration contracts into
+`CatalogOperation`, `CatalogPlan`, and `CatalogExecutionResult`, and validate
+resource ownership and execution counts. They do not import Grocy modules or
+transport details.
 
 The service contains no terminal presentation, Grocy imports, HTTP transport,
 or resource-specific branching. `SynchronizationApplicationService` delegates

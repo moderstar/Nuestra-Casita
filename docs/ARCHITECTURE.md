@@ -255,7 +255,10 @@ The `sync all` command runs registered resources in dependency-aware order:
 
 Each individual catalog operation is orchestrated by the backend-neutral
 `CatalogApplicationService`. It validates the resource, coordinates structured
-planning and optional execution, and returns `CatalogOperationResult`.
+planning and optional execution through `CatalogPlanner` and
+`CatalogExecutor`, and returns `CatalogOperationResult`. Planning produces a
+`CatalogPlan` containing explicit `CatalogOperation` values; execution
+produces `CatalogExecutionResult`.
 `SynchronizationApplicationService` uses the same service for every resource
 in `sync all`; neither service imports Grocy or renders terminal output.
 

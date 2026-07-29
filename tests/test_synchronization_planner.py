@@ -1,15 +1,19 @@
 """Tests for structured synchronization planning."""
 
+from contextlib import redirect_stdout
 from datetime import datetime, timezone
+from io import StringIO
 from unittest import TestCase
 
 from casita.application import (
     CatalogApplicationService,
+    CatalogExecutionResult,
     CatalogOperationResult,
+    CatalogPlan,
     IntegrationDirectory,
+    IntegrationCatalogExecutor,
+    IntegrationCatalogPlanner,
     SynchronizationApplicationService,
-    SynchronizationExecutor,
-    SynchronizationPlanner,
 )
 from casita.integrations import (
     HealthStatus,
@@ -72,16 +76,16 @@ class FakeSynchronizingIntegration:
         )
 
 
-class SynchronizationPlannerTests(TestCase):
+class CatalogPlannerTests(TestCase):
     def test_returns_structured_integration_plan(self):
         directory = IntegrationDirectory(
             (FakeSynchronizingIntegration(),)
         )
-        planner = SynchronizationPlanner(directory, owner="fake")
+        planner = IntegrationCatalogPlanner(directory, owner="fake")
 
         plan = planner.plan("household", "products")
 
-        self.assertIsInstance(plan, SynchronizationPlan)
+        self.assertIsInstance(plan, CatalogPlan)
         self.assertEqual(plan.integration_key, "fake")
         self.assertEqual(plan.resource, "products")
         self.assertEqual(plan.changes[0].action, SyncAction.MATCH)
@@ -98,7 +102,7 @@ class SynchronizationPlannerTests(TestCase):
                 )
 
         directory = IntegrationDirectory((MismatchedIntegration(),))
-        planner = SynchronizationPlanner(directory, owner="fake")
+        planner = IntegrationCatalogPlanner(directory, owner="fake")
 
         with self.assertRaisesRegex(
             ValueError,
@@ -106,19 +110,31 @@ class SynchronizationPlannerTests(TestCase):
         ):
             planner.plan("household", "products")
 
+    def test_rejects_blank_catalog_request(self):
+        directory = IntegrationDirectory(
+            (FakeSynchronizingIntegration(),)
+        )
+        planner = IntegrationCatalogPlanner(directory, owner="fake")
 
-class SynchronizationExecutorTests(TestCase):
+        with self.assertRaisesRegex(ValueError, "household ID"):
+            planner.plan("", "products")
+
+        with self.assertRaisesRegex(ValueError, "resource"):
+            planner.plan("household", " ")
+
+
+class CatalogExecutorTests(TestCase):
     def test_returns_structured_execution_result(self):
         directory = IntegrationDirectory(
             (FakeSynchronizingIntegration(),)
         )
-        planner = SynchronizationPlanner(directory, owner="fake")
-        executor = SynchronizationExecutor(directory, owner="fake")
+        planner = IntegrationCatalogPlanner(directory, owner="fake")
+        executor = IntegrationCatalogExecutor(directory, owner="fake")
         plan = planner.plan("household", "products")
 
         result = executor.execute(plan)
 
-        self.assertIsInstance(result, SynchronizationResult)
+        self.assertIsInstance(result, CatalogExecutionResult)
         self.assertEqual(result.integration_key, "fake")
         self.assertEqual(result.resource, "products")
         self.assertEqual(result.matched, 1)
@@ -127,12 +143,20 @@ class SynchronizationExecutorTests(TestCase):
         directory = IntegrationDirectory(
             (FakeSynchronizingIntegration(),)
         )
-        executor = SynchronizationExecutor(directory, owner="fake")
-        plan = SynchronizationPlan(
+        executor = IntegrationCatalogExecutor(directory, owner="fake")
+        integration_plan = SynchronizationPlan(
             integration_key="another",
             resource="products",
             generated_at=datetime.now(timezone.utc),
             changes=(),
+        )
+        plan = CatalogPlan(
+            household_id="household",
+            integration_key="another",
+            resource="products",
+            generated_at=integration_plan.generated_at,
+            operations=(),
+            integration_plan=integration_plan,
         )
 
         with self.assertRaisesRegex(
@@ -154,8 +178,8 @@ class SynchronizationExecutorTests(TestCase):
                 )
 
         directory = IntegrationDirectory((IncorrectResultIntegration(),))
-        planner = SynchronizationPlanner(directory, owner="fake")
-        executor = SynchronizationExecutor(directory, owner="fake")
+        planner = IntegrationCatalogPlanner(directory, owner="fake")
+        executor = IntegrationCatalogExecutor(directory, owner="fake")
         plan = planner.plan("household", "products")
 
         with self.assertRaisesRegex(
@@ -164,14 +188,28 @@ class SynchronizationExecutorTests(TestCase):
         ):
             executor.execute(plan)
 
+    def test_planner_and_executor_are_presentation_neutral(self):
+        directory = IntegrationDirectory(
+            (FakeSynchronizingIntegration(),)
+        )
+        planner = IntegrationCatalogPlanner(directory, owner="fake")
+        executor = IntegrationCatalogExecutor(directory, owner="fake")
+        output = StringIO()
+
+        with redirect_stdout(output):
+            plan = planner.plan("household", "products")
+            executor.execute(plan)
+
+        self.assertEqual(output.getvalue(), "")
+
 
 class SynchronizationApplicationServiceTests(TestCase):
     def test_orchestrates_all_resources_in_dependency_order(self):
         integration = FakeSynchronizingIntegration()
         directory = IntegrationDirectory((integration,))
         catalogs = CatalogApplicationService(
-            SynchronizationPlanner(directory, owner="fake"),
-            SynchronizationExecutor(directory, owner="fake"),
+            IntegrationCatalogPlanner(directory, owner="fake"),
+            IntegrationCatalogExecutor(directory, owner="fake"),
             resources=("groups", "products"),
         )
         service = SynchronizationApplicationService(
@@ -214,8 +252,8 @@ class SynchronizationApplicationServiceTests(TestCase):
             (ApplyForbiddenIntegration(),)
         )
         catalogs = CatalogApplicationService(
-            SynchronizationPlanner(directory, owner="fake"),
-            SynchronizationExecutor(directory, owner="fake"),
+            IntegrationCatalogPlanner(directory, owner="fake"),
+            IntegrationCatalogExecutor(directory, owner="fake"),
             resources=("products",),
         )
         service = SynchronizationApplicationService(
@@ -241,8 +279,8 @@ class CatalogApplicationServiceTests(TestCase):
             (FakeSynchronizingIntegration(),)
         )
         service = CatalogApplicationService(
-            SynchronizationPlanner(directory, owner="fake"),
-            SynchronizationExecutor(directory, owner="fake"),
+            IntegrationCatalogPlanner(directory, owner="fake"),
+            IntegrationCatalogExecutor(directory, owner="fake"),
             resources=("products",),
         )
 
@@ -255,7 +293,7 @@ class CatalogApplicationServiceTests(TestCase):
         self.assertIsInstance(operation, CatalogOperationResult)
         self.assertEqual(operation.resource, "products")
         self.assertEqual(operation.plan.resource, "products")
-        self.assertEqual(operation.result.resource, "products")
+        self.assertEqual(operation.execution.resource, "products")
         self.assertTrue(operation.applied)
 
     def test_rejects_unknown_catalog_resource(self):
@@ -263,8 +301,8 @@ class CatalogApplicationServiceTests(TestCase):
             (FakeSynchronizingIntegration(),)
         )
         service = CatalogApplicationService(
-            SynchronizationPlanner(directory, owner="fake"),
-            SynchronizationExecutor(directory, owner="fake"),
+            IntegrationCatalogPlanner(directory, owner="fake"),
+            IntegrationCatalogExecutor(directory, owner="fake"),
             resources=("products",),
         )
 

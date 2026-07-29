@@ -24,6 +24,7 @@ from casita.application import (
     RecipeService,
     ShoppingService,
     SyncService,
+    SynchronizationApplicationService,
 )
 from casita.bootstrap.configuration import ApplicationConfiguration
 from casita.dashboard import (
@@ -55,7 +56,7 @@ class NuestraCasitaApplication:
     integrations: IntegrationDirectory
     services: ApplicationServices
     dashboard: DashboardService
-    sync: SyncService | None = None
+    sync: SyncService | SynchronizationApplicationService | None = None
     doctor: DoctorService | None = None
     maintenance: MaintenanceService | None = None
     configuration: ApplicationConfiguration | None = None

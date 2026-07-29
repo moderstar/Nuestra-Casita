@@ -106,8 +106,15 @@ def main():
         _print_recipes(application.services.recipes.read(household.id))
     elif args.command == "sync":
         sync_service.synchronize(
+            household.id,
             args.sync_command or SYNC_ALL_COMMAND,
             apply=args.apply,
+            on_resource=_print_sync_resource_header,
+            on_plan=(
+                None
+                if args.apply
+                else lambda plan: _print_sync_dry_run(plan.resource)
+            ),
         )
     elif args.command == "lookups":
         _require_maintenance(application).lookups()
@@ -181,6 +188,27 @@ def _print_recipes(result):
 
     for failure in result.failures:
         print(f"ERROR {failure.message}")
+
+
+def _print_sync_resource_header(resource_name):
+    print()
+    print("#" * 40)
+    print(f"Synchronizing {resource_name.replace('-', ' ').title()}")
+    print("#" * 40)
+    print()
+
+
+def _print_sync_dry_run(resource_name):
+    print()
+    print("=" * 40)
+    print("Dry Run")
+    print("=" * 40)
+    print()
+    print("No changes were made.")
+    print()
+    print("Run again with:")
+    print()
+    print(f"    python tools/casita.py sync {resource_name} --apply")
 
 
 def _require_maintenance(application):

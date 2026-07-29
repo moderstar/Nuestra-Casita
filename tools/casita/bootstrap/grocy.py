@@ -5,7 +5,9 @@ from dataclasses import replace
 from casita.application import (
     DoctorService,
     MaintenanceService,
-    SyncService,
+    SynchronizationApplicationService,
+    SynchronizationExecutor,
+    SynchronizationPlanner,
 )
 from casita.bootstrap.application import (
     NuestraCasitaApplication,
@@ -89,9 +91,18 @@ def build_grocy_application(
         },
         dashboard_contract=dashboard_contract,
     )
-    sync_service = SyncService(
-        application.integrations,
-        owner=grocy.descriptor.key,
+    synchronization_owner = grocy.descriptor.key
+    sync_service = SynchronizationApplicationService(
+        SynchronizationPlanner(
+            application.integrations,
+            owner=synchronization_owner,
+        ),
+        SynchronizationExecutor(
+            application.integrations,
+            owner=synchronization_owner,
+        ),
+        resource_order=tuple(list_sync_resources()),
+        all_resource="all",
         resources=tuple(list_sync_commands()),
     )
     doctor_service = DoctorService(

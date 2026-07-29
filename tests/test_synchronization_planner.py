@@ -5,6 +5,7 @@ from unittest import TestCase
 
 from casita.application import (
     IntegrationDirectory,
+    SynchronizationApplicationService,
     SynchronizationExecutor,
     SynchronizationPlanner,
 )
@@ -160,3 +161,62 @@ class SynchronizationExecutorTests(TestCase):
             "result counts do not match",
         ):
             executor.execute(plan)
+
+
+class SynchronizationApplicationServiceTests(TestCase):
+    def test_orchestrates_all_resources_in_dependency_order(self):
+        integration = FakeSynchronizingIntegration()
+        directory = IntegrationDirectory((integration,))
+        service = SynchronizationApplicationService(
+            SynchronizationPlanner(directory, owner="fake"),
+            SynchronizationExecutor(directory, owner="fake"),
+            resources=("all", "groups", "products"),
+            resource_order=("groups", "products"),
+        )
+        announced = []
+        planned = []
+
+        run = service.synchronize(
+            "household",
+            "all",
+            apply=True,
+            on_resource=announced.append,
+            on_plan=lambda plan: planned.append(plan.resource),
+        )
+
+        self.assertTrue(run.applied)
+        self.assertEqual(
+            tuple(plan.resource for plan in run.plans),
+            ("groups", "products"),
+        )
+        self.assertEqual(
+            tuple(result.resource for result in run.results),
+            ("groups", "products"),
+        )
+        self.assertEqual(announced, ["groups", "products"])
+        self.assertEqual(planned, ["groups", "products"])
+
+    def test_dry_run_plans_without_executing(self):
+        class ApplyForbiddenIntegration(FakeSynchronizingIntegration):
+            def apply(self, plan):
+                raise AssertionError("Dry-run attempted execution")
+
+        directory = IntegrationDirectory(
+            (ApplyForbiddenIntegration(),)
+        )
+        service = SynchronizationApplicationService(
+            SynchronizationPlanner(directory, owner="fake"),
+            SynchronizationExecutor(directory, owner="fake"),
+            resources=("all", "products"),
+            resource_order=("products",),
+        )
+
+        run = service.synchronize(
+            "household",
+            "products",
+            apply=False,
+        )
+
+        self.assertFalse(run.applied)
+        self.assertEqual(len(run.plans), 1)
+        self.assertEqual(run.results, ())

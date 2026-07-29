@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Callable
+
 from casita.application.coordination import IntegrationDirectory
 from casita.integrations import (
     SyncAction,
@@ -10,6 +13,15 @@ from casita.integrations import (
     SynchronizingIntegration,
     SyncRequest,
 )
+
+
+@dataclass(frozen=True, slots=True)
+class SynchronizationRun:
+    """Collect structured plans and optional execution results."""
+
+    plans: tuple[SynchronizationPlan, ...]
+    results: tuple[SynchronizationResult, ...]
+    applied: bool
 
 
 class SynchronizationPlanner:
@@ -132,3 +144,71 @@ class SynchronizationExecutor:
             )
 
         return result
+
+
+class SynchronizationApplicationService:
+    """Orchestrate planning and execution for one or all resources."""
+
+    def __init__(
+        self,
+        planner: SynchronizationPlanner,
+        executor: SynchronizationExecutor,
+        *,
+        resources: tuple[str, ...],
+        resource_order: tuple[str, ...],
+        all_resource: str = "all",
+    ) -> None:
+        self._planner = planner
+        self._executor = executor
+        self._resources = resources
+        self._resource_order = resource_order
+        self._all_resource = all_resource
+
+    @property
+    def resources(self) -> tuple[str, ...]:
+        """Return every command accepted by the synchronization CLI."""
+
+        return self._resources
+
+    def synchronize(
+        self,
+        household_id: str,
+        resource: str,
+        *,
+        apply: bool = False,
+        on_resource: Callable[[str], None] | None = None,
+        on_plan: Callable[[SynchronizationPlan], None] | None = None,
+    ) -> SynchronizationRun:
+        """Plan and optionally execute selected resources in order."""
+
+        if resource not in self._resources:
+            raise ValueError(
+                f"Unknown synchronization resource {resource!r}."
+            )
+
+        selected = (
+            self._resource_order
+            if resource == self._all_resource
+            else (resource,)
+        )
+        plans = []
+        results = []
+
+        for resource_name in selected:
+            if len(selected) > 1 and on_resource is not None:
+                on_resource(resource_name)
+
+            plan = self._planner.plan(household_id, resource_name)
+            plans.append(plan)
+
+            if on_plan is not None:
+                on_plan(plan)
+
+            if apply:
+                results.append(self._executor.execute(plan))
+
+        return SynchronizationRun(
+            plans=tuple(plans),
+            results=tuple(results),
+            applied=apply,
+        )

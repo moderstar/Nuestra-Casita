@@ -25,8 +25,10 @@ from casita.application.services import (
     ShoppingService,
 )
 from casita.application.synchronization import (
+    SynchronizationApplicationService,
     SynchronizationExecutor,
     SynchronizationPlanner,
+    SynchronizationRun,
 )
 
 __all__ = [
@@ -50,4 +52,6 @@ __all__ = [
     "SyncService",
     "SynchronizationPlanner",
     "SynchronizationExecutor",
+    "SynchronizationApplicationService",
+    "SynchronizationRun",
 ]

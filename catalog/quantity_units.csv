@@ -1,0 +1,5 @@
+Quantity Unit,Plural Name,Plural Forms,Description,Active
+Each,Each,,Individual items counted separately,1
+Bag,Bags,,Items stocked or purchased by the bag,1
+Package,Packages,,Items stocked or purchased by the package,1
+Bottle,Bottles,,Liquids and other products stored in bottles,1

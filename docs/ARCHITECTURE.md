@@ -32,5 +32,14 @@ and apply engines contain no Product- or Product-Group-specific API logic.
 - Requires no lookup tables
 - CLI: `python tools/casita.py sync product-groups [--apply]`
 
+### Quantity Units
+
+- Catalog: `catalog/quantity_units.csv`
+- Grocy endpoint: `/objects/quantity_units`
+- Fields: `name`, `name_plural`, `plural_forms`, `description`, and `active`
+- Requires no lookup tables
+- CLI: `python tools/casita.py sync quantity-units [--apply]`
+
 Products retain the backward-compatible `sync_products()` entry point while
-using the same generic synchronization and apply engines as Product Groups.
+using the same generic synchronization and apply engines as Product Groups
+and Quantity Units.

@@ -10,12 +10,14 @@ from typing import Any
 from casita.resources import (
     PRODUCT_GROUP_RESOURCE,
     PRODUCT_RESOURCE,
+    QUANTITY_UNIT_RESOURCE,
 )
 
 
 RESOURCES: dict[str, dict[str, Any]] = {
     PRODUCT_GROUP_RESOURCE["name"]: PRODUCT_GROUP_RESOURCE,
     PRODUCT_RESOURCE["name"]: PRODUCT_RESOURCE,
+    QUANTITY_UNIT_RESOURCE["name"]: QUANTITY_UNIT_RESOURCE,
 }
 
 

@@ -55,27 +55,9 @@ Examples include:
 
 ## Integration Architecture
 
-The synchronization flow is:
-
-```text
-Authoritative Catalogs and Configuration
-                  |
-                  v
-              Validation
-                  |
-                  v
-            Planning Engine
-                  |
-                  v
-        Synchronization Engine
-                  |
-       +----------+----------+
-       |          |          |
-       v          v          v
-     Grocy    Nextcloud  Home Assistant
-       |
-       +------> Additional Integrations
-```
+Nuestra Casita now has backend-neutral domain, integration, synchronization,
+and dashboard contracts. External systems translate their APIs into household
+models before data reaches application services or clients.
 
 Planned integration targets include:
 
@@ -92,10 +74,23 @@ The registry, resource definitions, payload builders, planning engine,
 synchronization engine, and apply engine form the reusable foundation for
 these integrations.
 
+## Platform Foundation
+
+- [x] Define backend-neutral household domain models
+- [x] Define common integration capabilities and read contract
+- [x] Define optional declarative synchronization contract
+- [x] Define the versioned kitchen-dashboard data contract
+- [x] Document capability ownership and cache expectations
+- [ ] Add platform integration registry and household configuration
+- [ ] Wrap the existing Grocy engine in a Grocy integration adapter
+- [ ] Add application services for capability reads and snapshot assembly
+- [ ] Select persistence and caching only when required by an integration
+- [ ] Add normalized platform events and notifications
+
 ## Current Development Priority
 
-The current priority is completing a robust synchronization framework for
-Grocy 4.6.
+The current priority is preserving the robust Grocy 4.6 integration while
+building the orchestration layer one demonstrated integration at a time.
 
 Products, Product Groups, Quantity Units, Locations, Shopping Locations,
 Task Categories, Chores, Batteries, Recipe Definitions, Recipe Positions,
@@ -128,7 +123,8 @@ and Userfields are implemented through the generic synchronization framework.
 
 ## Next Integration Phases
 
-After the Grocy synchronization framework is complete:
+The next integration should exercise the new platform contracts before
+additional infrastructure is introduced.
 
 ### Home Assistant
 
@@ -183,6 +179,9 @@ Initial dashboard areas are expected to include:
 - Home status and common automations
 - Family photos
 
+The versioned internal dashboard contract is now defined. Dashboard UI,
+transport, authentication, and deployment remain intentionally deferred.
+
 ## Reproducibility Goal
 
 The complete system should be recoverable after reinstalling Proxmox.
@@ -193,7 +192,7 @@ Casita and reconnect it to the self-hosted applications it orchestrates.
 
 ## Project Direction
 
-Development will continue one integration and one resource at a time while
+Development will continue one integration and one capability at a time while
 preserving the generic architecture.
 
 Short-term work should solve the immediate Grocy synchronization milestones

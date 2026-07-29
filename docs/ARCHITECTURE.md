@@ -1,13 +1,34 @@
 # Nuestra Casita Architecture
 
-Nuestra Casita uses registered resource definitions to synchronize
-version-controlled catalogs with Grocy.
+Nuestra Casita is a backend-neutral household orchestration platform. Grocy
+synchronization is its first integration, not the platform boundary.
+
+The core architecture is documented in:
+
+- [CORE_ARCHITECTURE.md](CORE_ARCHITECTURE.md)
+- [INTEGRATION_CONTRACT.md](INTEGRATION_CONTRACT.md)
+- [DASHBOARD_CONTRACT.md](DASHBOARD_CONTRACT.md)
+
+The foundational code packages are:
+
+- `casita.domain`: immutable household models
+- `casita.integrations`: external-system and synchronization contracts
+- `casita.dashboard`: the internal kitchen-dashboard data contract
+
+The existing Grocy implementation remains unchanged and operational while a
+future Grocy adapter is developed around it.
+
+## Grocy Integration Architecture
+
+The current Grocy integration uses registered resource definitions to
+synchronize version-controlled catalogs with Grocy.
 
 The synchronization flow is:
 
 1. Load a resource definition from `casita.registry`.
 2. Load its CSV catalog and Grocy endpoint through `casita.sync_engine`.
-3. Match objects by normalized name and build a create, update, or match plan.
+3. Match objects by normalized or resource-defined identity and build a
+   create, update, or match plan.
 4. Display the plan without changing Grocy.
 5. Apply the plan only when the user supplies `--apply`.
 

@@ -1,96 +1,66 @@
-# 🏠 Nuestra Casita
+# Nuestra Casita
 
-Nuestra Casita is a Git-based household management project built around Grocy, Home Assistant, and automation.
+Nuestra Casita is the orchestration platform for a self-hosted household.
 
-The goal is to make it possible to recreate an entire household inventory system from scratch using version-controlled CSV files and Python automation.
+It provides one household language above specialized systems such as Grocy,
+Home Assistant, Nextcloud, Actual Budget, and Immich. Those applications keep
+their native strengths; Nuestra Casita translates, synchronizes, and combines
+their data without exposing vendor APIs to future clients.
 
----
+## Current Capabilities
 
-# Features
+- Git-backed declarative synchronization for Grocy 4.6
+- Generic planning, comparison, identity, apply, and ordered orchestration
+- Backend-neutral household domain models
+- Common integration and synchronization contracts
+- Versioned internal contract for the future kitchen dashboard
+- Architecture designed for reproducible Docker and Proxmox deployments
 
-- 📦 Product catalog stored in CSV
-- 🛒 Automatic Grocy product importer
-- 🏷 Product Group automation
-- 📍 Location automation
-- 🧮 Quantity Unit lookups
-- 🔁 Duplicate protection
-- 🔐 Secure API configuration using `.env`
-- 📝 Git version controlled
+No dashboard, frontend, API server, authentication system, or platform
+database is implemented yet.
 
----
+## Architecture
 
-# Project Structure
+- [Core architecture](docs/CORE_ARCHITECTURE.md)
+- [Integration contract](docs/INTEGRATION_CONTRACT.md)
+- [Dashboard contract](docs/DASHBOARD_CONTRACT.md)
+- [Grocy integration architecture](docs/ARCHITECTURE.md)
+- [Project roadmap](PROJECT_ROADMAP.md)
+- [Grocy 4.6 API inventory](docs/GROCY_4_6_API_RESOURCES.md)
 
+## Project Structure
+
+```text
+catalog/                  Git-backed declarative catalogs
+docs/                     Platform and integration documentation
+tools/casita/domain/      Household domain models
+tools/casita/integrations Integration contracts
+tools/casita/dashboard/   Internal dashboard contract
+tools/casita/payloads/    Grocy payload builders
+tools/casita/resources/   Grocy resource definitions
 ```
-Nuestra-Casita/
-│
-├── catalog/
-│   ├── products.csv
-│   ├── recipes.csv
-│   ├── chores.csv
-│   ├── stores.csv
-│   ├── locations.csv
-│   └── shopping_preferences.csv
-│
-├── docs/
-│
-├── grocy/
-│
-├── home-assistant/
-│
-└── tools/
-```
 
----
+## Grocy Synchronization
 
-# Current Status
-
-✅ Product Groups
-
-✅ Shopping Locations
-
-✅ Quantity Units
-
-✅ Product Importer
-
-✅ Duplicate Protection
-
-⬜ Recipe Importer
-
-⬜ Barcode Support
-
-⬜ Shopping Preferences
-
-⬜ Home Assistant Dashboard
-
-⬜ Meal Planning
-
----
-
-# Quick Start
-
-Clone the repository.
-
-Create a `.env` file.
-
-Run:
+Dry-run every registered Grocy resource:
 
 ```bash
-python tools/setup_master_data.py
+python tools/casita.py sync all
 ```
 
-Import products:
+Apply the generated plans:
 
 ```bash
-python tools/import_products.py
+python tools/casita.py sync all --apply
 ```
 
----
+Individual resource commands remain available. See
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the complete list and
+dependency order.
 
-# Roadmap
+## Long-Term Direction
 
-See:
-
-```
-docs/ROADMAP.md
-```
+The primary household interface will be a wall-mounted kitchen touchscreen
+that consumes only Nuestra Casita models. It will combine inventory, shopping,
+recipes, chores, calendars, finances, home state, notifications, and family
+media without requiring household members to navigate separate applications.

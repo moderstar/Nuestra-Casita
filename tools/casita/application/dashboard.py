@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from casita.application.coordination import IntegrationDirectory
 from casita.application.services import (
     BudgetService,
     CalendarService,
@@ -63,28 +62,6 @@ class DashboardService:
         self._devices = devices
         self._media = media
         self._contract = contract
-
-    @classmethod
-    def from_integrations(
-        cls,
-        integrations: IntegrationDirectory,
-        *,
-        contract: DashboardContract = DEFAULT_DASHBOARD_CONTRACT,
-    ) -> DashboardService:
-        """Create the default service composition for injected integrations."""
-
-        return cls(
-            shopping=ShoppingService(integrations),
-            inventory=InventoryService(integrations),
-            recipes=RecipeService(integrations),
-            chores=ChoreService(integrations),
-            calendar=CalendarService(integrations),
-            budget=BudgetService(integrations),
-            notifications=NotificationService(integrations),
-            devices=DeviceService(integrations),
-            media=MediaService(integrations),
-            contract=contract,
-        )
 
     def build(
         self,

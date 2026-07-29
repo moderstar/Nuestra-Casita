@@ -101,20 +101,22 @@ It:
   failures.
 - Uses the configured dashboard contract version.
 
-`DashboardService.from_integrations()` provides default wiring while retaining
-constructor injection for tests and future specialized compositions.
+`DashboardService` receives its capability services through constructor
+injection. `casita.bootstrap` owns the default application wiring.
 
 ## Integration Discovery and Ownership
 
 The application layer does not contain a global registry.
 
-The future process entry point or composition root will:
+The composition root in `casita.bootstrap`:
 
-1. Construct configured adapter instances.
-2. Pass them to `IntegrationDirectory`.
+1. Receives explicitly constructed adapter instances from the process entry
+   point.
+2. Passes them to `IntegrationDirectory`.
 3. Optionally supply capability ownership.
 4. Construct application services.
-5. Expose application operations through a future transport.
+5. Construct `DashboardService`.
+6. Return a fully assembled application to a future transport.
 
 Without explicit ownership, every adapter declaring a capability contributes
 in registration order. With ownership, only the named adapters contribute and
@@ -173,7 +175,7 @@ It must not:
 ## Deferred Work
 
 - Real Grocy domain-read adapter
-- Composition-root configuration
+- Deployment configuration loading
 - Cache and stale-record retrieval
 - Persistence
 - Write/command services

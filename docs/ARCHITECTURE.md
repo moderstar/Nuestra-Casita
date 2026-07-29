@@ -7,6 +7,7 @@ The core architecture is documented in:
 
 - [CORE_ARCHITECTURE.md](CORE_ARCHITECTURE.md)
 - [APPLICATION_LAYER.md](APPLICATION_LAYER.md)
+- [COMPOSITION_ROOT.md](COMPOSITION_ROOT.md)
 - [INTEGRATION_CONTRACT.md](INTEGRATION_CONTRACT.md)
 - [DASHBOARD_CONTRACT.md](DASHBOARD_CONTRACT.md)
 
@@ -14,6 +15,8 @@ The foundational code packages are:
 
 - `casita.domain`: immutable household models
 - `casita.integrations`: external-system and synchronization contracts
+- `casita.application`: household services and dashboard assembly
+- `casita.bootstrap`: explicit application construction and object lifetime
 - `casita.dashboard`: the internal kitchen-dashboard data contract
 
 The existing Grocy implementation remains unchanged and operational while a

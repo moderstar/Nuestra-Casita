@@ -84,7 +84,8 @@ these integrations.
 - [x] Add instance-scoped integration discovery and capability ownership
 - [x] Add household capability services
 - [x] Add backend-neutral dashboard snapshot assembly
-- [ ] Add composition-root household and integration configuration
+- [x] Add explicit composition root and application object lifetime
+- [ ] Add deployment-backed household and integration configuration
 - [ ] Wrap the existing Grocy engine in a Grocy integration adapter
 - [ ] Select persistence and caching only when required by an integration
 - [ ] Add normalized platform events and notifications

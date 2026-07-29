@@ -47,10 +47,20 @@ def build_grocy_application(
 ) -> NuestraCasitaApplication:
     """Build an application whose household data is owned by Grocy."""
 
-    config = configuration or load_configuration()
+    config = configuration or load_configuration(
+        strict=not (base_url and api_key),
+    )
+
+    if base_url or api_key:
+        config = replace(
+            config,
+            grocy_url=base_url or config.grocy_url,
+            grocy_api_key=api_key or config.grocy_api_key,
+        )
+
     client = GrocyApiClient(
-        base_url or config.grocy_url,
-        api_key or config.grocy_api_key,
+        config.grocy_url,
+        config.grocy_api_key,
     )
     configure_client(client)
     grocy = GrocyReadAdapter(

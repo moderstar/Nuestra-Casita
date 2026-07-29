@@ -51,3 +51,19 @@ and apply engines contain no Product- or Product-Group-specific API logic.
 Products retain the backward-compatible `sync_products()` entry point while
 using the same generic synchronization and apply engines as Product Groups
 and the other registered resources.
+
+## Complete Synchronization
+
+The `sync all` command runs registered resources in dependency-aware order:
+
+1. Product Groups
+2. Quantity Units
+3. Locations
+4. Products
+
+The order is defined by `SYNC_RESOURCE_ORDER` in `casita.registry`, not by the
+CLI. The orchestration workflow invokes the same synchronization function used
+by each individual resource command.
+
+- Dry run: `python tools/casita.py sync all`
+- Apply: `python tools/casita.py sync all --apply`

@@ -113,7 +113,7 @@ through the generic synchronization framework.
 - [ ] Remaining Grocy resources
 - [ ] Refine the generic comparison engine where appropriate
 - [ ] Add automated tests
-- [ ] Add a `sync all` command
+- [x] Add a `sync all` command
 
 ## Next Integration Phases
 

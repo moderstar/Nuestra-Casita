@@ -22,6 +22,15 @@ RESOURCES: dict[str, dict[str, Any]] = {
     QUANTITY_UNIT_RESOURCE["name"]: QUANTITY_UNIT_RESOURCE,
 }
 
+SYNC_ALL_COMMAND = "all"
+
+SYNC_RESOURCE_ORDER = (
+    "product-groups",
+    "quantity-units",
+    "locations",
+    "products",
+)
+
 
 def list_resources() -> list[str]:
     """
@@ -29,6 +38,37 @@ def list_resources() -> list[str]:
     """
 
     return sorted(RESOURCES)
+
+
+def list_sync_resources() -> list[str]:
+    """
+    Return registered resources in dependency-aware synchronization order.
+    """
+
+    missing_resources = [
+        resource_name
+        for resource_name in SYNC_RESOURCE_ORDER
+        if resource_name not in RESOURCES
+    ]
+
+    if missing_resources:
+        missing = ", ".join(missing_resources)
+        raise ValueError(
+            f"Sync order contains unregistered resources: {missing}"
+        )
+
+    return list(SYNC_RESOURCE_ORDER)
+
+
+def list_sync_commands() -> list[str]:
+    """
+    Return every command accepted by the sync CLI.
+    """
+
+    return [
+        SYNC_ALL_COMMAND,
+        *list_resources(),
+    ]
 
 
 def get_resource(resource_name: str) -> dict[str, Any]:

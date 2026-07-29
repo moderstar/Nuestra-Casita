@@ -4,7 +4,11 @@ from typing import Any
 
 from casita.apply import apply_plan
 from casita.lookups import build_lookups
-from casita.registry import get_resource
+from casita.registry import (
+    SYNC_ALL_COMMAND,
+    get_resource,
+    list_sync_resources,
+)
 from casita.sync_engine import (
     build_resource_plan,
     load_catalog,
@@ -100,6 +104,45 @@ def sync_registered_resource(
         print(f"    python tools/casita.py sync {resource_name} --apply")
 
     return plan
+
+
+def sync_all(
+    *,
+    apply: bool = False,
+) -> dict[str, dict[str, list[dict[str, Any]]]]:
+    """Synchronize every registered orchestration resource in order."""
+
+    plans: dict[str, dict[str, list[dict[str, Any]]]] = {}
+
+    for resource_name in list_sync_resources():
+        print()
+        print("#" * 40)
+        print(f"Synchronizing {resource_name.replace('-', ' ').title()}")
+        print("#" * 40)
+        print()
+
+        plans[resource_name] = sync_registered_resource(
+            resource_name,
+            apply=apply,
+        )
+
+    return plans
+
+
+def sync_command(
+    command_name: str,
+    *,
+    apply: bool = False,
+):
+    """Route one CLI sync command to its synchronization workflow."""
+
+    if command_name == SYNC_ALL_COMMAND:
+        return sync_all(apply=apply)
+
+    return sync_registered_resource(
+        command_name,
+        apply=apply,
+    )
 
 
 def sync_products(apply: bool = False):

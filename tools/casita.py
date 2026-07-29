@@ -2,8 +2,11 @@ import argparse
 
 from casita.exporter import export_products
 from casita.lookups import show
-from casita.registry import list_resources
-from casita.sync import sync_registered_resource
+from casita.registry import (
+    SYNC_ALL_COMMAND,
+    list_sync_commands,
+)
+from casita.sync import sync_command
 from casita.validator import validate
 
 
@@ -67,10 +70,17 @@ def main():
         required=True
     )
 
-    for resource_name in list_resources():
+    for resource_name in list_sync_commands():
+        if resource_name == SYNC_ALL_COMMAND:
+            help_text = "Synchronize all resources with Grocy"
+        else:
+            help_text = (
+                f"Synchronize {resource_name.replace('-', ' ')} with Grocy"
+            )
+
         sync_resource_parser = sync_subparsers.add_parser(
             resource_name,
-            help=f"Synchronize {resource_name.replace('-', ' ')} with Grocy"
+            help=help_text,
         )
 
         sync_resource_parser.add_argument(
@@ -96,7 +106,7 @@ def main():
             export_products()
 
     elif args.command == "sync":
-        sync_registered_resource(
+        sync_command(
             args.sync_command,
             apply=args.apply,
         )

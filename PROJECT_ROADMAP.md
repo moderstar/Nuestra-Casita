@@ -97,8 +97,8 @@ these integrations.
 The current priority is completing a robust synchronization framework for
 Grocy 4.6.
 
-Products, Product Groups, and Quantity Units are implemented through the
-generic synchronization framework.
+Products, Product Groups, Quantity Units, and Locations are implemented
+through the generic synchronization framework.
 
 ### Grocy Roadmap
 
@@ -106,7 +106,7 @@ generic synchronization framework.
 - [x] Product Groups framework integration
 - [x] Verify Product Groups against the live Grocy 4.6 instance
 - [x] Quantity Units
-- [ ] Locations
+- [x] Locations
 - [ ] Shopping Locations
 - [ ] Batteries
 - [ ] Chores

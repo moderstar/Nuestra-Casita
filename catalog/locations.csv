@@ -1,13 +1,13 @@
-Location
-Fridge
-Freezer
-Pantry
-Counter
-Coffee Station
-Spice Cabinet
-Cleaning Closet
-Laundry Room
-Bathroom Cabinet
-Bathroom Closet
-Medicine Cabinet
-Garage Shelf
+Location,Description,Is Freezer,Active
+Fridge,Refrigerated food storage,0,1
+Freezer,Frozen food storage,1,1
+Pantry,Shelf-stable food storage,0,1
+Counter,Room-temperature kitchen storage,0,1
+Coffee Station,Coffee and beverage supplies,0,1
+Spice Cabinet,Spices seasonings and cooking ingredients,0,1
+Cleaning Closet,Household cleaning supplies,0,1
+Laundry Room,Laundry supplies and equipment,0,1
+Bathroom Cabinet,Everyday bathroom supplies,0,1
+Bathroom Closet,Bulk bathroom and linen storage,0,1
+Medicine Cabinet,Medication and first-aid supplies,0,1
+Garage Shelf,Garage and utility storage,0,1

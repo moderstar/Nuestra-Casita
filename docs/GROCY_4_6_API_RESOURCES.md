@@ -26,7 +26,7 @@ Status meanings:
 | `shopping_lists` | Planned | Named shopping lists |
 | `shopping_locations` | Implemented | Shopping stores and locations |
 | `recipes` | Implemented | Declarative Recipe definitions; ingredients and runtime serving state are excluded |
-| `recipes_pos` | Planned | Recipe ingredients and positions |
+| `recipes_pos` | Implemented | Declarative Recipe ingredients; fulfillment and calculated state are excluded |
 | `recipes_nestings` | Planned | Nested recipe relationships |
 | `tasks` | Planned | Household task definitions |
 | `task_categories` | Implemented | Task category master data |

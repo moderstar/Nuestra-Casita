@@ -50,6 +50,14 @@ from casita.payloads.recipes import (
     parse_positive_number as parse_recipe_positive_number,
     resolve_product_id as resolve_recipe_product_id,
 )
+from casita.payloads.recipe_positions import (
+    build_recipe_position_create_payload,
+    build_recipe_position_update_payload,
+    parse_boolean as parse_recipe_position_boolean,
+    parse_positive_number as parse_recipe_position_positive_number,
+    recipe_position_name as recipe_position_display_name,
+    resolve_recipe_position_relationships,
+)
 from casita.payloads.shopping_locations import (
     build_shopping_location_create_payload,
     build_shopping_location_update_payload,
@@ -76,6 +84,8 @@ __all__ = [
     "build_product_update_payload",
     "build_recipe_create_payload",
     "build_recipe_update_payload",
+    "build_recipe_position_create_payload",
+    "build_recipe_position_update_payload",
     "build_shopping_location_create_payload",
     "build_shopping_location_update_payload",
     "build_task_category_create_payload",
@@ -89,6 +99,10 @@ __all__ = [
     "parse_quantity_unit_active",
     "parse_recipe_boolean",
     "parse_recipe_positive_number",
+    "parse_recipe_position_boolean",
+    "parse_recipe_position_positive_number",
+    "recipe_position_display_name",
+    "resolve_recipe_position_relationships",
     "resolve_recipe_product_id",
     "parse_shopping_location_active",
     "parse_task_category_active",

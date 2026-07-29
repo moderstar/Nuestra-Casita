@@ -99,6 +99,108 @@ def build_name_index(
     return index
 
 
+def get_row_identity(
+    resource: dict[str, Any],
+    row: dict[str, Any],
+    lookups: dict[str, dict[Any, Any]],
+    *,
+    source: str,
+) -> str:
+    """Return a normalized identity for one catalog or Grocy row."""
+
+    identity_builder = resource.get(f"{source}_identity")
+
+    if callable(identity_builder):
+        identity = normalize_name(
+            identity_builder(row, lookups)
+        )
+    else:
+        field_name = require_resource_text(
+            resource,
+            f"{source}_name_field",
+        )
+        identity = normalize_name(row.get(field_name))
+
+    if identity == "":
+        raise ValueError(
+            f"A {source} object has a blank synchronization identity."
+        )
+
+    return identity
+
+
+def get_catalog_display_name(
+    resource: dict[str, Any],
+    catalog_row: dict[str, Any],
+    lookups: dict[str, dict[Any, Any]],
+) -> str:
+    """Return the user-facing name for one catalog row."""
+
+    display_name_builder = resource.get("display_name")
+
+    if callable(display_name_builder):
+        name = str(
+            display_name_builder(catalog_row, lookups)
+        ).strip()
+    else:
+        catalog_name_field = require_resource_text(
+            resource,
+            "catalog_name_field",
+        )
+        name = str(
+            catalog_row.get(catalog_name_field, "")
+        ).strip()
+
+    if name == "":
+        if not callable(display_name_builder):
+            raise ValueError(
+                f"A catalog row is missing {catalog_name_field!r}."
+            )
+
+        raise ValueError(
+            "A catalog row has a blank display name."
+        )
+
+    return name
+
+
+def build_identity_index(
+    resource: dict[str, Any],
+    rows: list[dict[str, Any]],
+    lookups: dict[str, dict[Any, Any]],
+) -> dict[str, dict[str, Any]]:
+    """Index Grocy objects by the resource-defined identity."""
+
+    if not callable(resource.get("grocy_identity")):
+        grocy_name_field = require_resource_text(
+            resource,
+            "grocy_name_field",
+        )
+        return build_name_index(rows, grocy_name_field)
+
+    index: dict[str, dict[str, Any]] = {}
+
+    for row in rows:
+        if not isinstance(row, dict):
+            raise ValueError("Every Grocy object must be a dictionary.")
+
+        identity = get_row_identity(
+            resource,
+            row,
+            lookups,
+            source="grocy",
+        )
+
+        if identity in index:
+            raise ValueError(
+                f"Grocy contains duplicate identity {identity!r}."
+            )
+
+        index[identity] = row
+
+    return index
+
+
 def build_resource_plan(
     resource: dict[str, Any],
     catalog: list[dict[str, Any]],
@@ -110,14 +212,6 @@ def build_resource_plan(
     if not isinstance(resource, dict):
         raise ValueError("The resource definition must be a dictionary.")
 
-    catalog_name_field = require_resource_text(
-        resource,
-        "catalog_name_field",
-    )
-    grocy_name_field = require_resource_text(
-        resource,
-        "grocy_name_field",
-    )
     grocy_id_field = require_resource_text(
         resource,
         "grocy_id_field",
@@ -129,23 +223,38 @@ def build_resource_plan(
         raise ValueError("Resource field 'compare' must be callable.")
 
     plan = build_plan()
-    grocy_by_name = build_name_index(grocy, grocy_name_field)
-    seen_catalog_names: set[str] = set()
+    grocy_by_identity = build_identity_index(
+        resource,
+        grocy,
+        lookups,
+    )
+    seen_catalog_identities: set[str] = set()
 
     for catalog_row in catalog:
-        name = str(catalog_row.get(catalog_name_field, "")).strip()
-        name_key = normalize_name(name)
+        name = get_catalog_display_name(
+            resource,
+            catalog_row,
+            lookups,
+        )
+        identity = get_row_identity(
+            resource,
+            catalog_row,
+            lookups,
+            source="catalog",
+        )
 
-        if name_key == "":
+        if identity in seen_catalog_identities:
+            if not callable(resource.get("catalog_identity")):
+                raise ValueError(
+                    f"Catalog contains duplicate name {name!r}."
+                )
+
             raise ValueError(
-                f"A catalog row is missing {catalog_name_field!r}."
+                f"Catalog contains duplicate identity {identity!r}."
             )
 
-        if name_key in seen_catalog_names:
-            raise ValueError(f"Catalog contains duplicate name {name!r}.")
-
-        seen_catalog_names.add(name_key)
-        grocy_row = grocy_by_name.get(name_key)
+        seen_catalog_identities.add(identity)
+        grocy_row = grocy_by_identity.get(identity)
 
         if grocy_row is None:
             plan["create"].append(

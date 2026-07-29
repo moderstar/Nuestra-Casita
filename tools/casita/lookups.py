@@ -19,6 +19,9 @@ def build_lookups():
 
         "products": {},
         "products_by_id": {},
+
+        "recipes": {},
+        "recipes_by_id": {},
     }
 
     for row in get("/objects/locations"):
@@ -40,6 +43,10 @@ def build_lookups():
     for row in get("/objects/products"):
         lookups["products"][row["name"]] = row["id"]
         lookups["products_by_id"][row["id"]] = row["name"]
+
+    for row in get("/objects/recipes?query[]=type=normal"):
+        lookups["recipes"][row["name"]] = row["id"]
+        lookups["recipes_by_id"][row["id"]] = row["name"]
 
     return lookups
 

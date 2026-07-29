@@ -1,11 +1,11 @@
-Store
-Costco
-Safeway
-Trader Joe's
-Target
-Amazon
-Whole Foods
-CVS
-Walgreens
-Home Depot
-Lowe's
+Store,Description,Active
+Costco,Bulk groceries and household supplies,1
+Safeway,General grocery shopping,1
+Trader Joe's,Specialty groceries and prepared foods,1
+Target,General merchandise and household supplies,1
+Amazon,Online household shopping,1
+Whole Foods,Natural and specialty groceries,1
+CVS,Pharmacy and convenience shopping,1
+Walgreens,Pharmacy and convenience shopping,1
+Home Depot,Home improvement and hardware supplies,1
+Lowe's,Home improvement and hardware supplies,1

@@ -48,6 +48,14 @@ and apply engines contain no Product- or Product-Group-specific API logic.
 - Requires no lookup tables
 - CLI: `python tools/casita.py sync locations [--apply]`
 
+### Shopping Locations
+
+- Catalog: `catalog/stores.csv`
+- Grocy endpoint: `/objects/shopping_locations`
+- Fields: `name`, `description`, and `active`
+- Requires no lookup tables
+- CLI: `python tools/casita.py sync shopping-locations [--apply]`
+
 Products retain the backward-compatible `sync_products()` entry point while
 using the same generic synchronization and apply engines as Product Groups
 and the other registered resources.
@@ -59,7 +67,8 @@ The `sync all` command runs registered resources in dependency-aware order:
 1. Product Groups
 2. Quantity Units
 3. Locations
-4. Products
+4. Shopping Locations
+5. Products
 
 The order is defined by `SYNC_RESOURCE_ORDER` in `casita.registry`, not by the
 CLI. The orchestration workflow invokes the same synchronization function used

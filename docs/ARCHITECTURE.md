@@ -88,6 +88,21 @@ Chore runtime fields are also excluded: `next_execution_assigned_to_user_id`,
 `rescheduled_date`, `rescheduled_next_execution_assigned_to_user_id`,
 `row_created_timestamp`, and all `chores_log` execution history.
 
+### Batteries
+
+- Catalog: `catalog/batteries.csv`
+- Grocy endpoint: `/objects/batteries`
+- Managed definition fields: `name`, `description`, `used_in`,
+  `charge_interval_days`, and `active`
+- `charge_interval_days` must be a nonnegative integer; `0` disables
+  next-charge suggestions
+- Requires no lookup tables
+- CLI: `python tools/casita.py sync batteries [--apply]`
+
+Battery operational state is intentionally excluded. Charge history,
+undo state, tracking timestamps, and calculated next-charge status are stored
+in `battery_charge_cycles` or derived views rather than the Battery definition.
+
 Products retain the backward-compatible `sync_products()` entry point while
 using the same generic synchronization and apply engines as Product Groups
 and the other registered resources.
@@ -103,6 +118,7 @@ The `sync all` command runs registered resources in dependency-aware order:
 5. Products
 6. Task Categories
 7. Chores
+8. Batteries
 
 The order is defined by `SYNC_RESOURCE_ORDER` in `casita.registry`, not by the
 CLI. The orchestration workflow invokes the same synchronization function used

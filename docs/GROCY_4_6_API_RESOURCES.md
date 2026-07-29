@@ -18,7 +18,7 @@ Status meanings:
 | `products` | Implemented | Product master data |
 | `chores` | Implemented | Recurring chore definitions; execution state is excluded |
 | `product_barcodes` | Planned | Product barcode mappings |
-| `batteries` | Planned | Battery master data |
+| `batteries` | Implemented | Battery definitions; charge history is excluded |
 | `locations` | Implemented | Stock locations |
 | `quantity_units` | Implemented | Quantity unit master data |
 | `quantity_unit_conversions` | Planned | Quantity unit conversion rules |

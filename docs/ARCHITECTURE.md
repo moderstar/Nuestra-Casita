@@ -64,6 +64,30 @@ and apply engines contain no Product- or Product-Group-specific API logic.
 - Requires no lookup tables
 - CLI: `python tools/casita.py sync task-categories [--apply]`
 
+### Chores
+
+- Catalog: `catalog/chores.csv`
+- Grocy endpoint: `/objects/chores`
+- Managed definition fields: `name`, `description`, `period_type`,
+  `period_interval`, `period_days`, `period_config`, `track_date_only`,
+  `rollover`, `consume_product_on_execution`, `product_id`,
+  `product_amount`, and `active`
+- `start_date` is required for creation but intentionally excluded from
+  updates because Grocy treats it as immutable after the first execution
+- Optional product consumption resolves `product_id` through the Products
+  lookup
+- Task Categories are not related to Chores in the native Grocy 4.6 schema
+- CLI: `python tools/casita.py sync chores [--apply]`
+
+Chore assignment fields are intentionally not managed. Grocy stores assigned
+users as instance-specific IDs and recalculates the next assignment through a
+separate operational API after edits. New synchronized Chores default to
+`no-assignment`; existing assignment configuration remains untouched.
+
+Chore runtime fields are also excluded: `next_execution_assigned_to_user_id`,
+`rescheduled_date`, `rescheduled_next_execution_assigned_to_user_id`,
+`row_created_timestamp`, and all `chores_log` execution history.
+
 Products retain the backward-compatible `sync_products()` entry point while
 using the same generic synchronization and apply engines as Product Groups
 and the other registered resources.
@@ -78,6 +102,7 @@ The `sync all` command runs registered resources in dependency-aware order:
 4. Shopping Locations
 5. Products
 6. Task Categories
+7. Chores
 
 The order is defined by `SYNC_RESOURCE_ORDER` in `casita.registry`, not by the
 CLI. The orchestration workflow invokes the same synchronization function used

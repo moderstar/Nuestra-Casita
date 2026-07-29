@@ -5,6 +5,17 @@ Each module in this package converts catalog data into payloads accepted by
 the Grocy REST API.
 """
 
+from casita.payloads.chores import (
+    build_chore_create_payload,
+    build_chore_update_payload,
+    parse_active as parse_chore_active,
+    parse_boolean as parse_chore_boolean,
+    parse_period_config as parse_chore_period_config,
+    parse_period_type as parse_chore_period_type,
+    parse_positive_integer as parse_chore_positive_integer,
+    parse_positive_number as parse_chore_positive_number,
+    parse_start_date as parse_chore_start_date,
+)
 from casita.payloads.locations import (
     build_location_create_payload,
     build_location_update_payload,
@@ -38,6 +49,8 @@ from casita.payloads.task_categories import (
 )
 
 __all__ = [
+    "build_chore_create_payload",
+    "build_chore_update_payload",
     "build_location_create_payload",
     "build_location_update_payload",
     "build_product_group_create_payload",
@@ -57,4 +70,11 @@ __all__ = [
     "parse_quantity_unit_active",
     "parse_shopping_location_active",
     "parse_task_category_active",
+    "parse_chore_active",
+    "parse_chore_boolean",
+    "parse_chore_period_config",
+    "parse_chore_period_type",
+    "parse_chore_positive_integer",
+    "parse_chore_positive_number",
+    "parse_chore_start_date",
 ]

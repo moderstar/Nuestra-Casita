@@ -1,6 +1,7 @@
 """Internal dashboard data contracts for Nuestra Casita."""
 
 from casita.dashboard.contracts import (
+    Dashboard,
     DEFAULT_DASHBOARD_CONTRACT,
     DashboardContract,
     DashboardSection,
@@ -10,6 +11,7 @@ from casita.dashboard.contracts import (
 )
 
 __all__ = [
+    "Dashboard",
     "DEFAULT_DASHBOARD_CONTRACT",
     "DashboardContract",
     "DashboardSection",

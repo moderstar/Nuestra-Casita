@@ -24,9 +24,12 @@ from casita.application.services import (
 from casita.dashboard import (
     DEFAULT_DASHBOARD_CONTRACT,
     DashboardContract,
+    Dashboard,
     DashboardSection,
     DashboardSnapshot,
 )
+from casita.application.coordination import IntegrationDirectory
+from casita.integrations import RuntimeInspectableIntegration
 from casita.domain import (
     BudgetSummary,
     Household,
@@ -50,6 +53,7 @@ class DashboardService:
         notifications: NotificationService,
         devices: DeviceService,
         media: MediaService,
+        integrations: IntegrationDirectory | None = None,
         contract: DashboardContract = DEFAULT_DASHBOARD_CONTRACT,
     ) -> None:
         self._shopping = shopping
@@ -61,6 +65,7 @@ class DashboardService:
         self._notifications = notifications
         self._devices = devices
         self._media = media
+        self._integrations = integrations
         self._contract = contract
 
     def build(
@@ -119,6 +124,42 @@ class DashboardService:
             media=media.records,
             notifications=notifications.records,
             stale_sections=stale_sections,
+        )
+
+    def overview(
+        self,
+        household: Household,
+        *,
+        configuration_valid: bool = True,
+        last_synchronization: datetime | None = None,
+        missing_resources: tuple[str, ...] = (),
+        now: datetime | None = None,
+    ) -> Dashboard:
+        """Build a snapshot with normalized integration runtime status."""
+
+        integrations = ()
+
+        if self._integrations is not None:
+            integrations = tuple(
+                integration.runtime()
+                for integration in self._integrations.integrations
+                if isinstance(
+                    integration,
+                    RuntimeInspectableIntegration,
+                )
+            )
+
+        return Dashboard(
+            snapshot=self.build(household, now=now),
+            integrations=integrations,
+            configuration_valid=configuration_valid,
+            last_synchronization=last_synchronization,
+            missing_resources=missing_resources,
+            errors=tuple(
+                error
+                for integration in integrations
+                for error in integration.errors
+            ),
         )
 
     @staticmethod

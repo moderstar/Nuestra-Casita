@@ -237,3 +237,24 @@ class DiagnosableIntegration(Integration, Protocol):
 
     def diagnose(self) -> tuple[DiagnosticCheck, ...]:
         """Run adapter-owned connectivity and authentication checks."""
+
+
+@dataclass(frozen=True, slots=True)
+class IntegrationRuntime:
+    """Expose normalized runtime metadata for application presentation."""
+
+    integration_key: str
+    display_name: str
+    connected: bool
+    version: str = ""
+    database: str = ""
+    metrics: tuple[tuple[str, int], ...] = ()
+    errors: tuple[str, ...] = ()
+
+
+@runtime_checkable
+class RuntimeInspectableIntegration(Integration, Protocol):
+    """Provide dashboard-safe runtime information through the adapter."""
+
+    def runtime(self) -> IntegrationRuntime:
+        """Return normalized integration status and aggregate metrics."""

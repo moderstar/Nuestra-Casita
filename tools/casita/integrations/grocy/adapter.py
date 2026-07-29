@@ -14,6 +14,7 @@ from casita.integrations import (
     HealthStatus,
     IntegrationDescriptor,
     IntegrationHealth,
+    IntegrationRuntime,
     IntegrationSnapshot,
     ReadRequest,
 )
@@ -147,6 +148,74 @@ class GrocyReadAdapter:
             resource=resource,
             applied=apply,
             plans=plans,
+        )
+
+    def runtime(self) -> IntegrationRuntime:
+        """Return dashboard-safe Grocy status and aggregate counts."""
+
+        try:
+            system_info = self._client.get("/system/info")
+            products = self._client.get("/objects/products")
+            recipes = self._client.get(
+                "/objects/recipes?query[]=type=normal"
+            )
+            locations = self._client.get("/objects/locations")
+        except Exception as error:
+            return IntegrationRuntime(
+                integration_key=self.descriptor.key,
+                display_name=self.descriptor.display_name,
+                connected=False,
+                version=self.descriptor.version,
+                errors=(str(error) or error.__class__.__name__,),
+            )
+
+        for name, rows in (
+            ("products", products),
+            ("recipes", recipes),
+            ("locations", locations),
+        ):
+            if not isinstance(rows, list):
+                return IntegrationRuntime(
+                    integration_key=self.descriptor.key,
+                    display_name=self.descriptor.display_name,
+                    connected=False,
+                    version=self.descriptor.version,
+                    errors=(f"Grocy {name} response was not a list.",),
+                )
+
+        info = system_info if isinstance(system_info, dict) else {}
+        grocy_version = info.get("grocy_version", {})
+
+        if isinstance(grocy_version, dict):
+            version = str(
+                grocy_version.get("Version")
+                or grocy_version.get("version")
+                or self.descriptor.version
+            )
+        else:
+            version = str(grocy_version or self.descriptor.version)
+
+        sqlite_version = str(
+            info.get("sqlite_version")
+            or info.get("database")
+            or ""
+        )
+
+        return IntegrationRuntime(
+            integration_key=self.descriptor.key,
+            display_name=self.descriptor.display_name,
+            connected=True,
+            version=version,
+            database=(
+                f"SQLite {sqlite_version}"
+                if sqlite_version
+                else "SQLite"
+            ),
+            metrics=(
+                ("products", len(products)),
+                ("recipes", len(recipes)),
+                ("locations", len(locations)),
+            ),
         )
 
     def read(self, request: ReadRequest) -> IntegrationSnapshot:

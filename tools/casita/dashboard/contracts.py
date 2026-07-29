@@ -24,6 +24,7 @@ from casita.domain import (
     ShoppingList,
 )
 from casita.integrations import Capability
+from casita.integrations import IntegrationRuntime
 
 
 class DashboardSection(str, Enum):
@@ -84,6 +85,18 @@ class DashboardSnapshot:
     media: tuple[MediaItem, ...] = ()
     notifications: tuple[Notification, ...] = ()
     stale_sections: frozenset[DashboardSection] = frozenset()
+
+
+@dataclass(frozen=True, slots=True)
+class Dashboard:
+    """Present platform status alongside the household snapshot."""
+
+    snapshot: DashboardSnapshot
+    integrations: tuple[IntegrationRuntime, ...] = ()
+    configuration_valid: bool = True
+    last_synchronization: datetime | None = None
+    missing_resources: tuple[str, ...] = ()
+    errors: tuple[str, ...] = ()
 
 
 DEFAULT_DASHBOARD_CONTRACT = DashboardContract(

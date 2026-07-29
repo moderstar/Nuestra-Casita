@@ -100,6 +100,7 @@ def build_application(
         notifications=services.notifications,
         devices=services.devices,
         media=services.media,
+        integrations=directory,
         contract=dashboard_contract,
     )
 

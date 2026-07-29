@@ -22,7 +22,9 @@ from casita.application import (
     NotificationService,
     RecipeService,
     ShoppingService,
+    SyncService,
 )
+from casita.bootstrap.configuration import ApplicationConfiguration
 from casita.dashboard import (
     DEFAULT_DASHBOARD_CONTRACT,
     DashboardContract,
@@ -52,6 +54,9 @@ class NuestraCasitaApplication:
     integrations: IntegrationDirectory
     services: ApplicationServices
     dashboard: DashboardService
+    sync: SyncService | None = None
+    doctor: DoctorService | None = None
+    configuration: ApplicationConfiguration | None = None
 
 
 def build_application(
@@ -103,3 +108,4 @@ def build_application(
         services=services,
         dashboard=dashboard,
     )
+    DoctorService,

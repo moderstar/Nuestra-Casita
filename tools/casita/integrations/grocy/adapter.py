@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Protocol
+from typing import Any, Callable, Protocol
 from zoneinfo import ZoneInfo
 
 from casita.integrations import (
     Capability,
     CapabilityData,
+    CommandSyncResult,
+    DiagnosticCheck,
     HealthStatus,
     IntegrationDescriptor,
     IntegrationHealth,
@@ -54,9 +56,11 @@ class GrocyReadAdapter:
         client: GrocyReader,
         *,
         timezone_name: str = "UTC",
+        sync_runner: Callable[..., Any] | None = None,
     ) -> None:
         self._client = client
         self._timezone = ZoneInfo(timezone_name)
+        self._sync_runner = sync_runner
 
     @classmethod
     def from_credentials(
@@ -92,6 +96,57 @@ class GrocyReadAdapter:
             integration_key=self.descriptor.key,
             status=HealthStatus.HEALTHY,
             checked_at=checked_at,
+        )
+
+    def diagnose(self) -> tuple[DiagnosticCheck, ...]:
+        """Run Grocy-owned connectivity and API authentication checks."""
+
+        try:
+            self._client.get("/system/info")
+        except Exception as error:
+            message = str(error) or error.__class__.__name__
+            reachable = getattr(error, "response", None) is not None
+            return (
+                DiagnosticCheck(
+                    "Grocy Connection",
+                    reachable,
+                    message,
+                ),
+                DiagnosticCheck(
+                    "API Authentication",
+                    False,
+                    message,
+                ),
+                DiagnosticCheck(
+                    "Adapter Connectivity",
+                    False,
+                    message,
+                ),
+            )
+
+        return (
+            DiagnosticCheck("Grocy Connection", True),
+            DiagnosticCheck("API Authentication", True),
+            DiagnosticCheck("Adapter Connectivity", True),
+        )
+
+    def synchronize(
+        self,
+        resource: str,
+        *,
+        apply: bool = False,
+    ) -> CommandSyncResult:
+        """Delegate declarative synchronization to the established workflow."""
+
+        if self._sync_runner is None:
+            raise RuntimeError("Grocy synchronization is not configured.")
+
+        plans = self._sync_runner(resource, apply=apply)
+        return CommandSyncResult(
+            integration_key=self.descriptor.key,
+            resource=resource,
+            applied=apply,
+            plans=plans,
         )
 
     def read(self, request: ReadRequest) -> IntegrationSnapshot:

@@ -60,6 +60,24 @@ def sync_registered_resource(
 ) -> dict[str, list[dict[str, Any]]]:
     """Synchronize any registered resource by name."""
 
+    resource, plan = plan_registered_resource(resource_name)
+
+    if apply:
+        apply_plan(resource, plan)
+    else:
+        print_dry_run(resource_name)
+
+    return plan
+
+
+def plan_registered_resource(
+    resource_name: str,
+) -> tuple[
+    dict[str, Any],
+    dict[str, list[dict[str, Any]]],
+]:
+    """Build and display one native resource plan without applying it."""
+
     resource = get_resource(resource_name)
     plural_name = resource["plural_name"]
 
@@ -89,21 +107,22 @@ def sync_registered_resource(
     )
     print_execution_plan(resource, plan)
 
-    if apply:
-        apply_plan(resource, plan)
-    else:
-        print()
-        print("=" * 40)
-        print("Dry Run")
-        print("=" * 40)
-        print()
-        print("No changes were made.")
-        print()
-        print("Run again with:")
-        print()
-        print(f"    python tools/casita.py sync {resource_name} --apply")
+    return resource, plan
 
-    return plan
+
+def print_dry_run(resource_name: str) -> None:
+    """Display the backward-compatible dry-run footer."""
+
+    print()
+    print("=" * 40)
+    print("Dry Run")
+    print("=" * 40)
+    print()
+    print("No changes were made.")
+    print()
+    print("Run again with:")
+    print()
+    print(f"    python tools/casita.py sync {resource_name} --apply")
 
 
 def sync_all(

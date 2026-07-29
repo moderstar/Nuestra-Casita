@@ -1,10 +1,12 @@
 import csv
 from pathlib import Path
 
-from build_lookups import lookups
+from casita.lookups import build_lookups
 
 
 def validate():
+    
+    lookups = build_lookups()
 
     catalog = Path("/opt/Nuestra-Casita/catalog/products.csv")
 

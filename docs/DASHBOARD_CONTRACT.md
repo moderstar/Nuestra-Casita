@@ -62,6 +62,10 @@ vendor records.
 
 No cache implementation is selected in this milestone.
 
+`casita.application.DashboardService` now performs in-memory snapshot
+assembly. It marks sections stale when an integration read fails; a future
+cache service will decide whether previously known records can also be served.
+
 ## Snapshot Contents
 
 `DashboardSnapshot` includes:
@@ -90,6 +94,9 @@ All contents use models from `casita.domain`.
 5. Failed sections are omitted or marked stale without blocking other
    sections.
 6. A new immutable snapshot is assembled after refreshed data arrives.
+
+The current application layer implements direct reads and snapshot assembly.
+Cache lookup, background refresh, and push-triggered refresh remain deferred.
 
 ## Future Expansion
 

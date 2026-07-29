@@ -81,9 +81,11 @@ these integrations.
 - [x] Define optional declarative synchronization contract
 - [x] Define the versioned kitchen-dashboard data contract
 - [x] Document capability ownership and cache expectations
-- [ ] Add platform integration registry and household configuration
+- [x] Add instance-scoped integration discovery and capability ownership
+- [x] Add household capability services
+- [x] Add backend-neutral dashboard snapshot assembly
+- [ ] Add composition-root household and integration configuration
 - [ ] Wrap the existing Grocy engine in a Grocy integration adapter
-- [ ] Add application services for capability reads and snapshot assembly
 - [ ] Select persistence and caching only when required by an integration
 - [ ] Add normalized platform events and notifications
 

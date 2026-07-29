@@ -104,17 +104,21 @@ and rate limits remain inside adapters.
 
 ### Application Layer
 
-The future application layer will:
+`casita.application` now provides the first application layer. It:
 
 - Select integrations by capability
-- Coordinate refreshes and synchronization workflows
-- Resolve ownership when multiple integrations expose the same capability
-- Assemble dashboard snapshots
-- Apply cache and stale-data policies
-- Emit normalized notifications and platform events
+- Coordinates multiple injected integrations without a singleton registry
+- Defines household capability services
+- Resolves optional ordered ownership when multiple integrations expose the
+  same capability
+- Assembles dashboard snapshots
+- Isolates integration failures by capability
 
-No application service is implemented yet because there is no persistence,
-cache, or second integration to exercise it.
+Cache retrieval, synchronization coordination, normalized events, and write
+workflows remain future application services.
+
+See [APPLICATION_LAYER.md](APPLICATION_LAYER.md) for service boundaries and
+dashboard assembly.
 
 ### Presentation Boundary
 
@@ -205,7 +209,7 @@ them:
 - Cache technology
 - Authentication and household authorization
 - Event bus or job queue
-- Integration discovery and dependency injection
+- Composition-root configuration and adapter lifecycle
 - Conflict resolution between multiple writers
 - Offline mutation handling
 - Dashboard framework and deployment model

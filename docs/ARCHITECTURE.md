@@ -6,6 +6,7 @@ synchronization is its first integration, not the platform boundary.
 The core architecture is documented in:
 
 - [CORE_ARCHITECTURE.md](CORE_ARCHITECTURE.md)
+- [APPLICATION_LAYER.md](APPLICATION_LAYER.md)
 - [INTEGRATION_CONTRACT.md](INTEGRATION_CONTRACT.md)
 - [DASHBOARD_CONTRACT.md](DASHBOARD_CONTRACT.md)
 

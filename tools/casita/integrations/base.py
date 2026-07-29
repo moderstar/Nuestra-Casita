@@ -177,8 +177,8 @@ class SynchronizationPlan:
 
 
 @dataclass(frozen=True, slots=True)
-class ApplyResult:
-    """Summarize an applied synchronization plan."""
+class SynchronizationResult:
+    """Summarize successful execution of a synchronization plan."""
 
     integration_key: str
     resource: str
@@ -188,6 +188,11 @@ class ApplyResult:
     completed_at: datetime
 
 
+# Backward-compatible name retained while callers migrate to the structured
+# synchronization framework.
+ApplyResult = SynchronizationResult
+
+
 @runtime_checkable
 class SynchronizingIntegration(Integration, Protocol):
     """Optional contract for integrations with declarative sync resources."""
@@ -195,7 +200,7 @@ class SynchronizingIntegration(Integration, Protocol):
     def plan(self, request: SyncRequest) -> SynchronizationPlan:
         """Build a dry-run plan using the integration's resource adapters."""
 
-    def apply(self, plan: SynchronizationPlan) -> ApplyResult:
+    def apply(self, plan: SynchronizationPlan) -> SynchronizationResult:
         """Apply a previously generated plan through the owning integration."""
 
 

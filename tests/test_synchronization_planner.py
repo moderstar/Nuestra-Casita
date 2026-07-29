@@ -5,10 +5,10 @@ from unittest import TestCase
 
 from casita.application import (
     IntegrationDirectory,
+    SynchronizationExecutor,
     SynchronizationPlanner,
 )
 from casita.integrations import (
-    ApplyResult,
     HealthStatus,
     IntegrationDescriptor,
     IntegrationHealth,
@@ -16,6 +16,7 @@ from casita.integrations import (
     PlannedChange,
     SyncAction,
     SynchronizationPlan,
+    SynchronizationResult,
 )
 
 
@@ -58,7 +59,7 @@ class FakeSynchronizingIntegration:
         )
 
     def apply(self, plan):
-        return ApplyResult(
+        return SynchronizationResult(
             integration_key="fake",
             resource=plan.resource,
             created=0,
@@ -101,3 +102,61 @@ class SynchronizationPlannerTests(TestCase):
             "plan resource does not match",
         ):
             planner.plan("household", "products")
+
+
+class SynchronizationExecutorTests(TestCase):
+    def test_returns_structured_execution_result(self):
+        directory = IntegrationDirectory(
+            (FakeSynchronizingIntegration(),)
+        )
+        planner = SynchronizationPlanner(directory, owner="fake")
+        executor = SynchronizationExecutor(directory, owner="fake")
+        plan = planner.plan("household", "products")
+
+        result = executor.execute(plan)
+
+        self.assertIsInstance(result, SynchronizationResult)
+        self.assertEqual(result.integration_key, "fake")
+        self.assertEqual(result.resource, "products")
+        self.assertEqual(result.matched, 1)
+
+    def test_rejects_plan_for_another_integration(self):
+        directory = IntegrationDirectory(
+            (FakeSynchronizingIntegration(),)
+        )
+        executor = SynchronizationExecutor(directory, owner="fake")
+        plan = SynchronizationPlan(
+            integration_key="another",
+            resource="products",
+            generated_at=datetime.now(timezone.utc),
+            changes=(),
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "plan integration key does not match",
+        ):
+            executor.execute(plan)
+
+    def test_rejects_result_counts_that_do_not_match_plan(self):
+        class IncorrectResultIntegration(FakeSynchronizingIntegration):
+            def apply(self, plan):
+                return SynchronizationResult(
+                    integration_key="fake",
+                    resource=plan.resource,
+                    created=1,
+                    updated=0,
+                    matched=0,
+                    completed_at=datetime.now(timezone.utc),
+                )
+
+        directory = IntegrationDirectory((IncorrectResultIntegration(),))
+        planner = SynchronizationPlanner(directory, owner="fake")
+        executor = SynchronizationExecutor(directory, owner="fake")
+        plan = planner.plan("household", "products")
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "result counts do not match",
+        ):
+            executor.execute(plan)

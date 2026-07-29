@@ -21,6 +21,7 @@ from casita.integrations.base import (
     SyncAction,
     SyncRequest,
     SynchronizationPlan,
+    SynchronizationResult,
     SynchronizingIntegration,
 )
 
@@ -45,5 +46,6 @@ __all__ = [
     "SyncAction",
     "SyncRequest",
     "SynchronizationPlan",
+    "SynchronizationResult",
     "SynchronizingIntegration",
 ]

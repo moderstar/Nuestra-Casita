@@ -5,6 +5,10 @@ from casita.application.coordination import (
     IntegrationDirectory,
     IntegrationFailure,
 )
+from casita.application.catalog import (
+    CatalogApplicationService,
+    CatalogOperationResult,
+)
 from casita.application.commands import (
     DoctorReport,
     DoctorService,
@@ -32,6 +36,8 @@ from casita.application.synchronization import (
 
 __all__ = [
     "BudgetService",
+    "CatalogApplicationService",
+    "CatalogOperationResult",
     "CalendarService",
     "CapabilityRead",
     "ChoreService",

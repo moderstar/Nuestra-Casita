@@ -3,6 +3,7 @@
 from dataclasses import replace
 
 from casita.application import (
+    CatalogApplicationService,
     DoctorService,
     MaintenanceService,
     SynchronizationApplicationService,
@@ -88,7 +89,7 @@ def build_grocy_application(
         dashboard_contract=dashboard_contract,
     )
     synchronization_owner = grocy.descriptor.key
-    sync_service = SynchronizationApplicationService(
+    catalog_service = CatalogApplicationService(
         SynchronizationPlanner(
             application.integrations,
             owner=synchronization_owner,
@@ -97,6 +98,10 @@ def build_grocy_application(
             application.integrations,
             owner=synchronization_owner,
         ),
+        resources=tuple(list_resources()),
+    )
+    sync_service = SynchronizationApplicationService(
+        catalog_service,
         resource_order=tuple(list_sync_resources()),
         all_resource="all",
         resources=tuple(list_sync_commands()),
@@ -117,6 +122,7 @@ def build_grocy_application(
 
     return replace(
         application,
+        catalog=catalog_service,
         sync=sync_service,
         doctor=doctor_service,
         maintenance=maintenance_service,

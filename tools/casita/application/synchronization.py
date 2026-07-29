@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
+from casita.application.catalog import CatalogApplicationService
 from casita.application.coordination import IntegrationDirectory
 from casita.integrations import (
     SyncAction,
@@ -151,15 +152,13 @@ class SynchronizationApplicationService:
 
     def __init__(
         self,
-        planner: SynchronizationPlanner,
-        executor: SynchronizationExecutor,
+        catalogs: CatalogApplicationService,
         *,
         resources: tuple[str, ...],
         resource_order: tuple[str, ...],
         all_resource: str = "all",
     ) -> None:
-        self._planner = planner
-        self._executor = executor
+        self._catalogs = catalogs
         self._resources = resources
         self._resource_order = resource_order
         self._all_resource = all_resource
@@ -199,18 +198,17 @@ class SynchronizationApplicationService:
             if len(selected) > 1 and on_resource is not None:
                 on_resource(resource_name)
 
-            plan = self._planner.plan(household_id, resource_name)
-            plans.append(plan)
+            operation = self._catalogs.synchronize(
+                household_id,
+                resource_name,
+                apply=apply,
+                on_plan=on_plan,
+                on_result=on_result,
+            )
+            plans.append(operation.plan)
 
-            if on_plan is not None:
-                on_plan(plan)
-
-            if apply:
-                result = self._executor.execute(plan)
-                results.append(result)
-
-                if on_result is not None:
-                    on_result(result)
+            if operation.result is not None:
+                results.append(operation.result)
 
         return SynchronizationRun(
             plans=tuple(plans),

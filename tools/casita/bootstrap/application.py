@@ -12,6 +12,7 @@ from typing import Iterable, Mapping
 
 from casita.application import (
     BudgetService,
+    CatalogApplicationService,
     CalendarService,
     ChoreService,
     DashboardService,
@@ -55,6 +56,7 @@ class NuestraCasitaApplication:
     integrations: IntegrationDirectory
     services: ApplicationServices
     dashboard: DashboardService
+    catalog: CatalogApplicationService | None = None
     sync: SynchronizationApplicationService | None = None
     doctor: DoctorService | None = None
     maintenance: MaintenanceService | None = None

@@ -253,6 +253,12 @@ The `sync all` command runs registered resources in dependency-aware order:
 10. Recipes
 11. Recipe Positions
 
+Each individual catalog operation is orchestrated by the backend-neutral
+`CatalogApplicationService`. It validates the resource, coordinates structured
+planning and optional execution, and returns `CatalogOperationResult`.
+`SynchronizationApplicationService` uses the same service for every resource
+in `sync all`; neither service imports Grocy or renders terminal output.
+
 The order is defined by `SYNC_RESOURCE_ORDER` in `casita.registry`, not by the
 CLI. The orchestration workflow invokes the same synchronization function used
 by each individual resource command.

@@ -33,6 +33,7 @@ containing:
 - One `IntegrationDirectory`
 - One instance of every household capability service
 - One `DashboardService`
+- One `CatalogApplicationService`
 - One `SynchronizationApplicationService` with its planner and executor
 - One `DoctorService`
 - One `MaintenanceService` for backward-compatible commands
@@ -44,9 +45,9 @@ service receives those same instances rather than constructing duplicates.
 
 `build_grocy_application()` constructs one `GrocyApiClient`, injects it into
 the Grocy adapter, registers Grocy platform capabilities, and constructs the
-planner, executor, and application services. Concrete registries,
-configuration loading, and native synchronization callbacks remain confined
-to this composition boundary.
+planner, executor, catalog service, and synchronization service. Concrete
+registries, configuration loading, and native synchronization callbacks
+remain confined to this composition boundary.
 
 ## Object Lifetime
 

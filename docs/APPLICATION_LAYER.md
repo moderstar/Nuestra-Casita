@@ -119,6 +119,23 @@ Command services keep terminal transport separate from household workflows:
 These services accept injected contracts and callables, making them testable
 without Grocy or process environment state.
 
+### `application.catalog`
+
+`CatalogApplicationService` owns one declarative catalog operation. It
+validates the registered resource name, requests a structured plan through
+`SynchronizationPlanner`, optionally applies that plan through
+`SynchronizationExecutor`, and returns an explicit
+`CatalogOperationResult`.
+
+The service contains no terminal presentation, Grocy imports, HTTP transport,
+or resource-specific branching. `SynchronizationApplicationService` delegates
+each resource in its dependency-aware sequence to this catalog service, so
+individual resource commands and `sync all` share one application path.
+
+Grocy 4.6 exposes Task Categories as the category resource used by tasks and
+chores. Nuestra Casita therefore keeps the native `task-categories` catalog
+name and does not introduce a separate non-native `chore-categories` entity.
+
 ## Integration Discovery and Ownership
 
 The application layer does not contain a global registry.

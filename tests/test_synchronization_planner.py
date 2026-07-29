@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 from unittest import TestCase
 
 from casita.application import (
+    CatalogApplicationService,
+    CatalogOperationResult,
     IntegrationDirectory,
     SynchronizationApplicationService,
     SynchronizationExecutor,
@@ -167,9 +169,13 @@ class SynchronizationApplicationServiceTests(TestCase):
     def test_orchestrates_all_resources_in_dependency_order(self):
         integration = FakeSynchronizingIntegration()
         directory = IntegrationDirectory((integration,))
-        service = SynchronizationApplicationService(
+        catalogs = CatalogApplicationService(
             SynchronizationPlanner(directory, owner="fake"),
             SynchronizationExecutor(directory, owner="fake"),
+            resources=("groups", "products"),
+        )
+        service = SynchronizationApplicationService(
+            catalogs,
             resources=("all", "groups", "products"),
             resource_order=("groups", "products"),
         )
@@ -207,9 +213,13 @@ class SynchronizationApplicationServiceTests(TestCase):
         directory = IntegrationDirectory(
             (ApplyForbiddenIntegration(),)
         )
-        service = SynchronizationApplicationService(
+        catalogs = CatalogApplicationService(
             SynchronizationPlanner(directory, owner="fake"),
             SynchronizationExecutor(directory, owner="fake"),
+            resources=("products",),
+        )
+        service = SynchronizationApplicationService(
+            catalogs,
             resources=("all", "products"),
             resource_order=("products",),
         )
@@ -223,3 +233,43 @@ class SynchronizationApplicationServiceTests(TestCase):
         self.assertFalse(run.applied)
         self.assertEqual(len(run.plans), 1)
         self.assertEqual(run.results, ())
+
+
+class CatalogApplicationServiceTests(TestCase):
+    def test_returns_structured_catalog_operation_result(self):
+        directory = IntegrationDirectory(
+            (FakeSynchronizingIntegration(),)
+        )
+        service = CatalogApplicationService(
+            SynchronizationPlanner(directory, owner="fake"),
+            SynchronizationExecutor(directory, owner="fake"),
+            resources=("products",),
+        )
+
+        operation = service.synchronize(
+            "household",
+            "products",
+            apply=True,
+        )
+
+        self.assertIsInstance(operation, CatalogOperationResult)
+        self.assertEqual(operation.resource, "products")
+        self.assertEqual(operation.plan.resource, "products")
+        self.assertEqual(operation.result.resource, "products")
+        self.assertTrue(operation.applied)
+
+    def test_rejects_unknown_catalog_resource(self):
+        directory = IntegrationDirectory(
+            (FakeSynchronizingIntegration(),)
+        )
+        service = CatalogApplicationService(
+            SynchronizationPlanner(directory, owner="fake"),
+            SynchronizationExecutor(directory, owner="fake"),
+            resources=("products",),
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "Unknown catalog resource",
+        ):
+            service.synchronize("household", "unknown")

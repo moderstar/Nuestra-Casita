@@ -107,7 +107,7 @@ through the generic synchronization framework.
 - [x] Verify Product Groups against the live Grocy 4.6 instance
 - [x] Quantity Units
 - [x] Locations
-- [ ] Shopping Locations
+- [x] Shopping Locations
 - [ ] Batteries
 - [ ] Chores
 - [ ] Remaining Grocy resources

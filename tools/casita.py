@@ -8,10 +8,7 @@ from casita.bootstrap import (
     load_configuration,
 )
 from casita.domain import Household
-from casita.exporter import export_products
-from casita.lookups import show
 from casita.registry import SYNC_ALL_COMMAND
-from casita.validator import validate
 
 
 def build_parser(sync_resources):
@@ -113,11 +110,11 @@ def main():
             apply=args.apply,
         )
     elif args.command == "lookups":
-        show()
+        _require_maintenance(application).lookups()
     elif args.command == "validate":
-        validate()
+        _require_maintenance(application).validate()
     elif args.command == "export":
-        export_products()
+        _require_maintenance(application).export(args.export_command)
     elif args.command == "import":
         print("Product importer will be connected here.")
 
@@ -184,6 +181,13 @@ def _print_recipes(result):
 
     for failure in result.failures:
         print(f"ERROR {failure.message}")
+
+
+def _require_maintenance(application):
+    if application.maintenance is None:
+        raise RuntimeError("Maintenance service is not configured.")
+
+    return application.maintenance
 
 
 if __name__ == "__main__":

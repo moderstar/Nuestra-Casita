@@ -66,6 +66,39 @@ class SyncService:
         return integration.synchronize(resource, apply=apply)
 
 
+class MaintenanceService:
+    """Preserve legacy maintenance operations behind the application layer."""
+
+    def __init__(
+        self,
+        *,
+        show_lookups: Callable[[], object],
+        validate_catalog: Callable[[], object],
+        export_products: Callable[[], object],
+    ) -> None:
+        self._show_lookups = show_lookups
+        self._validate_catalog = validate_catalog
+        self._export_products = export_products
+
+    def lookups(self):
+        """Display integration lookups through the configured operation."""
+
+        return self._show_lookups()
+
+    def validate(self):
+        """Validate catalogs through the configured operation."""
+
+        return self._validate_catalog()
+
+    def export(self, resource: str):
+        """Export one backward-compatible integration resource."""
+
+        if resource != "products":
+            raise ValueError(f"Unsupported export resource {resource!r}.")
+
+        return self._export_products()
+
+
 class DoctorService:
     """Validate platform configuration and registered integration resources."""
 

@@ -2,7 +2,11 @@
 
 from dataclasses import replace
 
-from casita.application import DoctorService, SyncService
+from casita.application import (
+    DoctorService,
+    MaintenanceService,
+    SyncService,
+)
 from casita.bootstrap.application import (
     NuestraCasitaApplication,
     build_application,
@@ -12,6 +16,8 @@ from casita.bootstrap.configuration import (
     load_configuration,
 )
 from casita.grocy import configure_client
+from casita.exporter import export_products
+from casita.lookups import show
 from casita.integrations.grocy.client import GrocyApiClient
 from casita.registry import (
     RESOURCES,
@@ -22,6 +28,7 @@ from casita.registry import (
 )
 from casita.sync import sync_command
 from casita.sync_engine import CATALOG_ROOT
+from casita.validator import validate
 from casita.dashboard import (
     DEFAULT_DASHBOARD_CONTRACT,
     DashboardContract,
@@ -79,11 +86,17 @@ def build_grocy_application(
         payload_registry_valid=_validate_payload_registry,
         resource_registry_valid=_validate_resource_registry,
     )
+    maintenance_service = MaintenanceService(
+        show_lookups=show,
+        validate_catalog=validate,
+        export_products=export_products,
+    )
 
     return replace(
         application,
         sync=sync_service,
         doctor=doctor_service,
+        maintenance=maintenance_service,
         configuration=config,
     )
 

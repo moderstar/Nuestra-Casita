@@ -19,6 +19,7 @@ from casita.application import (
     IntegrationDirectory,
     InventoryService,
     MediaService,
+    MaintenanceService,
     NotificationService,
     RecipeService,
     ShoppingService,
@@ -56,6 +57,7 @@ class NuestraCasitaApplication:
     dashboard: DashboardService
     sync: SyncService | None = None
     doctor: DoctorService | None = None
+    maintenance: MaintenanceService | None = None
     configuration: ApplicationConfiguration | None = None
 
 

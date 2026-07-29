@@ -24,6 +24,7 @@ from casita.application.services import (
     ServiceResult,
     ShoppingService,
 )
+from casita.application.synchronization import SynchronizationPlanner
 
 __all__ = [
     "BudgetService",
@@ -44,4 +45,5 @@ __all__ = [
     "ServiceResult",
     "ShoppingService",
     "SyncService",
+    "SynchronizationPlanner",
 ]

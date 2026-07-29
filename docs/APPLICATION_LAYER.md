@@ -104,6 +104,20 @@ It:
 `DashboardService` receives its capability services through constructor
 injection. `casita.bootstrap` owns the default application wiring.
 
+### `application.commands`
+
+Command services keep terminal transport separate from household workflows:
+
+- `SyncService` resolves its configured integration owner and invokes the
+  integration synchronization contract.
+- `DoctorService` coordinates local platform validation and adapter-owned
+  connectivity diagnostics.
+- `MaintenanceService` preserves lookup, catalog validation, and export
+  operations without exposing their concrete implementation to the CLI.
+
+These services accept injected contracts and callables, making them testable
+without Grocy or process environment state.
+
 ## Integration Discovery and Ownership
 
 The application layer does not contain a global registry.

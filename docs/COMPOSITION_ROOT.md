@@ -33,14 +33,20 @@ containing:
 - One `IntegrationDirectory`
 - One instance of every household capability service
 - One `DashboardService`
+- One `SyncService` for the configured synchronization owner
+- One `DoctorService`
+- One `MaintenanceService` for backward-compatible commands
+- Validated `ApplicationConfiguration`
 
 `ApplicationServices` groups the Shopping, Inventory, Recipe, Chore,
 Calendar, Budget, Notification, Device, and Media services. The dashboard
 service receives those same instances rather than constructing duplicates.
 
-The existing Grocy synchronization CLI remains intentionally separate from
-the read application graph. `build_grocy_application()` constructs the Grocy
-read adapter and registers its platform capabilities.
+`build_grocy_application()` constructs one `GrocyApiClient`, injects it into
+the Grocy adapter and established synchronization transport, registers Grocy
+platform capabilities, and constructs command services. Concrete registries,
+configuration loading, and synchronization callbacks remain confined to this
+composition boundary.
 
 ## Object Lifetime
 

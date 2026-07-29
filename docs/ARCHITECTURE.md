@@ -11,6 +11,7 @@ The core architecture is documented in:
 - [GROCY_READ_ADAPTER.md](GROCY_READ_ADAPTER.md)
 - [INTEGRATION_CONTRACT.md](INTEGRATION_CONTRACT.md)
 - [DASHBOARD_CONTRACT.md](DASHBOARD_CONTRACT.md)
+- [COMMAND_FRAMEWORK.md](COMMAND_FRAMEWORK.md)
 
 The foundational code packages are:
 
@@ -22,6 +23,19 @@ The foundational code packages are:
 
 The existing Grocy implementation remains unchanged and operational while a
 Grocy read adapter translates runtime data into platform domain models.
+
+## Application Command Flow
+
+The unified CLI follows the platform dependency boundary:
+
+`CLI → Composition Root → Application Services → Integration Contracts →
+Grocy Adapter`
+
+Dashboard, doctor, inventory, recipes, synchronization, and preserved
+maintenance commands all enter through application services. The CLI does not
+import the Grocy client or synchronization engine. The composition root
+constructs one Grocy client and injects the adapter, services, configuration,
+registries, and established synchronization workflow.
 
 ## Grocy Read Integration
 

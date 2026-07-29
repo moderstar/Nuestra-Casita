@@ -85,6 +85,15 @@ cache service will decide whether previously known records can also be served.
 
 All contents use models from `casita.domain`.
 
+The terminal dashboard wraps the snapshot in the backend-neutral `Dashboard`
+contract. It adds normalized integration connectivity, version, database
+description, aggregate resource counts, configuration state, missing
+resources, synchronization timestamp, and errors. Concrete adapters retrieve
+and translate this metadata; presentation code never reads vendor endpoints.
+
+Last synchronization currently reports `Not recorded`. Persisting this value
+is intentionally deferred with the broader platform persistence decision.
+
 ## Refresh Strategy
 
 1. The application layer checks cached capability data.

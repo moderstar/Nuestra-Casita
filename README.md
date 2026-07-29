@@ -16,8 +16,9 @@ their data without exposing vendor APIs to future clients.
 - Versioned internal contract for the future kitchen dashboard
 - Architecture designed for reproducible Docker and Proxmox deployments
 
-No dashboard, frontend, API server, authentication system, or platform
-database is implemented yet.
+The terminal dashboard and unified application CLI are implemented. No web
+frontend, API server, authentication system, or platform database is
+implemented yet.
 
 ## Architecture
 
@@ -25,6 +26,7 @@ database is implemented yet.
 - [Application layer](docs/APPLICATION_LAYER.md)
 - [Composition root](docs/COMPOSITION_ROOT.md)
 - [Grocy read adapter](docs/GROCY_READ_ADAPTER.md)
+- [Dashboard and command framework](docs/COMMAND_FRAMEWORK.md)
 - [Integration contract](docs/INTEGRATION_CONTRACT.md)
 - [Dashboard contract](docs/DASHBOARD_CONTRACT.md)
 - [Grocy integration architecture](docs/ARCHITECTURE.md)
@@ -49,10 +51,28 @@ tools/casita/resources/   Grocy resource definitions
 
 ## Grocy Synchronization
 
+Show platform and Grocy status:
+
+```bash
+python tools/casita.py dashboard
+```
+
+Run actionable diagnostics:
+
+```bash
+python tools/casita.py doctor
+```
+
 Dry-run every registered Grocy resource:
 
 ```bash
 python tools/casita.py sync all
+```
+
+The shorter form defaults to the same dependency-aware orchestration:
+
+```bash
+python tools/casita.py sync
 ```
 
 Apply the generated plans:

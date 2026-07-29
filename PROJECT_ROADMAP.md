@@ -85,8 +85,11 @@ these integrations.
 - [x] Add household capability services
 - [x] Add backend-neutral dashboard snapshot assembly
 - [x] Add explicit composition root and application object lifetime
-- [ ] Add deployment-backed household and integration configuration
+- [x] Add environment-backed household and integration configuration
 - [x] Add Grocy read adapter for Inventory, Shopping, Recipes, and Chores
+- [x] Add unified dashboard and command framework
+- [x] Route synchronization and diagnostics through application services
+- [x] Add application service unit tests and command regression verification
 - [ ] Add remaining Grocy platform read capabilities when domain needs emerge
 - [ ] Select persistence and caching only when required by an integration
 - [ ] Add normalized platform events and notifications

@@ -13,6 +13,7 @@ from casita.resources import (
     PRODUCT_RESOURCE,
     QUANTITY_UNIT_RESOURCE,
     SHOPPING_LOCATION_RESOURCE,
+    TASK_CATEGORY_RESOURCE,
 )
 
 
@@ -22,6 +23,7 @@ RESOURCES: dict[str, dict[str, Any]] = {
     PRODUCT_RESOURCE["name"]: PRODUCT_RESOURCE,
     QUANTITY_UNIT_RESOURCE["name"]: QUANTITY_UNIT_RESOURCE,
     SHOPPING_LOCATION_RESOURCE["name"]: SHOPPING_LOCATION_RESOURCE,
+    TASK_CATEGORY_RESOURCE["name"]: TASK_CATEGORY_RESOURCE,
 }
 
 SYNC_ALL_COMMAND = "all"
@@ -32,6 +34,7 @@ SYNC_RESOURCE_ORDER = (
     "locations",
     "shopping-locations",
     "products",
+    "task-categories",
 )
 
 

@@ -31,6 +31,11 @@ from casita.payloads.shopping_locations import (
     build_shopping_location_update_payload,
     parse_active as parse_shopping_location_active,
 )
+from casita.payloads.task_categories import (
+    build_task_category_create_payload,
+    build_task_category_update_payload,
+    parse_active as parse_task_category_active,
+)
 
 __all__ = [
     "build_location_create_payload",
@@ -43,10 +48,13 @@ __all__ = [
     "build_product_update_payload",
     "build_shopping_location_create_payload",
     "build_shopping_location_update_payload",
+    "build_task_category_create_payload",
+    "build_task_category_update_payload",
     "load_product_template",
     "parse_location_active",
     "parse_location_is_freezer",
     "parse_product_group_active",
     "parse_quantity_unit_active",
     "parse_shopping_location_active",
+    "parse_task_category_active",
 ]

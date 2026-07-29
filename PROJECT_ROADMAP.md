@@ -86,7 +86,8 @@ these integrations.
 - [x] Add backend-neutral dashboard snapshot assembly
 - [x] Add explicit composition root and application object lifetime
 - [ ] Add deployment-backed household and integration configuration
-- [ ] Wrap the existing Grocy engine in a Grocy integration adapter
+- [x] Add Grocy read adapter for Inventory, Shopping, Recipes, and Chores
+- [ ] Add remaining Grocy platform read capabilities when domain needs emerge
 - [ ] Select persistence and caching only when required by an integration
 - [ ] Add normalized platform events and notifications
 

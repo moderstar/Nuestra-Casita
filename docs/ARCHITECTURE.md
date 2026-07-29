@@ -8,6 +8,7 @@ The core architecture is documented in:
 - [CORE_ARCHITECTURE.md](CORE_ARCHITECTURE.md)
 - [APPLICATION_LAYER.md](APPLICATION_LAYER.md)
 - [COMPOSITION_ROOT.md](COMPOSITION_ROOT.md)
+- [GROCY_READ_ADAPTER.md](GROCY_READ_ADAPTER.md)
 - [INTEGRATION_CONTRACT.md](INTEGRATION_CONTRACT.md)
 - [DASHBOARD_CONTRACT.md](DASHBOARD_CONTRACT.md)
 
@@ -20,7 +21,25 @@ The foundational code packages are:
 - `casita.dashboard`: the internal kitchen-dashboard data contract
 
 The existing Grocy implementation remains unchanged and operational while a
-future Grocy adapter is developed around it.
+Grocy read adapter translates runtime data into platform domain models.
+
+## Grocy Read Integration
+
+`casita.integrations.grocy.GrocyReadAdapter` implements the backend-neutral
+`Integration` contract for Inventory, Shopping, Recipes, and Chores. Native
+Grocy responses are translated inside the adapter package and never reach
+application services.
+
+`casita.bootstrap.build_grocy_application()` explicitly constructs and
+registers the adapter, assigns capability ownership, and returns the same
+backend-neutral application graph used by every future integration.
+
+The read adapter and synchronization engine share the authenticated
+`GrocyApiClient`. Synchronization behavior and resource registration remain
+unchanged.
+
+See [GROCY_READ_ADAPTER.md](GROCY_READ_ADAPTER.md) for endpoint mappings,
+identity handling, and current limitations.
 
 ## Grocy Integration Architecture
 

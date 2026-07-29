@@ -38,8 +38,9 @@ containing:
 Calendar, Budget, Notification, Device, and Media services. The dashboard
 service receives those same instances rather than constructing duplicates.
 
-The existing Grocy synchronization CLI is intentionally separate until a
-Grocy domain-read adapter implements the platform integration contract.
+The existing Grocy synchronization CLI remains intentionally separate from
+the read application graph. `build_grocy_application()` constructs the Grocy
+read adapter and registers its platform capabilities.
 
 ## Object Lifetime
 
@@ -70,8 +71,8 @@ application = build_application(
 )
 ```
 
-The example describes the future registration shape; a Grocy domain-read
-adapter is not implemented yet.
+`build_grocy_application()` provides this production registration explicitly
+for Grocy while `build_application()` remains the backend-neutral constructor.
 
 Each adapter declares capabilities through its `IntegrationDescriptor`.
 Without ownership configuration, all adapters declaring a capability

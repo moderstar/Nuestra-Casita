@@ -24,6 +24,7 @@ database is implemented yet.
 - [Core architecture](docs/CORE_ARCHITECTURE.md)
 - [Application layer](docs/APPLICATION_LAYER.md)
 - [Composition root](docs/COMPOSITION_ROOT.md)
+- [Grocy read adapter](docs/GROCY_READ_ADAPTER.md)
 - [Integration contract](docs/INTEGRATION_CONTRACT.md)
 - [Dashboard contract](docs/DASHBOARD_CONTRACT.md)
 - [Grocy integration architecture](docs/ARCHITECTURE.md)
@@ -37,6 +38,8 @@ catalog/                  Git-backed declarative catalogs
 docs/                     Platform and integration documentation
 tools/casita/domain/      Household domain models
 tools/casita/integrations Integration contracts
+tools/casita/integrations/grocy
+                          Grocy client and domain translation
 tools/casita/application/ Household services and dashboard assembly
 tools/casita/bootstrap/   Application construction and object lifetime
 tools/casita/dashboard/   Internal dashboard contract

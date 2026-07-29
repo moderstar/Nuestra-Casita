@@ -1,7 +1,8 @@
 import os
 
-import requests
 from dotenv import load_dotenv
+
+from casita.integrations.grocy.client import GrocyApiClient
 
 
 # Load environment variables
@@ -20,68 +21,28 @@ HEADERS = {
 }
 
 
+CLIENT = GrocyApiClient(BASE_URL, API_KEY)
+
+
 def get(endpoint):
     """Perform a GET request."""
 
-    response = requests.get(
-        f"{BASE_URL}/api{endpoint}",
-        headers=HEADERS,
-        timeout=10,
-    )
-
-    response.raise_for_status()
-
-    return response.json()
+    return CLIENT.get(endpoint)
 
 
 def post(endpoint, payload):
     """Perform a POST request."""
 
-    response = requests.post(
-        f"{BASE_URL}/api{endpoint}",
-        headers=HEADERS,
-        json=payload,
-        timeout=10,
-    )
-
-    response.raise_for_status()
-
-    if response.text:
-        return response.json()
-
-    return None
+    return CLIENT.post(endpoint, payload)
 
 
 def put(endpoint, payload):
     """Perform a PUT request."""
 
-    response = requests.put(
-        f"{BASE_URL}/api{endpoint}",
-        headers=HEADERS,
-        json=payload,
-        timeout=10,
-    )
-
-    response.raise_for_status()
-
-    if response.text:
-        return response.json()
-
-    return None
+    return CLIENT.put(endpoint, payload)
 
 
 def delete(endpoint):
     """Perform a DELETE request."""
 
-    response = requests.delete(
-        f"{BASE_URL}/api{endpoint}",
-        headers=HEADERS,
-        timeout=10,
-    )
-
-    response.raise_for_status()
-
-    if response.text:
-        return response.json()
-
-    return None
+    return CLIENT.delete(endpoint)

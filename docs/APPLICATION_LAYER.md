@@ -134,6 +134,10 @@ This supports use cases such as:
 Cross-source deduplication is deferred until real integrations demonstrate the
 identity rules it requires.
 
+The production Grocy read adapter now demonstrates this boundary. Application
+services discover its declared capabilities through `IntegrationDirectory`;
+they do not import the adapter or inspect Grocy records.
+
 ## Dashboard Assembly Flow
 
 1. A caller supplies the household and current time.
@@ -174,7 +178,6 @@ It must not:
 
 ## Deferred Work
 
-- Real Grocy domain-read adapter
 - Deployment configuration loading
 - Cache and stale-record retrieval
 - Persistence

@@ -22,6 +22,8 @@ from casita.domain import (
     Chore,
     Device,
     Inventory,
+    HouseholdTask,
+    MealPlanEntry,
     MediaItem,
     Notification,
     Recipe,
@@ -116,6 +118,20 @@ class ChoreService(CapabilityService[Chore]):
 
     capability = Capability.CHORES
     record_type = Chore
+
+
+class MealPlanService(CapabilityService[MealPlanEntry]):
+    """Provide normalized read-only household meal plans."""
+
+    capability = Capability.MEAL_PLAN
+    record_type = MealPlanEntry
+
+
+class TaskService(CapabilityService[HouseholdTask]):
+    """Provide normalized read-only household tasks."""
+
+    capability = Capability.TASKS
+    record_type = HouseholdTask
 
 
 class CalendarService(CapabilityService[CalendarEvent]):

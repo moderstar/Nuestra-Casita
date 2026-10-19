@@ -68,6 +68,8 @@ class GrocyBackendProvider:
             Capability.INVENTORY,
             Capability.RECIPES,
             Capability.CHORES,
+            Capability.MEAL_PLAN,
+            Capability.TASKS,
         )
         integration_key = self._integration.descriptor.key
         return {
@@ -116,6 +118,7 @@ def build_grocy_application(
     client = GrocyApiClient(
         config.grocy_url,
         config.grocy_api_key,
+        timeout=config.request_timeout_seconds,
     )
     configure_client(client)
     grocy = GrocyReadAdapter(

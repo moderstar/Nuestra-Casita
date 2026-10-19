@@ -406,3 +406,15 @@ by each individual resource command.
 
 The native Grocy 4.6 API resource inventory and implementation status are
 tracked in [GROCY_4_6_API_RESOURCES.md](GROCY_4_6_API_RESOURCES.md).
+
+## Dashboard HTTP Boundary
+
+The read path is `HTTP route → application capability service → integration
+contract → Grocy adapter`. Meal Plan and Tasks are normalized into domain
+models alongside Inventory, Shopping Lists, Recipes, and Chores. FastAPI owns
+authentication, envelopes, serialization, and HTTP status behavior only; it
+does not import Grocy clients or synchronization modules.
+
+The API and backend services are constructed once per process. Refreshes read
+current upstream state with bounded timeouts; no cache, database, or additional
+persistence layer is introduced.

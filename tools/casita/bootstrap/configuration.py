@@ -23,6 +23,7 @@ class ApplicationConfiguration:
     timezone: str
     household_id: str
     household_name: str
+    request_timeout_seconds: float = 10.0
 
     @property
     def exists(self) -> bool:
@@ -85,4 +86,7 @@ def load_configuration(
             "CASITA_HOUSEHOLD_NAME",
             "Nuestra Casita",
         ).strip() or "Nuestra Casita",
+        request_timeout_seconds=float(
+            os.getenv("CASITA_REQUEST_TIMEOUT_SECONDS", "10")
+        ),
     )

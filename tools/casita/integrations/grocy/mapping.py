@@ -11,8 +11,11 @@ from zoneinfo import ZoneInfo
 
 from casita.domain import (
     Chore,
+    HouseholdTask,
     Inventory,
     InventoryItem,
+    MealPlanEntry,
+    MealPlanEntryType,
     Recipe,
     RecipeIngredient,
     ShoppingItem,
@@ -379,6 +382,120 @@ def map_chores(
                 chore.due_at is None,
                 chore.due_at or datetime.max.replace(tzinfo=timezone.utc),
                 chore.name.casefold(),
+            ),
+        )
+    )
+
+
+def map_meal_plan(
+    household_id: str,
+    entry_rows: Iterable[GrocyRow],
+    sections: Mapping[str, GrocyRow],
+    recipes: Mapping[str, GrocyRow],
+    products: Mapping[str, GrocyRow],
+    units: Mapping[str, GrocyRow],
+) -> tuple[MealPlanEntry, ...]:
+    """Translate Grocy Meal Plan rows without leaking native identifiers."""
+
+    entries = []
+
+    for row in entry_rows:
+        raw_type = str(row.get("type") or "").strip().casefold()
+
+        try:
+            entry_type = MealPlanEntryType(raw_type)
+        except ValueError as error:
+            raise ValueError(
+                f"Grocy returned unsupported Meal Plan type {raw_type!r}."
+            ) from error
+
+        day = date_value(row.get("day"))
+        if day is None:
+            raise ValueError("Grocy Meal Plan entry is missing its day.")
+
+        section = sections.get(identity_key(row.get("section_id")), {})
+        section_name = str(section.get("name") or "").strip()
+        title = ""
+        description = ""
+        servings = None
+        quantity = None
+        unit_name = ""
+        reference_available = True
+
+        if entry_type == MealPlanEntryType.RECIPE:
+            recipe_id = identity_key(row.get("recipe_id"))
+            recipe = recipes.get(recipe_id, {})
+            reference_available = bool(recipe)
+            title = str(recipe.get("name") or "").strip()
+            description = str(recipe.get("description") or "").strip()
+            servings = decimal_value(row.get("recipe_servings"))
+        elif entry_type == MealPlanEntryType.PRODUCT:
+            product_id = identity_key(row.get("product_id"))
+            product = products.get(product_id, {})
+            reference_available = bool(product)
+            title = str(product.get("name") or "").strip()
+            quantity = decimal_value(row.get("product_amount"))
+            unit = units.get(identity_key(row.get("product_qu_id")), {})
+            unit_name = str(unit.get("name") or "").strip()
+        else:
+            description = str(row.get("note") or "").strip()
+            title = description
+
+        entries.append(
+            MealPlanEntry(
+                id=domain_id("meal-plan-entry", row.get("id")),
+                household_id=household_id,
+                day=day,
+                section=section_name,
+                entry_type=entry_type,
+                title=title,
+                description=description,
+                servings=servings,
+                quantity=quantity,
+                unit=unit_name,
+                completed=boolean_value(row.get("done")),
+                reference_available=reference_available,
+            )
+        )
+
+    return tuple(sorted(entries, key=lambda item: (item.day, item.section, item.title)))
+
+
+def map_tasks(
+    household_id: str,
+    task_rows: Iterable[GrocyRow],
+    categories: Mapping[str, GrocyRow],
+) -> tuple[HouseholdTask, ...]:
+    """Translate all pending and completed Grocy Tasks."""
+
+    tasks = []
+
+    for row in task_rows:
+        name = str(row.get("name") or "").strip()
+        if name == "":
+            raise ValueError("Grocy Task is missing its name.")
+
+        category = categories.get(identity_key(row.get("category_id")), {})
+        tasks.append(
+            HouseholdTask(
+                id=domain_id("task", row.get("id")),
+                household_id=household_id,
+                name=name,
+                description=str(row.get("description") or "").strip(),
+                due_on=date_value(row.get("due_date")),
+                category=str(category.get("name") or "").strip(),
+                completed=boolean_value(row.get("done")),
+            )
+        )
+
+    return tuple(
+        sorted(
+            tasks,
+            key=lambda item: (
+                item.completed,
+                item.due_on is None,
+                item.due_on or date.max,
+                item.name.casefold(),
             ),
         )
     )

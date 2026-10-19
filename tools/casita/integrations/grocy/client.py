@@ -6,13 +6,14 @@ import requests
 class GrocyApiClient:
     """Perform authenticated requests against one Grocy API instance."""
 
-    def __init__(self, base_url, api_key):
+    def __init__(self, base_url, api_key, *, timeout=10):
         self.base_url = str(base_url).rstrip("/")
         self.headers = {
             "GROCY-API-KEY": str(api_key),
             "Accept": "application/json",
             "Content-Type": "application/json",
         }
+        self.timeout = float(timeout)
 
     def get(self, endpoint):
         """Perform a GET request."""
@@ -20,7 +21,7 @@ class GrocyApiClient:
         response = requests.get(
             f"{self.base_url}/api{endpoint}",
             headers=self.headers,
-            timeout=10,
+            timeout=self.timeout,
         )
 
         response.raise_for_status()
@@ -34,7 +35,7 @@ class GrocyApiClient:
             f"{self.base_url}/api{endpoint}",
             headers=self.headers,
             json=payload,
-            timeout=10,
+            timeout=self.timeout,
         )
 
         response.raise_for_status()
@@ -51,7 +52,7 @@ class GrocyApiClient:
             f"{self.base_url}/api{endpoint}",
             headers=self.headers,
             json=payload,
-            timeout=10,
+            timeout=self.timeout,
         )
 
         response.raise_for_status()
@@ -67,7 +68,7 @@ class GrocyApiClient:
         response = requests.delete(
             f"{self.base_url}/api{endpoint}",
             headers=self.headers,
-            timeout=10,
+            timeout=self.timeout,
         )
 
         response.raise_for_status()

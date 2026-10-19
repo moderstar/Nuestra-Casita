@@ -28,11 +28,13 @@ from casita.application.services import (
     ChoreService,
     DeviceService,
     InventoryService,
+    MealPlanService,
     MediaService,
     NotificationService,
     RecipeService,
     ServiceResult,
     ShoppingService,
+    TaskService,
 )
 from casita.application.synchronization import (
     SynchronizationApplicationService,
@@ -61,11 +63,13 @@ __all__ = [
     "IntegrationCatalogExecutor",
     "IntegrationCatalogPlanner",
     "InventoryService",
+    "MealPlanService",
     "MediaService",
     "NotificationService",
     "RecipeService",
     "ServiceResult",
     "ShoppingService",
+    "TaskService",
     "SynchronizationApplicationService",
     "SynchronizationRun",
 ]

@@ -88,23 +88,22 @@ because they can orphan or reinterpret existing custom data.
 
 ## Grocy Integration — Dashboard Readiness
 
-| Capability | Status before Dashboard API |
+| Capability | Dashboard API status |
 | --- | --- |
 | Inventory read | Implemented and normalized |
 | Shopping Lists read | Implemented, including named/empty lists and items |
 | Recipes read | Implemented and normalized |
-| Meal Plan read | Sync resource exists; backend-neutral read projection is missing |
+| Meal Plan read | Implemented and normalized |
 | Chores read | Implemented and normalized |
-| Tasks read | Sync resource exists; dashboard/domain read projection is missing |
+| Tasks read | Implemented and normalized |
 | Dashboard snapshot assembly | Implemented with versioned backend-neutral contract |
-| API transport | Missing; current entry point is CLI only |
-| Authentication | Missing for a future dashboard API |
-| Docker deployment | Existing project/Grocy deployment conventions are usable; no Dashboard API service exists yet |
+| API transport | Implemented as versioned read-only FastAPI endpoints |
+| Authentication | Signed HTTP-only cookie session implemented |
+| Docker deployment | Dedicated non-root Dashboard API service implemented |
 
-Milestone 15 can begin by adding backend-neutral Meal Plan and Task read
-models, exposing the existing snapshot through a small authenticated HTTP API,
-and defining its Docker service and health check. Caching or a new database is
-not required until measured API behavior demonstrates that need.
+Milestone 16 can build the iPad browser interface against the authenticated
+API. Caching or a new database remains unnecessary until measured behavior
+demonstrates that need.
 
 ## Product Barcode API Findings
 

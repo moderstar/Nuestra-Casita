@@ -19,11 +19,13 @@ from casita.application import (
     DeviceService,
     IntegrationDirectory,
     InventoryService,
+    MealPlanService,
     MediaService,
     MaintenanceService,
     NotificationService,
     RecipeService,
     ShoppingService,
+    TaskService,
     SynchronizationApplicationService,
 )
 from casita.bootstrap.configuration import ApplicationConfiguration
@@ -42,6 +44,8 @@ class ApplicationServices:
     inventory: InventoryService
     recipes: RecipeService
     chores: ChoreService
+    meal_plan: MealPlanService
+    tasks: TaskService
     calendar: CalendarService
     budget: BudgetService
     notifications: NotificationService
@@ -88,6 +92,8 @@ def build_application(
         inventory=InventoryService(directory),
         recipes=RecipeService(directory),
         chores=ChoreService(directory),
+        meal_plan=MealPlanService(directory),
+        tasks=TaskService(directory),
         calendar=CalendarService(directory),
         budget=BudgetService(directory),
         notifications=NotificationService(directory),
@@ -99,6 +105,8 @@ def build_application(
         inventory=services.inventory,
         recipes=services.recipes,
         chores=services.chores,
+        meal_plan=services.meal_plan,
+        tasks=services.tasks,
         calendar=services.calendar,
         budget=services.budget,
         notifications=services.notifications,

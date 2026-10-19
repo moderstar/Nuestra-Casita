@@ -20,6 +20,8 @@ from casita.domain import (
     Device,
     Household,
     Inventory,
+    HouseholdTask,
+    MealPlanEntry,
     MediaItem,
     Notification,
     Person,
@@ -33,6 +35,8 @@ DomainRecord: TypeAlias = (
     | Person
     | ShoppingList
     | Inventory
+    | HouseholdTask
+    | MealPlanEntry
     | Recipe
     | Chore
     | CalendarEvent
@@ -52,6 +56,8 @@ class Capability(str, Enum):
     INVENTORY = "inventory"
     RECIPES = "recipes"
     CHORES = "chores"
+    MEAL_PLAN = "meal-plan"
+    TASKS = "tasks"
     CALENDAR = "calendar"
     BUDGET = "budget"
     NOTIFICATIONS = "notifications"

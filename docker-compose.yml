@@ -1,0 +1,16 @@
+services:
+  dashboard-api:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      CASITA_API_HOST: 0.0.0.0
+      CASITA_API_PORT: 8080
+    ports:
+      - "${CASITA_API_BIND_ADDRESS:-127.0.0.1}:${CASITA_API_PORT:-8080}:8080"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true

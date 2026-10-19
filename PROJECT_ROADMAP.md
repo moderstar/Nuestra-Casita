@@ -93,6 +93,8 @@ these integrations.
 - [ ] Add remaining Grocy platform read capabilities when domain needs emerge
 - [ ] Select persistence and caching only when required by an integration
 - [ ] Add normalized platform events and notifications
+- [x] Add authenticated, read-only Dashboard HTTP API
+- [x] Add normalized Meal Plan and Task read projections
 
 ## Current Development Priority
 
@@ -187,10 +189,10 @@ Initial dashboard areas are expected to include:
 - Home status and common automations
 - Family photos
 
-The versioned internal dashboard contract is now defined. Dashboard UI,
-transport, authentication, and deployment remain intentionally deferred.
-The Grocy resource milestone is complete; Milestone 15 can begin the Dashboard
-API after adding normalized Meal Plan and Task read projections.
+The versioned dashboard contract, authenticated HTTP transport, and Docker
+deployment are defined. The touch-friendly Dashboard UI remains deferred.
+The Grocy resource milestone and Dashboard API are complete. Milestone 16 can
+build the touch-friendly iPad interface against the versioned HTTP contract.
 
 ## Reproducibility Goal
 

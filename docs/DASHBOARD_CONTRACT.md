@@ -1,5 +1,10 @@
 # Kitchen Dashboard Contract
 
+Milestone 15 keeps contract version `1` and adds optional `meal_plan`, `tasks`,
+and `issues` fields with empty defaults. Existing consumers that ignore unknown
+fields remain compatible. Decimals serialize as strings and dates/datetimes as
+ISO 8601. `issues` distinguishes partial failure from successful empty data.
+
 ## Boundary
 
 The future kitchen dashboard consumes only Nuestra Casita domain models
@@ -12,7 +17,8 @@ It must never:
 - Store integration credentials
 - Interpret backend-specific failure responses
 
-No dashboard or frontend is implemented in this milestone.
+The contract is exposed by the Dashboard API. The browser frontend remains a
+Milestone 16 concern.
 
 ## Version
 

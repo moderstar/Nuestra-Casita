@@ -16,9 +16,8 @@ their data without exposing vendor APIs to future clients.
 - Versioned internal contract for the future kitchen dashboard
 - Architecture designed for reproducible Docker and Proxmox deployments
 
-The terminal dashboard and unified application CLI are implemented. No web
-frontend, API server, authentication system, or platform database is
-implemented yet.
+The terminal dashboard, unified CLI, and authenticated read-only Dashboard API
+are implemented. No web frontend or platform database is implemented yet.
 
 ## Architecture
 
@@ -29,6 +28,9 @@ implemented yet.
 - [Dashboard and command framework](docs/COMMAND_FRAMEWORK.md)
 - [Integration contract](docs/INTEGRATION_CONTRACT.md)
 - [Dashboard contract](docs/DASHBOARD_CONTRACT.md)
+- [Dashboard API](docs/DASHBOARD_API.md)
+- [Dashboard API deployment](docs/DASHBOARD_API_DEPLOYMENT.md)
+- [Milestone 16 UI handoff](docs/MILESTONE_16_HANDOFF.md)
 - [Grocy integration architecture](docs/ARCHITECTURE.md)
 - [Project roadmap](PROJECT_ROADMAP.md)
 - [Grocy 4.6 API inventory](docs/GROCY_4_6_API_RESOURCES.md)

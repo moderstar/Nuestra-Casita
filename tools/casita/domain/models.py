@@ -137,6 +137,47 @@ class Chore:
     source_references: tuple[SourceReference, ...] = ()
 
 
+class MealPlanEntryType(str, Enum):
+    """Describe a backend-neutral meal-plan entry kind."""
+
+    RECIPE = "recipe"
+    PRODUCT = "product"
+    NOTE = "note"
+
+
+@dataclass(frozen=True, slots=True)
+class MealPlanEntry:
+    """Represent one household meal-plan entry."""
+
+    id: str
+    household_id: str
+    day: date
+    section: str
+    entry_type: MealPlanEntryType
+    title: str = ""
+    description: str = ""
+    servings: Decimal | None = None
+    quantity: Decimal | None = None
+    unit: str = ""
+    completed: bool = False
+    reference_available: bool = True
+    source_references: tuple[SourceReference, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class HouseholdTask:
+    """Represent a read-only household task projection."""
+
+    id: str
+    household_id: str
+    name: str
+    description: str = ""
+    due_on: date | None = None
+    category: str = ""
+    completed: bool = False
+    source_references: tuple[SourceReference, ...] = ()
+
+
 @dataclass(frozen=True, slots=True)
 class CalendarEvent:
     """Represent an event shown on the household calendar."""

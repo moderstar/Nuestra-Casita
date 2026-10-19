@@ -2,6 +2,7 @@
 
 from casita.dashboard.contracts import (
     Dashboard,
+    DashboardIssue,
     DEFAULT_DASHBOARD_CONTRACT,
     DashboardContract,
     DashboardSection,
@@ -12,6 +13,7 @@ from casita.dashboard.contracts import (
 
 __all__ = [
     "Dashboard",
+    "DashboardIssue",
     "DEFAULT_DASHBOARD_CONTRACT",
     "DashboardContract",
     "DashboardSection",

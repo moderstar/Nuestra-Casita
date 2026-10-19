@@ -29,8 +29,10 @@ from casita.integrations.grocy.client import GrocyApiClient
 from casita.integrations.grocy.mapping import (
     map_chores,
     map_inventory,
+    map_meal_plan,
     map_recipes,
     map_shopping_lists,
+    map_tasks,
     rows_by_id,
 )
 
@@ -54,6 +56,8 @@ class GrocyReadAdapter:
                 Capability.INVENTORY,
                 Capability.RECIPES,
                 Capability.CHORES,
+                Capability.MEAL_PLAN,
+                Capability.TASKS,
             }
         ),
         version="4.6",
@@ -401,6 +405,21 @@ class GrocyReadAdapter:
                     rows("/objects/chores"),
                     rows("/chores"),
                     self._timezone,
+                )
+            elif capability == Capability.MEAL_PLAN:
+                records = map_meal_plan(
+                    request.household_id,
+                    rows("/objects/meal_plan"),
+                    rows_by_id(rows("/objects/meal_plan_sections")),
+                    rows_by_id(rows("/objects/recipes?query[]=type=normal")),
+                    rows_by_id(rows("/objects/products")),
+                    rows_by_id(rows("/objects/quantity_units")),
+                )
+            elif capability == Capability.TASKS:
+                records = map_tasks(
+                    request.household_id,
+                    rows("/objects/tasks"),
+                    rows_by_id(rows("/objects/task_categories")),
                 )
             else:
                 raise AssertionError(

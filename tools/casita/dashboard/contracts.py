@@ -17,7 +17,9 @@ from casita.domain import (
     Chore,
     Device,
     Household,
+    HouseholdTask,
     Inventory,
+    MealPlanEntry,
     MediaItem,
     Notification,
     Recipe,
@@ -35,6 +37,8 @@ class DashboardSection(str, Enum):
     INVENTORY = "inventory"
     MEALS = "meals"
     CHORES = "chores"
+    MEAL_PLAN = "meal-plan"
+    TASKS = "tasks"
     BUDGET = "budget"
     HOME = "home"
     MEDIA = "media"
@@ -69,6 +73,15 @@ class DashboardContract:
 
 
 @dataclass(frozen=True, slots=True)
+class DashboardIssue:
+    """Expose a safe, backend-neutral partial dashboard failure."""
+
+    source: str
+    capability: str
+    message: str = "Integration data could not be loaded."
+
+
+@dataclass(frozen=True, slots=True)
 class DashboardSnapshot:
     """Aggregate backend-neutral household data for one dashboard render."""
 
@@ -80,11 +93,14 @@ class DashboardSnapshot:
     inventory: Inventory | None = None
     recipes: tuple[Recipe, ...] = ()
     chores: tuple[Chore, ...] = ()
+    meal_plan: tuple[MealPlanEntry, ...] = ()
+    tasks: tuple[HouseholdTask, ...] = ()
     budget: BudgetSummary | None = None
     devices: tuple[Device, ...] = ()
     media: tuple[MediaItem, ...] = ()
     notifications: tuple[Notification, ...] = ()
     stale_sections: frozenset[DashboardSection] = frozenset()
+    issues: tuple[DashboardIssue, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -127,6 +143,16 @@ DEFAULT_DASHBOARD_CONTRACT = DashboardContract(
         SectionContract(
             DashboardSection.CHORES,
             frozenset({Capability.CHORES}),
+            RefreshPolicy(60, 600),
+        ),
+        SectionContract(
+            DashboardSection.MEAL_PLAN,
+            frozenset({Capability.MEAL_PLAN}),
+            RefreshPolicy(60, 600),
+        ),
+        SectionContract(
+            DashboardSection.TASKS,
+            frozenset({Capability.TASKS}),
             RefreshPolicy(60, 600),
         ),
         SectionContract(

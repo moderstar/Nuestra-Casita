@@ -1,0 +1,9 @@
+.git
+.env
+.env.*
+!.env.dashboard.example
+*.bundle
+__pycache__
+*.pyc
+.pytest_cache
+upload

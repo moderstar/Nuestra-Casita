@@ -15,16 +15,19 @@ from casita.application.services import (
     ChoreService,
     DeviceService,
     InventoryService,
+    MealPlanService,
     MediaService,
     NotificationService,
     RecipeService,
     ServiceResult,
     ShoppingService,
+    TaskService,
 )
 from casita.dashboard import (
     DEFAULT_DASHBOARD_CONTRACT,
     DashboardContract,
     Dashboard,
+    DashboardIssue,
     DashboardSection,
     DashboardSnapshot,
 )
@@ -48,6 +51,8 @@ class DashboardService:
         inventory: InventoryService,
         recipes: RecipeService,
         chores: ChoreService,
+        meal_plan: MealPlanService,
+        tasks: TaskService,
         calendar: CalendarService,
         budget: BudgetService,
         notifications: NotificationService,
@@ -60,6 +65,8 @@ class DashboardService:
         self._inventory = inventory
         self._recipes = recipes
         self._chores = chores
+        self._meal_plan = meal_plan
+        self._tasks = tasks
         self._calendar = calendar
         self._budget = budget
         self._notifications = notifications
@@ -86,6 +93,8 @@ class DashboardService:
         inventory = self._inventory.read(household.id)
         recipes = self._recipes.read(household.id)
         chores = self._chores.read(household.id)
+        meal_plan = self._meal_plan.read(household.id)
+        tasks = self._tasks.read(household.id)
         budget = self._budget.read(household.id)
         devices = self._devices.read(household.id)
         media = self._media.read(household.id)
@@ -96,6 +105,8 @@ class DashboardService:
             DashboardSection.INVENTORY: inventory,
             DashboardSection.MEALS: recipes,
             DashboardSection.CHORES: chores,
+            DashboardSection.MEAL_PLAN: meal_plan,
+            DashboardSection.TASKS: tasks,
             DashboardSection.BUDGET: budget,
             DashboardSection.HOME: devices,
             DashboardSection.MEDIA: media,
@@ -119,11 +130,21 @@ class DashboardService:
             ),
             recipes=recipes.records,
             chores=chores.records,
+            meal_plan=meal_plan.records,
+            tasks=tasks.records,
             budget=self._select_budget(budget),
             devices=devices.records,
             media=media.records,
             notifications=notifications.records,
             stale_sections=stale_sections,
+            issues=tuple(
+                DashboardIssue(
+                    source=failure.integration_key,
+                    capability=failure.capability.value,
+                )
+                for result in section_results.values()
+                for failure in result.failures
+            ),
         )
 
     def overview(

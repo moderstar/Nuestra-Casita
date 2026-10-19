@@ -6,6 +6,7 @@ Each resource describes how one catalog type maps to Grocy.
 
 from casita.resources.batteries import BATTERY_RESOURCE
 from casita.resources.chores import CHORE_RESOURCE
+from casita.resources.equipment import EQUIPMENT_RESOURCE
 from casita.resources.locations import LOCATION_RESOURCE
 from casita.resources.meal_plan import MEAL_PLAN_RESOURCE
 from casita.resources.meal_plan_sections import MEAL_PLAN_SECTION_RESOURCE
@@ -22,10 +23,12 @@ from casita.resources.shopping_locations import SHOPPING_LOCATION_RESOURCE
 from casita.resources.task_categories import TASK_CATEGORY_RESOURCE
 from casita.resources.tasks import TASK_RESOURCE
 from casita.resources.userfields import USERFIELD_RESOURCE
+from casita.resources.user_entities import USER_ENTITY_RESOURCE
 
 __all__ = [
     "BATTERY_RESOURCE",
     "CHORE_RESOURCE",
+    "EQUIPMENT_RESOURCE",
     "LOCATION_RESOURCE",
     "MEAL_PLAN_RESOURCE",
     "MEAL_PLAN_SECTION_RESOURCE",
@@ -40,4 +43,5 @@ __all__ = [
     "TASK_CATEGORY_RESOURCE",
     "TASK_RESOURCE",
     "USERFIELD_RESOURCE",
+    "USER_ENTITY_RESOURCE",
 ]

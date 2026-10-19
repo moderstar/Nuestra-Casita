@@ -17,6 +17,8 @@ Current version: Grocy 4.6
 - Recipes and recipe positions
 - Meal plan sections
 - Meal plan entries
+- Equipment definitions
+- User Entity definitions (records remain Grocy-owned)
 
 ## Next
 

@@ -169,6 +169,19 @@ def compare_userfield(
             grocy_userfield.get(api_field)
         )
 
+        if (
+            api_field == "type"
+            and catalog_value != grocy_value
+            and parse_userfield_entity(
+                catalog_userfield.get("Entity")
+            ).startswith("userentity-")
+        ):
+            raise ValueError(
+                "Changing a User Entity field type is an unsupported "
+                "destructive schema migration; create an explicit "
+                "migration outside synchronization."
+            )
+
         if catalog_value != grocy_value:
             differences.append(
                 {

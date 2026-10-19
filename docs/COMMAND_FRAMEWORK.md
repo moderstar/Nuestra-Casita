@@ -82,6 +82,18 @@ Both are also included in `sync all` after Recipe dependencies. Dry-run only
 renders structured plans. Apply preserves unmanaged entries and never writes
 Meal Plan completion state.
 
+Equipment and User Entity definitions use the same command surface:
+
+```text
+casita sync equipment [--apply]
+casita sync user-entities [--apply]
+```
+
+Equipment apply manages names on create and descriptions on update, without
+touching manuals or custom values. User Entity apply manages definition
+metadata only; records, custom-field values, destructive schema changes,
+renames, and deletes are excluded.
+
 Legacy lookup, validation, and export commands remain available through
 `MaintenanceService`. The CLI does not invoke their Grocy implementation
 directly.

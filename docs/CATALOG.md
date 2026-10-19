@@ -4,6 +4,55 @@ Nuestra Casita catalogs contain only household definitions intentionally
 managed from Git. Native Grocy rows absent from a catalog remain unmanaged and
 are never deleted by synchronization.
 
+## Equipment
+
+`catalog/equipment.csv` contains:
+
+| Column | Required | Meaning |
+| --- | --- | --- |
+| `Equipment` | Yes | Unique name and conservative synchronization identity |
+| `Description` | No | Git-managed descriptive text |
+
+The file starts header-only. Equipment names match case-insensitively after
+trimming. Duplicate catalog names and ambiguous duplicate Grocy names stop
+planning. Apply can create a named item or update its description only.
+Instruction-manual files, Userfield values, creation timestamps, maintenance
+information kept outside this entity, unmanaged rows, and deletions remain
+Grocy-owned.
+
+```bash
+python tools/casita.py sync equipment
+python tools/casita.py sync equipment --apply
+```
+
+## User Entity Definitions
+
+`catalog/user_entities.csv` contains:
+
+| Column | Required | Meaning |
+| --- | --- | --- |
+| `Name` | Yes | Immutable internal identifier: letters, numbers, underscores |
+| `Caption` | Yes | User-facing name |
+| `Description` | No | Definition description |
+| `Show in Sidebar` | No | Boolean; blank defaults to enabled |
+| `Icon CSS Class` | No | Optional Grocy sidebar icon class |
+
+This CSV models only rows in Grocy's `userentities` definition table. Custom
+fields remain in `catalog/userfields.csv` under entity
+`userentity-<Name>`. User Entity records (`userobjects`) and all field values
+are live Grocy data and are never cataloged, updated, migrated, or deleted.
+
+The internal name is the identity and is never updated. Apply can create a
+definition or update caption, description, sidebar visibility, and icon only.
+A field-type change for a `userentity-*` Userfield is rejected as an
+unsupported destructive migration. Renames and record migration require an
+explicit future migration mechanism.
+
+```bash
+python tools/casita.py sync user-entities
+python tools/casita.py sync user-entities --apply
+```
+
 ## Quantity Unit Conversions
 
 `catalog/quantity_unit_conversions.csv` has these columns:

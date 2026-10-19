@@ -10,6 +10,7 @@ from typing import Any
 from casita.resources import (
     BATTERY_RESOURCE,
     CHORE_RESOURCE,
+    EQUIPMENT_RESOURCE,
     LOCATION_RESOURCE,
     MEAL_PLAN_RESOURCE,
     MEAL_PLAN_SECTION_RESOURCE,
@@ -24,12 +25,14 @@ from casita.resources import (
     TASK_CATEGORY_RESOURCE,
     TASK_RESOURCE,
     USERFIELD_RESOURCE,
+    USER_ENTITY_RESOURCE,
 )
 
 
 RESOURCES: dict[str, dict[str, Any]] = {
     BATTERY_RESOURCE["name"]: BATTERY_RESOURCE,
     CHORE_RESOURCE["name"]: CHORE_RESOURCE,
+    EQUIPMENT_RESOURCE["name"]: EQUIPMENT_RESOURCE,
     LOCATION_RESOURCE["name"]: LOCATION_RESOURCE,
     MEAL_PLAN_RESOURCE["name"]: MEAL_PLAN_RESOURCE,
     MEAL_PLAN_SECTION_RESOURCE["name"]: MEAL_PLAN_SECTION_RESOURCE,
@@ -46,11 +49,13 @@ RESOURCES: dict[str, dict[str, Any]] = {
     TASK_CATEGORY_RESOURCE["name"]: TASK_CATEGORY_RESOURCE,
     TASK_RESOURCE["name"]: TASK_RESOURCE,
     USERFIELD_RESOURCE["name"]: USERFIELD_RESOURCE,
+    USER_ENTITY_RESOURCE["name"]: USER_ENTITY_RESOURCE,
 }
 
 SYNC_ALL_COMMAND = "all"
 
 SYNC_RESOURCE_ORDER = (
+    "user-entities",
     "userfields",
     "product-groups",
     "quantity-units",
@@ -63,6 +68,7 @@ SYNC_RESOURCE_ORDER = (
     "tasks",
     "chores",
     "batteries",
+    "equipment",
     "recipes",
     "recipe-positions",
     "meal-plan-sections",

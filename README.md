@@ -145,6 +145,19 @@ python tools/casita.py sync meal-plan --apply
 Unmanaged Grocy plans and completion state are preserved. Entry moves,
 retargeting, ambiguous duplicates, and automatic deletion are not performed.
 
+Preview or apply Equipment and User Entity definitions:
+
+```bash
+python tools/casita.py sync equipment
+python tools/casita.py sync equipment --apply
+python tools/casita.py sync user-entities
+python tools/casita.py sync user-entities --apply
+```
+
+These resources preserve manuals, custom values, User Entity records,
+unmanaged definitions, and all deletion-sensitive data. User Entity names and
+field types are not migrated automatically.
+
 ## Long-Term Direction
 
 The primary household interface will be a wall-mounted kitchen touchscreen

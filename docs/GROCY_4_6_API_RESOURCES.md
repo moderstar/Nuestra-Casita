@@ -33,11 +33,11 @@ Status meanings:
 | `tasks` | Implemented | Managed non-recurring definitions; completion remains Grocy-owned |
 | `task_categories` | Implemented | Task category master data |
 | `product_groups` | Implemented | Product group master data |
-| `equipment` | Planned | Equipment master data |
+| `equipment` | Implemented | Definitions; manuals and Userfield values are excluded |
 | `api_keys` | Not Applicable | Security credentials |
 | `userfields` | Implemented | Declarative custom field definitions; per-object values are excluded |
-| `userentities` | Planned | Custom entity definitions |
-| `userobjects` | Planned | Custom entity records |
+| `userentities` | Implemented | Definition metadata only |
+| `userobjects` | Not Applicable | Live custom records and values remain Grocy-owned |
 | `meal_plan` | Implemented | Managed recipe, product, and note entries; completion remains Grocy-owned |
 | `stock_log` | Not Applicable | Read-only stock journal |
 | `stock` | Not Applicable | Runtime stock state |
@@ -55,6 +55,56 @@ Status meanings:
 Grocy 4.6 does not expose a `chore_groups` entity. Task Categories replace
 the previously assumed Chore Groups milestone because they are a native,
 supported Grocy resource.
+
+## Equipment API Findings
+
+Grocy 4.6 exposes Equipment through generic `GET`, `POST`, `PUT`, and `DELETE`
+object endpoints under `/objects/equipment`. The table requires a unique
+`name` and also contains `description`, `instruction_manual_file_name`, an ID,
+and `row_created_timestamp`. The UI uploads manuals separately through the
+files API; no native Equipment category, Location, purchase, warranty, or
+maintenance-history relationship exists in this entity. Additional metadata
+can be modeled through the separate Userfields mechanism.
+
+Nuestra Casita matches normalized names, creates cataloged definitions, and
+updates descriptions. It never deletes Equipment or changes manual references,
+timestamps, or Userfield values.
+
+## User Entity API Findings
+
+Grocy 4.6 exposes definitions at `/objects/userentities`. A definition has a
+unique internal `name`, required `caption`, optional `description`, sidebar
+visibility, icon CSS class, generated ID, and creation timestamp. The frontend
+uses generic POST and PUT operations but disables the internal name when
+editing, so Nuestra Casita treats it as immutable.
+
+User Entity fields are ordinary `userfields` definitions whose entity is
+`userentity-<name>`. Instance records are separate `/objects/userobjects` rows
+linked by `userentity_id`, and their values are held in Grocy's Userfield value
+store. Definition synchronization never writes records or values. Although
+Grocy exposes generic deletes, Nuestra Casita never invokes them. Renames,
+field-type changes, record migration, and definition deletion are unsupported
+because they can orphan or reinterpret existing custom data.
+
+## Grocy Integration — Dashboard Readiness
+
+| Capability | Status before Dashboard API |
+| --- | --- |
+| Inventory read | Implemented and normalized |
+| Shopping Lists read | Implemented, including named/empty lists and items |
+| Recipes read | Implemented and normalized |
+| Meal Plan read | Sync resource exists; backend-neutral read projection is missing |
+| Chores read | Implemented and normalized |
+| Tasks read | Sync resource exists; dashboard/domain read projection is missing |
+| Dashboard snapshot assembly | Implemented with versioned backend-neutral contract |
+| API transport | Missing; current entry point is CLI only |
+| Authentication | Missing for a future dashboard API |
+| Docker deployment | Existing project/Grocy deployment conventions are usable; no Dashboard API service exists yet |
+
+Milestone 15 can begin by adding backend-neutral Meal Plan and Task read
+models, exposing the existing snapshot through a small authenticated HTTP API,
+and defining its Docker service and health check. Caching or a new database is
+not required until measured API behavior demonstrates that need.
 
 ## Product Barcode API Findings
 

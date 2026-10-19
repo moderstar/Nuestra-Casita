@@ -101,7 +101,8 @@ building the orchestration layer one demonstrated integration at a time.
 
 Products, Product Groups, Quantity Units, Locations, Shopping Locations,
 Task Categories, Chores, Batteries, Recipe Definitions, Recipe Positions,
-and Userfields are implemented through the generic synchronization framework.
+Equipment, User Entity definitions, and Userfields are implemented through
+the generic synchronization framework.
 
 ### Grocy Roadmap
 
@@ -122,8 +123,8 @@ and Userfields are implemented through the generic synchronization framework.
 - [x] Product Barcodes
 - [x] Tasks (Git-managed definitions; Grocy owns completion activity)
 - [x] Meal Plan Sections and Meal Plan
-- [ ] Equipment
-- [ ] User Entities
+- [x] Equipment
+- [x] User Entity definitions (records remain Grocy-owned)
 - [ ] Refine the generic comparison engine where appropriate
 - [ ] Add automated tests
 - [x] Add a `sync all` command
@@ -188,6 +189,8 @@ Initial dashboard areas are expected to include:
 
 The versioned internal dashboard contract is now defined. Dashboard UI,
 transport, authentication, and deployment remain intentionally deferred.
+The Grocy resource milestone is complete; Milestone 15 can begin the Dashboard
+API after adding normalized Meal Plan and Task read projections.
 
 ## Reproducibility Goal
 

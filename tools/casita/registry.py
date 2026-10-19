@@ -20,6 +20,7 @@ from casita.resources import (
     RECIPE_POSITION_RESOURCE,
     SHOPPING_LOCATION_RESOURCE,
     TASK_CATEGORY_RESOURCE,
+    TASK_RESOURCE,
     USERFIELD_RESOURCE,
 )
 
@@ -39,6 +40,7 @@ RESOURCES: dict[str, dict[str, Any]] = {
     RECIPE_POSITION_RESOURCE["name"]: RECIPE_POSITION_RESOURCE,
     SHOPPING_LOCATION_RESOURCE["name"]: SHOPPING_LOCATION_RESOURCE,
     TASK_CATEGORY_RESOURCE["name"]: TASK_CATEGORY_RESOURCE,
+    TASK_RESOURCE["name"]: TASK_RESOURCE,
     USERFIELD_RESOURCE["name"]: USERFIELD_RESOURCE,
 }
 
@@ -54,6 +56,7 @@ SYNC_RESOURCE_ORDER = (
     "product-barcodes",
     "quantity-unit-conversions",
     "task-categories",
+    "tasks",
     "chores",
     "batteries",
     "recipes",

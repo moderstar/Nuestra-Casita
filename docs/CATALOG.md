@@ -88,3 +88,35 @@ python tools/casita.py sync product-barcodes --apply
 Git is authoritative only for rows explicitly present in the catalog. Apply
 creates missing associations; matching rows are no-ops. Unmanaged Grocy rows
 are preserved, and synchronization never updates or deletes barcode rows.
+
+## Tasks
+
+`catalog/tasks.csv` has these columns:
+
+| Column | Required | Meaning |
+| --- | --- | --- |
+| `Task` | Yes | Stable Task name used for exact normalized matching |
+| `Description` | No | Git-managed definition text |
+| `Due Date` | No | Date-only `YYYY-MM-DD` value; blank means no due date |
+| `Task Category` | No | Existing Task Category name; blank means uncategorized |
+
+The catalog intentionally starts with only its header. Task Categories must
+exist before referenced Tasks are applied, and `sync all` enforces that order.
+Invalid dates and missing categories fail during planning.
+
+Task names are matched case-insensitively after trimming. Grocy 4.6 has no
+external Task key or unique-name constraint, so duplicate names on either side
+are rejected as ambiguous. A catalog row with an exact identity is explicitly
+managed; Grocy Tasks absent from Git are preserved.
+
+Dry-run and apply:
+
+```bash
+python tools/casita.py sync tasks
+python tools/casita.py sync tasks --apply
+```
+
+Only `description`, `due_date`, and `category_id` can be updated. Completion,
+completion timestamps, assignment, creation timestamps, userfields, and other
+runtime state are never placed in synchronization payloads. No Task is deleted
+for being absent from the catalog.

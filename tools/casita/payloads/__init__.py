@@ -81,6 +81,12 @@ from casita.payloads.task_categories import (
     build_task_category_update_payload,
     parse_active as parse_task_category_active,
 )
+from casita.payloads.tasks import (
+    build_task_create_payload,
+    build_task_update_payload,
+    parse_due_date as parse_task_due_date,
+    resolve_category_id as resolve_task_category_id,
+)
 from casita.payloads.userfields import (
     build_userfield_create_payload,
     build_userfield_update_payload,
@@ -119,6 +125,8 @@ __all__ = [
     "build_shopping_location_update_payload",
     "build_task_category_create_payload",
     "build_task_category_update_payload",
+    "build_task_create_payload",
+    "build_task_update_payload",
     "build_userfield_create_payload",
     "build_userfield_update_payload",
     "load_product_template",
@@ -142,6 +150,8 @@ __all__ = [
     "resolve_recipe_product_id",
     "parse_shopping_location_active",
     "parse_task_category_active",
+    "parse_task_due_date",
+    "resolve_task_category_id",
     "parse_userfield_boolean",
     "parse_userfield_caption",
     "parse_userfield_default_value",

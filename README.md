@@ -123,6 +123,16 @@ python tools/casita.py sync product-barcodes --apply
 Existing Grocy barcodes absent from the catalog are preserved, and an existing
 barcode is never silently reassigned to a different Product.
 
+Preview or apply Git-managed non-recurring Task definitions:
+
+```bash
+python tools/casita.py sync tasks
+python tools/casita.py sync tasks --apply
+```
+
+Task completion, completion timestamps, user assignments, and Grocy-only Tasks
+remain owned by Grocy and are never overwritten by catalog synchronization.
+
 ## Long-Term Direction
 
 The primary household interface will be a wall-mounted kitchen touchscreen

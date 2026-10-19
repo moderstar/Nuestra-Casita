@@ -58,6 +58,17 @@ The dry run validates barcode identity and Product references. Apply creates
 only missing catalog associations; conflicts, reassignments, updates, and
 deletes are not performed.
 
+Tasks use the existing resource commands:
+
+```text
+casita sync tasks
+casita sync tasks --apply
+```
+
+They validate names, optional date-only due dates, and Task Category
+references. Apply creates missing definitions or updates managed definition
+fields only; completion and assignment activity are never written.
+
 Legacy lookup, validation, and export commands remain available through
 `MaintenanceService`. The CLI does not invoke their Grocy implementation
 directly.

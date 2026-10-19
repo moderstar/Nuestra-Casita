@@ -132,6 +132,12 @@ catalog Product names inside the adapter-owned workflow, and emits structured
 create or match plans. Barcode strings and Grocy IDs remain outside application
 services. Reassignments and deletes are intentionally unsupported.
 
+Tasks follow the same synchronization boundary through `/objects/tasks`.
+The Grocy-owned workflow resolves optional Task Category names and compares
+definition fields, then exposes only generic structured plans and results.
+Grocy completion flags, completion timestamps, assignments, and internal IDs
+never enter application-layer models or update payloads.
+
 ## Adapter Guidelines
 
 Future adapters should:

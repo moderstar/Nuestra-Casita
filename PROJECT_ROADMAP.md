@@ -120,7 +120,7 @@ and Userfields are implemented through the generic synchronization framework.
 - [x] Shopping Lists (read-only runtime projection; Grocy owns live activity)
 - [x] Quantity Unit Conversions
 - [x] Product Barcodes
-- [ ] Tasks
+- [x] Tasks (Git-managed definitions; Grocy owns completion activity)
 - [ ] Meal Plan Sections and Meal Plan
 - [ ] Equipment
 - [ ] User Entities

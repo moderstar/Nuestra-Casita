@@ -12,10 +12,11 @@ Current version: Grocy 4.6
 - Shopping lists (read-only)
 - Quantity unit conversions
 - Product barcodes
+- Tasks (definitions only)
+- Chores
 
 ## Next
 
-- Chores
 - Recipes
 - Meal planning
 - Home Assistant integration

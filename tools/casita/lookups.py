@@ -22,6 +22,9 @@ def build_lookups():
 
         "recipes": {},
         "recipes_by_id": {},
+
+        "task_categories": {},
+        "task_categories_by_id": {},
     }
 
     for row in get("/objects/locations"):
@@ -47,6 +50,10 @@ def build_lookups():
     for row in get("/objects/recipes?query[]=type=normal"):
         lookups["recipes"][row["name"]] = row["id"]
         lookups["recipes_by_id"][row["id"]] = row["name"]
+
+    for row in get("/objects/task_categories"):
+        lookups["task_categories"][row["name"]] = row["id"]
+        lookups["task_categories_by_id"][row["id"]] = row["name"]
 
     return lookups
 

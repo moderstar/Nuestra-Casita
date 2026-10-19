@@ -175,6 +175,21 @@ catalog rows.
 - Requires no lookup tables
 - CLI: `python tools/casita.py sync task-categories [--apply]`
 
+### Tasks
+
+- Catalog: `catalog/tasks.csv`
+- Grocy endpoint: `/objects/tasks`
+- Managed fields: `name`, `description`, `due_date`, and `category_id`
+- Exact normalized Task name identity; duplicate matches are rejected
+- Optional Task Category lookup; runs after Task Categories
+- CLI: `python tools/casita.py sync tasks [--apply]`
+
+Tasks are non-recurring definitions, unlike Chores. Synchronization never
+includes `done`, `done_timestamp`, `assigned_to_user_id`, creation timestamps,
+or userfields. Completed Tasks remain matchable through the object endpoint,
+and safe definition updates cannot reset their activity. Grocy-only Tasks are
+preserved and automatic deletion is unsupported.
+
 ### Chores
 
 - Catalog: `catalog/chores.csv`
@@ -303,10 +318,11 @@ The `sync all` command runs registered resources in dependency-aware order:
 7. Product Barcodes
 8. Quantity Unit Conversions
 9. Task Categories
-10. Chores
-11. Batteries
-12. Recipes
-13. Recipe Positions
+10. Tasks
+11. Chores
+12. Batteries
+13. Recipes
+14. Recipe Positions
 
 Each individual catalog operation is orchestrated by the backend-neutral
 `CatalogApplicationService`. It validates the resource, coordinates structured

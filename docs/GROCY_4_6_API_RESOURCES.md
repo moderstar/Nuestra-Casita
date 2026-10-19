@@ -30,7 +30,7 @@ Status meanings:
 | `recipes` | Implemented | Declarative Recipe definitions; ingredients and runtime serving state are excluded |
 | `recipes_pos` | Implemented | Declarative Recipe ingredients; fulfillment and calculated state are excluded |
 | `recipes_nestings` | Planned | Nested recipe relationships |
-| `tasks` | Planned | Household task definitions |
+| `tasks` | Implemented | Managed non-recurring definitions; completion remains Grocy-owned |
 | `task_categories` | Implemented | Task category master data |
 | `product_groups` | Implemented | Product group master data |
 | `equipment` | Planned | Equipment master data |
@@ -76,3 +76,33 @@ purchase metadata and deletes are deliberately unsupported. Although the
 generic API permits updates and deletes, synchronization refuses to reassign
 an existing barcode and never deletes a row absent from Git. These rules avoid
 overwriting unmanaged Grocy barcode data.
+
+## Tasks API Findings
+
+Grocy 4.6 stores non-recurring Tasks in the native `tasks` entity. Definition
+records are available through the generic object API:
+
+- `GET` and `POST /objects/tasks`
+- `GET`, `PUT`, and `DELETE /objects/tasks/{id}`
+
+The entity fields are `id`, required `name`, optional `description`, optional
+`due_date`, `done`, `done_timestamp`, optional `category_id`, optional
+`assigned_to_user_id`, and `row_created_timestamp`. The specialized
+`GET /tasks` endpoint returns only incomplete Tasks and expands the assigned
+user and Task Category. `POST /tasks/{taskId}/complete` and
+`POST /tasks/{taskId}/undo` exclusively manage completion state.
+
+Nuestra Casita reads `/objects/tasks` so completed rows remain visible for
+identity matching, but it never manages `done` or `done_timestamp`. The catalog
+supports `name`, `description`, a date-only due date, and an optional Task
+Category. Assignment is deferred because Grocy represents it with
+instance-specific user IDs. Userfields, creation timestamps, specialized
+completion endpoints, and delete operations are also outside this milestone.
+Grocy 4.6 has no separate Task history entity: completion is current state on
+the Task row, changed only through the complete and undo operations. Nuestra
+Casita does not call either operation.
+
+Grocy has no external Task key and does not enforce a unique Task name. Exact,
+case-insensitive normalized name matching is therefore the conservative
+identity rule. Duplicate catalog names or duplicate matching Grocy names are
+reported as ambiguity instead of being updated.

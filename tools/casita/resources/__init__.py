@@ -9,6 +9,9 @@ from casita.resources.chores import CHORE_RESOURCE
 from casita.resources.locations import LOCATION_RESOURCE
 from casita.resources.product_groups import PRODUCT_GROUP_RESOURCE
 from casita.resources.quantity_units import QUANTITY_UNIT_RESOURCE
+from casita.resources.quantity_unit_conversions import (
+    QUANTITY_UNIT_CONVERSION_RESOURCE,
+)
 from casita.resources.products import PRODUCT_RESOURCE
 from casita.resources.recipes import RECIPE_RESOURCE
 from casita.resources.recipe_positions import RECIPE_POSITION_RESOURCE
@@ -22,6 +25,7 @@ __all__ = [
     "LOCATION_RESOURCE",
     "PRODUCT_GROUP_RESOURCE",
     "QUANTITY_UNIT_RESOURCE",
+    "QUANTITY_UNIT_CONVERSION_RESOURCE",
     "PRODUCT_RESOURCE",
     "RECIPE_RESOURCE",
     "RECIPE_POSITION_RESOURCE",

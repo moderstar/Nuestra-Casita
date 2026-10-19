@@ -118,7 +118,7 @@ and Userfields are implemented through the generic synchronization framework.
 - [x] Recipe Positions
 - [x] Userfields
 - [x] Shopping Lists (read-only runtime projection; Grocy owns live activity)
-- [ ] Quantity Unit Conversions
+- [x] Quantity Unit Conversions
 - [ ] Product Barcodes
 - [ ] Tasks
 - [ ] Meal Plan Sections and Meal Plan

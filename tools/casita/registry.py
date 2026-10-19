@@ -13,6 +13,7 @@ from casita.resources import (
     LOCATION_RESOURCE,
     PRODUCT_GROUP_RESOURCE,
     PRODUCT_RESOURCE,
+    QUANTITY_UNIT_CONVERSION_RESOURCE,
     QUANTITY_UNIT_RESOURCE,
     RECIPE_RESOURCE,
     RECIPE_POSITION_RESOURCE,
@@ -29,6 +30,9 @@ RESOURCES: dict[str, dict[str, Any]] = {
     PRODUCT_GROUP_RESOURCE["name"]: PRODUCT_GROUP_RESOURCE,
     PRODUCT_RESOURCE["name"]: PRODUCT_RESOURCE,
     QUANTITY_UNIT_RESOURCE["name"]: QUANTITY_UNIT_RESOURCE,
+    QUANTITY_UNIT_CONVERSION_RESOURCE["name"]: (
+        QUANTITY_UNIT_CONVERSION_RESOURCE
+    ),
     RECIPE_RESOURCE["name"]: RECIPE_RESOURCE,
     RECIPE_POSITION_RESOURCE["name"]: RECIPE_POSITION_RESOURCE,
     SHOPPING_LOCATION_RESOURCE["name"]: SHOPPING_LOCATION_RESOURCE,
@@ -45,6 +49,7 @@ SYNC_RESOURCE_ORDER = (
     "locations",
     "shopping-locations",
     "products",
+    "quantity-unit-conversions",
     "task-categories",
     "chores",
     "batteries",

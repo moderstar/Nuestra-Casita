@@ -114,6 +114,18 @@ normalizes `/system/info` plus Product, Recipe, and Location counts into
 integration contracts. The application and CLI never inspect those Grocy
 responses directly.
 
+Quantity Unit Conversions are synchronization definitions rather than a new
+household read capability. The registered Grocy resource reads
+`/objects/quantity_unit_conversions`, resolves Quantity Unit and optional
+Product names inside the adapter-owned workflow, and exposes only structured
+plans/results through the existing synchronization contract.
+
+Grocy 4.6 stores source unit, target unit, factor, and nullable Product scope.
+Global/default and Product-specific conversions are distinct. Grocy also
+maintains a resolved conversion cache that can derive reverse or transitive
+paths; Nuestra Casita manages only the explicit native rows named in its
+catalog and never synchronizes derived cache rows.
+
 ## Adapter Guidelines
 
 Future adapters should:

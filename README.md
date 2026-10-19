@@ -96,6 +96,18 @@ Shopping lists are intentionally not part of declarative synchronization.
 Products and other master data can remain Git-managed, while checked state,
 quantities, notes, and list membership remain live Grocy-owned activity.
 
+Inspect managed Quantity Unit Conversions without changing Grocy:
+
+```bash
+python tools/casita.py sync quantity-unit-conversions
+```
+
+Apply only the explicitly cataloged conversion creates or factor updates:
+
+```bash
+python tools/casita.py sync quantity-unit-conversions --apply
+```
+
 ## Long-Term Direction
 
 The primary household interface will be a wall-mounted kitchen touchscreen

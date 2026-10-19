@@ -114,6 +114,28 @@ and apply engines contain no Product- or Product-Group-specific API logic.
 - Requires no lookup tables
 - CLI: `python tools/casita.py sync quantity-units [--apply]`
 
+### Quantity Unit Conversions
+
+- Catalog: `catalog/quantity_unit_conversions.csv`
+- Grocy endpoint: `/objects/quantity_unit_conversions`
+- Identity: optional Product scope plus directional source and target units
+- Managed field: positive decimal `factor`
+- Requires Quantity Unit and optional Product lookups
+- CLI: `python tools/casita.py sync quantity-unit-conversions [--apply]`
+
+The direction is `1 From Quantity Unit = Factor To Quantity Units`. A blank
+Product creates a global/default conversion; a Product name creates a
+product-specific conversion for the same direction. Factors are parsed and
+compared using `Decimal`, then serialized without binary floating-point
+conversion.
+
+The catalog owns only identities explicitly listed in Git. Existing Grocy
+conversions absent from the catalog are preserved. Planning rejects missing
+references, non-positive or non-finite factors, same-unit directions, and
+duplicate or conflicting identities. Reverse and transitively resolved
+conversions are Grocy-derived behavior and are not written as additional
+catalog rows.
+
 ### Locations
 
 - Catalog: `catalog/locations.csv`
@@ -263,11 +285,12 @@ The `sync all` command runs registered resources in dependency-aware order:
 4. Locations
 5. Shopping Locations
 6. Products
-7. Task Categories
-8. Chores
-9. Batteries
-10. Recipes
-11. Recipe Positions
+7. Quantity Unit Conversions
+8. Task Categories
+9. Chores
+10. Batteries
+11. Recipes
+12. Recipe Positions
 
 Each individual catalog operation is orchestrated by the backend-neutral
 `CatalogApplicationService`. It validates the resource, coordinates structured

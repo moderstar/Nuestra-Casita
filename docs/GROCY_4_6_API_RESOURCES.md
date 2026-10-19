@@ -23,7 +23,7 @@ Status meanings:
 | `batteries` | Implemented | Battery definitions; charge history is excluded |
 | `locations` | Implemented | Stock locations |
 | `quantity_units` | Implemented | Quantity unit master data |
-| `quantity_unit_conversions` | Planned | Quantity unit conversion rules |
+| `quantity_unit_conversions` | Implemented | Managed directional global and Product-specific conversion rules |
 | `shopping_list` | Read capability | Grocy-owned runtime items; never synchronized from Git |
 | `shopping_lists` | Read capability | Named lists grouped with their current items |
 | `shopping_locations` | Implemented | Shopping stores and locations |

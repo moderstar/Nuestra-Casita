@@ -37,6 +37,16 @@ usage output.
 available, including `casita sync products` and
 `casita sync product-groups --apply`.
 
+Quantity Unit Conversions use the same command surface:
+
+```text
+casita sync quantity-unit-conversions
+casita sync quantity-unit-conversions --apply
+```
+
+The first command is a presentation-only dry run. The second applies only
+planned creates and factor updates through the existing catalog executor.
+
 Legacy lookup, validation, and export commands remain available through
 `MaintenanceService`. The CLI does not invoke their Grocy implementation
 directly.

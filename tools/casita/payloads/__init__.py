@@ -38,6 +38,13 @@ from casita.payloads.quantity_units import (
     build_quantity_unit_update_payload,
     parse_active as parse_quantity_unit_active,
 )
+from casita.payloads.quantity_unit_conversions import (
+    build_quantity_unit_conversion_create_payload,
+    build_quantity_unit_conversion_update_payload,
+    conversion_display_name,
+    parse_conversion_factor,
+    resolve_relationships as resolve_quantity_unit_conversion_relationships,
+)
 from casita.payloads.products import (
     build_product_create_payload,
     build_product_update_payload,
@@ -92,6 +99,8 @@ __all__ = [
     "build_product_group_update_payload",
     "build_quantity_unit_create_payload",
     "build_quantity_unit_update_payload",
+    "build_quantity_unit_conversion_create_payload",
+    "build_quantity_unit_conversion_update_payload",
     "build_product_create_payload",
     "build_product_update_payload",
     "build_recipe_create_payload",
@@ -111,6 +120,9 @@ __all__ = [
     "parse_location_is_freezer",
     "parse_product_group_active",
     "parse_quantity_unit_active",
+    "parse_conversion_factor",
+    "conversion_display_name",
+    "resolve_quantity_unit_conversion_relationships",
     "parse_recipe_boolean",
     "parse_recipe_positive_number",
     "parse_recipe_position_boolean",

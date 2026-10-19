@@ -69,6 +69,19 @@ They validate names, optional date-only due dates, and Task Category
 references. Apply creates missing definitions or updates managed definition
 fields only; completion and assignment activity are never written.
 
+Meal planning adds two ordered resources through the same command surface:
+
+```text
+casita sync meal-plan-sections
+casita sync meal-plan-sections --apply
+casita sync meal-plan
+casita sync meal-plan --apply
+```
+
+Both are also included in `sync all` after Recipe dependencies. Dry-run only
+renders structured plans. Apply preserves unmanaged entries and never writes
+Meal Plan completion state.
+
 Legacy lookup, validation, and export commands remain available through
 `MaintenanceService`. The CLI does not invoke their Grocy implementation
 directly.

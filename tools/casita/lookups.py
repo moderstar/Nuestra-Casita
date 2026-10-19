@@ -25,6 +25,9 @@ def build_lookups():
 
         "task_categories": {},
         "task_categories_by_id": {},
+
+        "meal_plan_sections": {},
+        "meal_plan_sections_by_id": {},
     }
 
     for row in get("/objects/locations"):
@@ -54,6 +57,10 @@ def build_lookups():
     for row in get("/objects/task_categories"):
         lookups["task_categories"][row["name"]] = row["id"]
         lookups["task_categories_by_id"][row["id"]] = row["name"]
+
+    for row in get("/objects/meal_plan_sections?query[]=id>0"):
+        lookups["meal_plan_sections"][row["name"]] = row["id"]
+        lookups["meal_plan_sections_by_id"][row["id"]] = row["name"]
 
     return lookups
 

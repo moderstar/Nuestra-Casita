@@ -121,7 +121,7 @@ and Userfields are implemented through the generic synchronization framework.
 - [x] Quantity Unit Conversions
 - [x] Product Barcodes
 - [x] Tasks (Git-managed definitions; Grocy owns completion activity)
-- [ ] Meal Plan Sections and Meal Plan
+- [x] Meal Plan Sections and Meal Plan
 - [ ] Equipment
 - [ ] User Entities
 - [ ] Refine the generic comparison engine where appropriate

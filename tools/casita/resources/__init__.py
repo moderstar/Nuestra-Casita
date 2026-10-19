@@ -7,6 +7,8 @@ Each resource describes how one catalog type maps to Grocy.
 from casita.resources.batteries import BATTERY_RESOURCE
 from casita.resources.chores import CHORE_RESOURCE
 from casita.resources.locations import LOCATION_RESOURCE
+from casita.resources.meal_plan import MEAL_PLAN_RESOURCE
+from casita.resources.meal_plan_sections import MEAL_PLAN_SECTION_RESOURCE
 from casita.resources.product_groups import PRODUCT_GROUP_RESOURCE
 from casita.resources.product_barcodes import PRODUCT_BARCODE_RESOURCE
 from casita.resources.quantity_units import QUANTITY_UNIT_RESOURCE
@@ -25,6 +27,8 @@ __all__ = [
     "BATTERY_RESOURCE",
     "CHORE_RESOURCE",
     "LOCATION_RESOURCE",
+    "MEAL_PLAN_RESOURCE",
+    "MEAL_PLAN_SECTION_RESOURCE",
     "PRODUCT_GROUP_RESOURCE",
     "PRODUCT_BARCODE_RESOURCE",
     "QUANTITY_UNIT_RESOURCE",

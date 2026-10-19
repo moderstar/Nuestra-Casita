@@ -120,3 +120,53 @@ Only `description`, `due_date`, and `category_id` can be updated. Completion,
 completion timestamps, assignment, creation timestamps, userfields, and other
 runtime state are never placed in synchronization payloads. No Task is deleted
 for being absent from the catalog.
+
+## Meal Plan Sections
+
+`catalog/meal_plan_sections.csv` contains:
+
+| Column | Required | Meaning |
+| --- | --- | --- |
+| `Meal Plan Section` | Yes | Unique section name and synchronization identity |
+| `Sort Number` | No | Nonnegative presentation order |
+| `Time` | No | Presentation time in 24-hour `HH:MM` format |
+
+The catalog starts header-only. Explicit rows can be created, matched, or have
+their sort number/time updated. Renaming is represented as a new section so an
+unrelated or user-created section is never silently renamed. Grocy's internal
+blank section is filtered from synchronization.
+
+## Meal Plan Entries
+
+`catalog/meal_plan.csv` contains:
+
+| Column | Required | Meaning |
+| --- | --- | --- |
+| `Day` | Yes | Entry date in `YYYY-MM-DD` format |
+| `Meal Plan Section` | Yes | Existing managed or Grocy section name |
+| `Entry Type` | Yes | `recipe`, `product`, or `note` |
+| `Recipe` | Recipe only | Existing Recipe name |
+| `Servings` | No | Positive decimal; defaults to `1` for Recipe entries |
+| `Product` | Product only | Existing Product name |
+| `Amount` | Product only | Positive decimal amount |
+| `Quantity Unit` | Product only | Existing Quantity Unit name |
+| `Note` | Note only | Required free text and part of identity |
+
+Type-irrelevant values are rejected rather than silently discarded. Identity
+is the day, resolved section, type, and type-specific Recipe, Product, or exact
+note content. Exact duplicate identities are unsupported because Grocy has no
+external ownership key; ambiguity blocks planning.
+
+Dry-run and apply:
+
+```bash
+python tools/casita.py sync meal-plan-sections
+python tools/casita.py sync meal-plan-sections --apply
+python tools/casita.py sync meal-plan
+python tools/casita.py sync meal-plan --apply
+```
+
+Recipe servings and Product amount/unit may be updated after an unambiguous
+identity match. Day, section, type, referenced Recipe/Product, note content,
+completion state, and creation timestamps are never updated. Missing catalog
+rows never cause deletions, so user-created Grocy plans remain intact.

@@ -275,6 +275,32 @@ Fulfillment status, missing amounts, shopping-list state, calculated costs,
 consumption history, and inventory calculations are runtime or derived data
 and are intentionally excluded.
 
+### Meal Plan Sections
+
+- Catalog: `catalog/meal_plan_sections.csv`
+- Grocy endpoint: `/objects/meal_plan_sections?query[]=id>0`
+- Managed fields: unique `name`, optional `sort_number`, optional `time_info`
+- CLI: `python tools/casita.py sync meal-plan-sections [--apply]`
+
+The filtered endpoint excludes Grocy's required internal blank section. Names
+are stable identities. Existing sort/time values may be updated, while renames
+become creates and unmanaged sections remain untouched.
+
+### Meal Plan Entries
+
+- Catalog: `catalog/meal_plan.csv`
+- Grocy endpoint: `/objects/meal_plan`
+- Supported types: Recipe, Product, and note
+- Requires Meal Plan Sections plus Recipe, Product, and Quantity Unit lookups
+- CLI: `python tools/casita.py sync meal-plan [--apply]`
+
+Entry identity combines day, section, type, and the type-specific Recipe,
+Product, or exact note content. This supports distinct entries sharing a day
+and section without relying on Grocy IDs. Duplicate identities are rejected as
+ambiguous. Safe updates are limited to Recipe servings and Product amount/unit.
+The operational `done` flag is ignored and never written. Moving, retargeting,
+renaming, and deletion are intentionally unsupported.
+
 ### Userfields
 
 - Catalog: `catalog/userfields.csv`
@@ -323,6 +349,8 @@ The `sync all` command runs registered resources in dependency-aware order:
 12. Batteries
 13. Recipes
 14. Recipe Positions
+15. Meal Plan Sections
+16. Meal Plan Entries
 
 Each individual catalog operation is orchestrated by the backend-neutral
 `CatalogApplicationService`. It validates the resource, coordinates structured

@@ -28,6 +28,20 @@ from casita.payloads.locations import (
     parse_active as parse_location_active,
     parse_is_freezer as parse_location_is_freezer,
 )
+from casita.payloads.meal_plan import (
+    build_meal_plan_create_payload,
+    build_meal_plan_update_payload,
+    entry_identity_from_values as meal_plan_entry_identity,
+    parse_day as parse_meal_plan_day,
+    parse_entry_type as parse_meal_plan_entry_type,
+    resolve_entry as resolve_meal_plan_entry,
+)
+from casita.payloads.meal_plan_sections import (
+    build_meal_plan_section_create_payload,
+    build_meal_plan_section_update_payload,
+    parse_sort_number as parse_meal_plan_section_sort_number,
+    parse_time_info as parse_meal_plan_section_time,
+)
 from casita.payloads.product_groups import (
     build_product_group_create_payload,
     build_product_group_update_payload,
@@ -107,6 +121,10 @@ __all__ = [
     "build_chore_update_payload",
     "build_location_create_payload",
     "build_location_update_payload",
+    "build_meal_plan_create_payload",
+    "build_meal_plan_update_payload",
+    "build_meal_plan_section_create_payload",
+    "build_meal_plan_section_update_payload",
     "build_product_group_create_payload",
     "build_product_group_update_payload",
     "build_product_barcode_create_payload",
@@ -134,6 +152,12 @@ __all__ = [
     "parse_battery_charge_interval_days",
     "parse_location_active",
     "parse_location_is_freezer",
+    "meal_plan_entry_identity",
+    "parse_meal_plan_day",
+    "parse_meal_plan_entry_type",
+    "parse_meal_plan_section_sort_number",
+    "parse_meal_plan_section_time",
+    "resolve_meal_plan_entry",
     "parse_product_group_active",
     "normalize_product_barcode",
     "resolve_product_barcode_product_id",

@@ -138,6 +138,12 @@ definition fields, then exposes only generic structured plans and results.
 Grocy completion flags, completion timestamps, assignments, and internal IDs
 never enter application-layer models or update payloads.
 
+Meal Plan Sections and Meal Plan Entries are declarative synchronization
+resources. The Grocy-owned workflow resolves sections, Recipes, Products, and
+Quantity Units internally and exposes generic plans/results. Composite entry
+identities and native IDs remain inside the adapter boundary. Completion state
+and unmanaged live planning activity are excluded from synchronization.
+
 ## Adapter Guidelines
 
 Future adapters should:

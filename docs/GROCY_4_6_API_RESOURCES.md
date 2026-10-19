@@ -38,12 +38,12 @@ Status meanings:
 | `userfields` | Implemented | Declarative custom field definitions; per-object values are excluded |
 | `userentities` | Planned | Custom entity definitions |
 | `userobjects` | Planned | Custom entity records |
-| `meal_plan` | Planned | Meal-plan entries |
+| `meal_plan` | Implemented | Managed recipe, product, and note entries; completion remains Grocy-owned |
 | `stock_log` | Not Applicable | Read-only stock journal |
 | `stock` | Not Applicable | Runtime stock state |
 | `stock_current_locations` | Not Applicable | Derived stock-location view |
 | `chores_log` | Not Applicable | Chore execution journal |
-| `meal_plan_sections` | Planned | Meal-plan section definitions |
+| `meal_plan_sections` | Implemented | Named section definitions and presentation ordering/time |
 | `products_last_purchased` | Not Applicable | Derived reporting view |
 | `products_average_price` | Not Applicable | Derived reporting view |
 | `quantity_unit_conversions_resolved` | Not Applicable | Derived conversion view |
@@ -106,3 +106,32 @@ Grocy has no external Task key and does not enforce a unique Task name. Exact,
 case-insensitive normalized name matching is therefore the conservative
 identity rule. Duplicate catalog names or duplicate matching Grocy names are
 reported as ambiguity instead of being updated.
+
+## Meal Planning API Findings
+
+Grocy 4.6 exposes both `meal_plan_sections` and `meal_plan` through the generic
+object read, create, update, and delete endpoints. Nuestra Casita uses only
+read, create, and controlled update operations.
+
+Meal Plan Sections contain a unique `name`, optional `sort_number`, optional
+`time_info`, generated ID, and creation timestamp. Grocy also maintains an
+internal blank section with ID `-1`; synchronization filters that row and never
+manages or deletes it. The section name is the stable normalized identity.
+
+Meal Plan Entries contain a required `day`, a `type` of `recipe`, `product`, or
+`note`, and a required `section_id`. Recipe entries use `recipe_id` and
+`recipe_servings`; Product entries use `product_id`, `product_amount`, and
+`product_qu_id`; note entries use `note`. The `done` flag is live activity and
+is excluded from catalog payloads. `row_created_timestamp` is generated and is
+also excluded.
+
+Grocy provides no external entry key, uniqueness constraint, ordering field,
+entry time field, template entity, or recurring meal-plan API. The UI's copy
+day behavior creates ordinary entries rather than a reusable template.
+
+The conservative identity is day, section, type, and the type-specific Recipe,
+Product, or exact note content. This permits multiple different entries in one
+section on one day. Duplicate identities in Git or Grocy are ambiguous and
+rejected. Safe updates are limited to Recipe servings and Product amount/unit;
+changing the day, section, type, reference, or note produces a distinct create
+without modifying the pre-existing Grocy row.

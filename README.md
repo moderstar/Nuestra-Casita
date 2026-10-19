@@ -133,6 +133,18 @@ python tools/casita.py sync tasks --apply
 Task completion, completion timestamps, user assignments, and Grocy-only Tasks
 remain owned by Grocy and are never overwritten by catalog synchronization.
 
+Preview or apply Meal Plan Sections and explicitly managed Meal Plan Entries:
+
+```bash
+python tools/casita.py sync meal-plan-sections
+python tools/casita.py sync meal-plan-sections --apply
+python tools/casita.py sync meal-plan
+python tools/casita.py sync meal-plan --apply
+```
+
+Unmanaged Grocy plans and completion state are preserved. Entry moves,
+retargeting, ambiguous duplicates, and automatic deletion are not performed.
+
 ## Long-Term Direction
 
 The primary household interface will be a wall-mounted kitchen touchscreen

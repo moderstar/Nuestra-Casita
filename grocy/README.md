@@ -14,9 +14,10 @@ Current version: Grocy 4.6
 - Product barcodes
 - Tasks (definitions only)
 - Chores
+- Recipes and recipe positions
+- Meal plan sections
+- Meal plan entries
 
 ## Next
 
-- Recipes
-- Meal planning
 - Home Assistant integration

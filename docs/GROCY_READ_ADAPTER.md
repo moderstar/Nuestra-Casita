@@ -126,6 +126,12 @@ maintains a resolved conversion cache that can derive reverse or transitive
 paths; Nuestra Casita manages only the explicit native rows named in its
 catalog and never synchronizes derived cache rows.
 
+Product Barcodes are synchronization definitions rather than a new read
+capability. The registered resource reads `/objects/product_barcodes`, resolves
+catalog Product names inside the adapter-owned workflow, and emits structured
+create or match plans. Barcode strings and Grocy IDs remain outside application
+services. Reassignments and deletes are intentionally unsupported.
+
 ## Adapter Guidelines
 
 Future adapters should:

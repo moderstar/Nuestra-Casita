@@ -108,6 +108,21 @@ Apply only the explicitly cataloged conversion creates or factor updates:
 python tools/casita.py sync quantity-unit-conversions --apply
 ```
 
+Validate and preview Git-managed Product Barcode associations:
+
+```bash
+python tools/casita.py sync product-barcodes
+```
+
+Create only missing, explicitly cataloged associations:
+
+```bash
+python tools/casita.py sync product-barcodes --apply
+```
+
+Existing Grocy barcodes absent from the catalog are preserved, and an existing
+barcode is never silently reassigned to a different Product.
+
 ## Long-Term Direction
 
 The primary household interface will be a wall-mounted kitchen touchscreen

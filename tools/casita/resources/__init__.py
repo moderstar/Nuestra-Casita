@@ -8,6 +8,7 @@ from casita.resources.batteries import BATTERY_RESOURCE
 from casita.resources.chores import CHORE_RESOURCE
 from casita.resources.locations import LOCATION_RESOURCE
 from casita.resources.product_groups import PRODUCT_GROUP_RESOURCE
+from casita.resources.product_barcodes import PRODUCT_BARCODE_RESOURCE
 from casita.resources.quantity_units import QUANTITY_UNIT_RESOURCE
 from casita.resources.quantity_unit_conversions import (
     QUANTITY_UNIT_CONVERSION_RESOURCE,
@@ -24,6 +25,7 @@ __all__ = [
     "CHORE_RESOURCE",
     "LOCATION_RESOURCE",
     "PRODUCT_GROUP_RESOURCE",
+    "PRODUCT_BARCODE_RESOURCE",
     "QUANTITY_UNIT_RESOURCE",
     "QUANTITY_UNIT_CONVERSION_RESOURCE",
     "PRODUCT_RESOURCE",

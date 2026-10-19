@@ -33,6 +33,12 @@ from casita.payloads.product_groups import (
     build_product_group_update_payload,
     parse_active as parse_product_group_active,
 )
+from casita.payloads.product_barcodes import (
+    build_product_barcode_create_payload,
+    build_product_barcode_update_payload,
+    normalize_barcode as normalize_product_barcode,
+    resolve_product_id as resolve_product_barcode_product_id,
+)
 from casita.payloads.quantity_units import (
     build_quantity_unit_create_payload,
     build_quantity_unit_update_payload,
@@ -97,6 +103,8 @@ __all__ = [
     "build_location_update_payload",
     "build_product_group_create_payload",
     "build_product_group_update_payload",
+    "build_product_barcode_create_payload",
+    "build_product_barcode_update_payload",
     "build_quantity_unit_create_payload",
     "build_quantity_unit_update_payload",
     "build_quantity_unit_conversion_create_payload",
@@ -119,6 +127,8 @@ __all__ = [
     "parse_location_active",
     "parse_location_is_freezer",
     "parse_product_group_active",
+    "normalize_product_barcode",
+    "resolve_product_barcode_product_id",
     "parse_quantity_unit_active",
     "parse_conversion_factor",
     "conversion_display_name",

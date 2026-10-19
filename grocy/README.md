@@ -8,10 +8,13 @@ Current version: Grocy 4.6
 - Quantity units
 - Product groups
 - Stores
+- Products
+- Shopping lists (read-only)
+- Quantity unit conversions
+- Product barcodes
 
 ## Next
 
-- Products
 - Chores
 - Recipes
 - Meal planning

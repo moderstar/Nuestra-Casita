@@ -47,6 +47,17 @@ casita sync quantity-unit-conversions --apply
 The first command is a presentation-only dry run. The second applies only
 planned creates and factor updates through the existing catalog executor.
 
+Product Barcodes use the same commands:
+
+```text
+casita sync product-barcodes
+casita sync product-barcodes --apply
+```
+
+The dry run validates barcode identity and Product references. Apply creates
+only missing catalog associations; conflicts, reassignments, updates, and
+deletes are not performed.
+
 Legacy lookup, validation, and export commands remain available through
 `MaintenanceService`. The CLI does not invoke their Grocy implementation
 directly.

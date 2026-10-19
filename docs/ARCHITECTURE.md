@@ -98,6 +98,21 @@ and apply engines contain no Product- or Product-Group-specific API logic.
 - Requires Product Group, Location, and Quantity Unit lookups
 - CLI: `python tools/casita.py sync products [--apply]`
 
+### Product Barcodes
+
+- Catalog: `catalog/product_barcodes.csv`
+- Grocy endpoint: `/objects/product_barcodes`
+- Identity: non-empty barcode string, matched case-insensitively
+- Managed association: Barcode to Product name
+- Requires Product lookups and runs after Products
+- CLI: `python tools/casita.py sync product-barcodes [--apply]`
+
+The resource creates explicitly cataloged associations and treats an existing
+association as a match. It rejects duplicate identities and refuses to
+reassign an existing barcode to another Product. Optional native purchase
+metadata is outside the managed catalog. No update or delete operation is
+planned, so Grocy-only barcode records remain untouched.
+
 ### Product Groups
 
 - Catalog: `catalog/product_groups.csv`
@@ -285,12 +300,13 @@ The `sync all` command runs registered resources in dependency-aware order:
 4. Locations
 5. Shopping Locations
 6. Products
-7. Quantity Unit Conversions
-8. Task Categories
-9. Chores
-10. Batteries
-11. Recipes
-12. Recipe Positions
+7. Product Barcodes
+8. Quantity Unit Conversions
+9. Task Categories
+10. Chores
+11. Batteries
+12. Recipes
+13. Recipe Positions
 
 Each individual catalog operation is orchestrated by the backend-neutral
 `CatalogApplicationService`. It validates the resource, coordinates structured

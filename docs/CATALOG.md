@@ -52,3 +52,39 @@ python tools/casita.py sync quantity-unit-conversions --apply
 Apply can create explicitly cataloged conversions or update the factor of an
 identity already managed by the catalog. It does not delete conversions, so
 unmanaged Grocy definitions are preserved.
+
+## Product Barcodes
+
+`catalog/product_barcodes.csv` has these columns:
+
+| Column | Required | Meaning |
+| --- | --- | --- |
+| `Barcode` | Yes | Exact opaque barcode value; retained as text |
+| `Product` | Yes | Product name resolved through the existing Product lookup |
+
+The file intentionally starts with only its header. Barcode values are never
+parsed as numbers, so leading zeros are preserved. Grocy 4.6 does not impose
+a documented symbology or checksum restriction through this API; the catalog
+therefore accepts non-empty strings rather than guessing a format policy.
+
+Identity is the barcode value, matched case-insensitively to follow Grocy 4.6
+lookup behavior. Duplicate values, including case-only variants, are rejected.
+Multiple distinct barcodes may reference one Product. If a catalog barcode
+already exists for a different Product, planning fails instead of producing a
+reassignment.
+
+Dry-run:
+
+```bash
+python tools/casita.py sync product-barcodes
+```
+
+Explicit apply:
+
+```bash
+python tools/casita.py sync product-barcodes --apply
+```
+
+Git is authoritative only for rows explicitly present in the catalog. Apply
+creates missing associations; matching rows are no-ops. Unmanaged Grocy rows
+are preserved, and synchronization never updates or deletes barcode rows.

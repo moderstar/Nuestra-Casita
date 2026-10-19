@@ -19,7 +19,7 @@ Status meanings:
 | --- | --- | --- |
 | `products` | Implemented | Product master data |
 | `chores` | Implemented | Recurring chore definitions; execution state is excluded |
-| `product_barcodes` | Planned | Product barcode mappings |
+| `product_barcodes` | Implemented | Managed barcode-to-Product associations |
 | `batteries` | Implemented | Battery definitions; charge history is excluded |
 | `locations` | Implemented | Stock locations |
 | `quantity_units` | Implemented | Quantity unit master data |
@@ -55,3 +55,24 @@ Status meanings:
 Grocy 4.6 does not expose a `chore_groups` entity. Task Categories replace
 the previously assumed Chore Groups milestone because they are a native,
 supported Grocy resource.
+
+## Product Barcode API Findings
+
+Grocy 4.6 exposes `product_barcodes` through the generic object endpoints:
+
+- `GET` and `POST /objects/product_barcodes`
+- `GET`, `PUT`, and `DELETE /objects/product_barcodes/{id}`
+
+The native model requires `product_id` and the string `barcode`. It can also
+store optional purchase metadata (`qu_id`, `amount`, `shopping_location_id`,
+`last_price`, and `note`). A Product may have multiple barcode rows, while a
+barcode is unique and therefore cannot belong to multiple Products. Version
+4.6 also matches barcode values case-insensitively. The API does not publish
+a supported-format or checksum constraint, so Nuestra Casita treats barcode
+values as opaque strings and preserves leading zeros.
+
+This milestone manages only barcode-to-Product associations. Optional
+purchase metadata and deletes are deliberately unsupported. Although the
+generic API permits updates and deletes, synchronization refuses to reassign
+an existing barcode and never deletes a row absent from Git. These rules avoid
+overwriting unmanaged Grocy barcode data.

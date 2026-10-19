@@ -28,14 +28,16 @@ Grocy read adapter translates runtime data into platform domain models.
 
 The unified CLI follows the platform dependency boundary:
 
-`CLI → Composition Root → Application Services → Integration Contracts →
-Grocy Adapter`
+`CLI → Application Services → Planner / Executor Protocols → Backend
+Registry → Integration Contracts → Active Backend`
 
 Dashboard, doctor, inventory, recipes, synchronization, and preserved
 maintenance commands all enter through application services. The CLI does not
 import the Grocy client or synchronization engine. The composition root
-constructs one Grocy client and injects the adapter, services, configuration,
-registries, and established synchronization workflow.
+constructs one Grocy client and registers a `GrocyBackendProvider`.
+`BackendResolver` selects Grocy as the unchanged default, and the provider
+supplies integrations plus planner/executor implementations to the
+composition root.
 
 ## Grocy Read Integration
 

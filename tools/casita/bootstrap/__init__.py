@@ -6,6 +6,11 @@ from casita.bootstrap.application import (
     build_application,
 )
 from casita.bootstrap.grocy import build_grocy_application
+from casita.bootstrap.backends import (
+    BackendProvider,
+    BackendRegistry,
+    BackendResolver,
+)
 from casita.bootstrap.configuration import (
     ApplicationConfiguration,
     load_configuration,
@@ -13,6 +18,9 @@ from casita.bootstrap.configuration import (
 
 __all__ = [
     "ApplicationServices",
+    "BackendProvider",
+    "BackendRegistry",
+    "BackendResolver",
     "ApplicationConfiguration",
     "NuestraCasitaApplication",
     "build_application",

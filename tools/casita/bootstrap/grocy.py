@@ -14,6 +14,10 @@ from casita.bootstrap.application import (
     NuestraCasitaApplication,
     build_application,
 )
+from casita.bootstrap.backends import (
+    BackendRegistry,
+    BackendResolver,
+)
 from casita.bootstrap.configuration import (
     ApplicationConfiguration,
     load_configuration,
@@ -39,6 +43,53 @@ from casita.dashboard import (
 )
 from casita.integrations import Capability
 from casita.integrations.grocy import GrocyReadAdapter
+
+
+class GrocyBackendProvider:
+    """Provide Grocy integrations and catalog components to the bootstrap."""
+
+    key = "grocy"
+
+    def __init__(self, integration: GrocyReadAdapter) -> None:
+        self._integration = integration
+
+    @property
+    def integrations(self):
+        """Return the application-scoped Grocy integration."""
+
+        return (self._integration,)
+
+    @property
+    def capability_owners(self):
+        """Assign Grocy ownership of its declared household capabilities."""
+
+        capabilities = (
+            Capability.SHOPPING,
+            Capability.INVENTORY,
+            Capability.RECIPES,
+            Capability.CHORES,
+        )
+        integration_key = self._integration.descriptor.key
+        return {
+            capability: (integration_key,)
+            for capability in capabilities
+        }
+
+    def catalog_planner(self, directory):
+        """Build the integration-backed Grocy catalog planner."""
+
+        return IntegrationCatalogPlanner(
+            directory,
+            owner=self._integration.descriptor.key,
+        )
+
+    def catalog_executor(self, directory):
+        """Build the integration-backed Grocy catalog executor."""
+
+        return IntegrationCatalogExecutor(
+            directory,
+            owner=self._integration.descriptor.key,
+        )
 
 
 def build_grocy_application(
@@ -73,31 +124,22 @@ def build_grocy_application(
         sync_planner=plan_registered_resource,
         sync_applier=apply_plan,
     )
-    capabilities = (
-        Capability.SHOPPING,
-        Capability.INVENTORY,
-        Capability.RECIPES,
-        Capability.CHORES,
-    )
+    provider = GrocyBackendProvider(grocy)
+    registry = BackendRegistry()
+    registry.register(provider)
+    backend = BackendResolver(
+        registry,
+        default_key=GrocyBackendProvider.key,
+    ).resolve()
 
     application = build_application(
-        integrations=(grocy,),
-        capability_owners={
-            capability: (grocy.descriptor.key,)
-            for capability in capabilities
-        },
+        integrations=backend.integrations,
+        capability_owners=backend.capability_owners,
         dashboard_contract=dashboard_contract,
     )
-    synchronization_owner = grocy.descriptor.key
     catalog_service = CatalogApplicationService(
-        IntegrationCatalogPlanner(
-            application.integrations,
-            owner=synchronization_owner,
-        ),
-        IntegrationCatalogExecutor(
-            application.integrations,
-            owner=synchronization_owner,
-        ),
+        backend.catalog_planner(application.integrations),
+        backend.catalog_executor(application.integrations),
         resources=tuple(list_resources()),
     )
     sync_service = SynchronizationApplicationService(

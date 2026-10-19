@@ -14,7 +14,9 @@ dashboard sections.
 
 ```mermaid
 flowchart TB
-    Adapters["Concrete integration instances"] --> Bootstrap["casita.bootstrap"]
+    Providers["Backend providers"] --> Registry["BackendRegistry"]
+    Registry --> Resolver["BackendResolver"]
+    Resolver --> Bootstrap["casita.bootstrap"]
     Bootstrap --> Directory["IntegrationDirectory"]
     Directory --> Services["ApplicationServices"]
     Services --> Dashboard["DashboardService"]
@@ -45,8 +47,10 @@ Calendar, Budget, Notification, Device, and Media services. The dashboard
 service receives those same instances rather than constructing duplicates.
 
 `build_grocy_application()` constructs one `GrocyApiClient`, injects it into
-the Grocy adapter, registers Grocy platform capabilities, and constructs the
-planner, executor, catalog service, and synchronization service. Concrete
+the Grocy adapter, and registers a `GrocyBackendProvider`. `BackendResolver`
+selects Grocy as the default provider without exposing that choice to any
+application service. The provider supplies its integrations, capability
+ownership, catalog planner, and catalog executor. Concrete resource
 registries, configuration loading, and native synchronization callbacks
 remain confined to this composition boundary.
 
@@ -62,37 +66,37 @@ The object graph has application scope:
    immutable values.
 5. Process shutdown releases the graph.
 
-No global mutable registry, service locator, automatic package discovery, or
-hidden singleton is used.
+The backend registry is application-scoped and explicitly populated during
+startup. No global mutable registry, service locator, automatic package
+discovery, or hidden singleton is used.
 
 ## Integration Registration
 
-Registration is explicit:
+Backend registration and selection are explicit:
 
 ```python
-application = build_application(
-    integrations=(grocy,),
-    capability_owners={
-        Capability.INVENTORY: ("grocy",),
-        Capability.SHOPPING: ("grocy",),
-    },
-)
+registry = BackendRegistry()
+registry.register(grocy_provider)
+backend = BackendResolver(registry, default_key="grocy").resolve()
 ```
 
-`build_grocy_application()` provides this production registration explicitly
-for Grocy while `build_application()` remains the backend-neutral constructor.
+`build_grocy_application()` performs this production registration for Grocy
+while `build_application()` and every application service remain
+backend-neutral. A future backend can be selected by registering another
+provider and resolving its key; application services do not change.
 
 Each adapter declares capabilities through its `IntegrationDescriptor`.
 Without ownership configuration, all adapters declaring a capability
 contribute in registration order. An ownership mapping can select and order
 specific providers for a capability.
 
-Adding Home Assistant, Nextcloud, Actual Budget, or Immich will require:
+Adding Home Assistant, PantryParty, a test backend, or another provider will
+require:
 
-1. Implementing the existing integration contract.
-2. Constructing the adapter at startup.
-3. Adding it to the explicit `integrations` tuple.
-4. Configuring ownership only where the household needs it.
+1. Implementing the existing integration contracts.
+2. Implementing `BackendProvider` for construction and ownership.
+3. Registering the provider at startup.
+4. Selecting it explicitly or making its key the default.
 
 No application service or dashboard assembly branch should be added.
 
@@ -101,8 +105,8 @@ No application service or dashboard assembly branch should be added.
 A future executable process will:
 
 1. Load and validate deployment configuration.
-2. Construct enabled concrete adapters and their clients.
-3. Call `build_application()` with adapters and capability ownership.
+2. Construct and register enabled backend providers.
+3. Resolve the active provider and build its application graph.
 4. Pass the returned application to a transport such as a future REST API.
 5. Resolve a household and invoke application services.
 

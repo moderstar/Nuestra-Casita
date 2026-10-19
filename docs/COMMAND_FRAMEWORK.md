@@ -31,6 +31,7 @@ usage output.
 | `casita sync [resource] --apply` | `SynchronizationApplicationService` | Structured explicit apply workflow |
 | `casita inventory` | `InventoryService` | Backend-neutral inventory items |
 | `casita recipes` | `RecipeService` | Backend-neutral Recipe definitions |
+| `casita shopping-lists` | `ShoppingService` | Backend-neutral named Shopping Lists and live items |
 
 `casita sync` defaults to `all`. Every existing individual resource remains
 available, including `casita sync products` and
@@ -73,6 +74,12 @@ status `1`. A completely passing report exits with status `0`.
 backend-neutral `IntegrationRuntime` values. The Grocy adapter owns retrieval
 and normalization of its version, database engine, Product count, Recipe
 count, and Location count.
+
+`ShoppingService` reads the configured owner of the Shopping capability and
+returns `ServiceResult[ShoppingList]`. The CLI renders named lists and their
+items, including decimal quantities, resolved Quantity Units, notes, and
+checked state. This is a read-only runtime command; it does not enter the
+catalog planner or executor because Grocy owns live shopping activity.
 
 ## Configuration
 

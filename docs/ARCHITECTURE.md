@@ -32,7 +32,9 @@ The unified CLI follows the platform dependency boundary:
 Registry → Integration Contracts → Active Backend`
 
 Dashboard, doctor, inventory, recipes, synchronization, and preserved
-maintenance commands all enter through application services. The CLI does not
+maintenance commands all enter through application services. The
+`shopping-lists` command uses the existing `ShoppingService` and read
+contract. The CLI does not
 import the Grocy client or synchronization engine. The composition root
 constructs one Grocy client and registers a `GrocyBackendProvider`.
 `BackendResolver` selects Grocy as the unchanged default, and the provider
@@ -56,6 +58,18 @@ unchanged.
 
 See [GROCY_READ_ADAPTER.md](GROCY_READ_ADAPTER.md) for endpoint mappings,
 identity handling, and current limitations.
+
+## Shopping Lists
+
+`python tools/casita.py shopping-lists` reads named Grocy 4.6 Shopping Lists,
+their current items, Products, and Quantity Units through the Shopping
+capability. It renders normalized models only; the CLI never calls Grocy
+directly.
+
+Shopping-list definitions and live items are distinct native entities. Live
+item state—including amount, note, completion, membership, and removal—is
+owned by Grocy and is not declaratively synchronized from Git. This prevents
+catalog synchronization from overwriting household shopping activity.
 
 ## Grocy Integration Architecture
 

@@ -63,6 +63,13 @@ Run actionable diagnostics:
 python tools/casita.py doctor
 ```
 
+Inspect Grocy-owned shopping lists and their current items without changing
+household activity:
+
+```bash
+python tools/casita.py shopping-lists
+```
+
 Dry-run every registered Grocy resource:
 
 ```bash
@@ -84,6 +91,10 @@ python tools/casita.py sync all --apply
 Individual resource commands remain available. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the complete list and
 dependency order.
+
+Shopping lists are intentionally not part of declarative synchronization.
+Products and other master data can remain Git-managed, while checked state,
+quantities, notes, and list membership remain live Grocy-owned activity.
 
 ## Long-Term Direction
 

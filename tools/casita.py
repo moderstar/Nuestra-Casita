@@ -24,6 +24,10 @@ def build_parser(sync_resources):
     subparsers.add_parser("doctor", help="Diagnose configuration and services")
     subparsers.add_parser("inventory", help="Show normalized inventory")
     subparsers.add_parser("recipes", help="Show normalized recipes")
+    subparsers.add_parser(
+        "shopping-lists",
+        help="Show normalized shopping lists",
+    )
 
     sync_parser = subparsers.add_parser(
         "sync",
@@ -105,6 +109,10 @@ def main():
         _print_inventory(application.services.inventory.read(household.id))
     elif args.command == "recipes":
         _print_recipes(application.services.recipes.read(household.id))
+    elif args.command == "shopping-lists":
+        _print_shopping_lists(
+            application.services.shopping.read(household.id)
+        )
     elif args.command == "sync":
         sync_service.synchronize(
             household.id,
@@ -186,6 +194,35 @@ def _print_inventory(result):
 def _print_recipes(result):
     for recipe in result.records:
         print(recipe.name)
+
+    for failure in result.failures:
+        print(f"ERROR {failure.message}")
+
+
+def _print_shopping_lists(result):
+    for index, shopping_list in enumerate(result.records):
+        if index:
+            print()
+
+        print(shopping_list.name)
+
+        if not shopping_list.items:
+            print("(empty)")
+            continue
+
+        for item in shopping_list.items:
+            status = "x" if item.checked else " "
+            amount = ""
+
+            if item.quantity is not None:
+                amount = f": {item.quantity} {item.unit}".rstrip()
+
+            note = (
+                f" — {item.note}"
+                if item.note and item.note != item.name
+                else ""
+            )
+            print(f"[{status}] {item.name}{amount}{note}")
 
     for failure in result.failures:
         print(f"ERROR {failure.message}")

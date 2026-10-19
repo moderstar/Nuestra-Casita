@@ -51,10 +51,22 @@ endpoints when the domain contract supports multiple locations per Product.
 
 ### Shopping
 
-Named Shopping Lists contain their current Shopping List Items. Product-backed
-items use the Product name; note-only entries use the note as their display
-name. Completion state, amount, Quantity Unit, note, and latest known
-timestamp are normalized.
+Grocy 4.6 stores named list definitions in `shopping_lists` and live items in
+the separate `shopping_list` entity. The adapter reads both, resolves each
+item's Product and Quantity Unit references, groups items by
+`shopping_list_id`, and preserves empty and multiple lists.
+
+Product-backed items use the Product name; note-only entries use the note as
+their display name. Decimal amount (including zero), Quantity Unit, note,
+completion state, and latest known timestamp are normalized. Unknown list,
+Product, or Quantity Unit references fail the capability read explicitly
+instead of leaking an incomplete native record.
+
+Grocy is authoritative for live shopping activity. Checked state is a
+shopping workflow marker; deleting or clearing items removes live records.
+Consequently Nuestra Casita exposes Shopping Lists as a read-only runtime
+projection and does not register them as a Git catalog or declarative sync
+resource.
 
 ### Recipes
 
@@ -128,3 +140,11 @@ assembler.
 - Chore assignees use stable person identities, but Person profile reads are
   not yet a supported Grocy capability.
 - Nested Recipes are not expanded.
+- Shopping-list creation, item creation/editing, completion, removal, clear,
+  and add-missing/expired-product operations are deferred. Grocy 4.6 exposes
+  generic object writes and specialized shopping endpoints, but their merge
+  and deletion semantics mutate household activity and need a separate,
+  explicit command/ownership design.
+- Grocy supplies creation timestamps for these objects but no common
+  last-modified cursor, so `ShoppingList.updated_at` is the latest known
+  creation timestamp rather than a complete modification history.

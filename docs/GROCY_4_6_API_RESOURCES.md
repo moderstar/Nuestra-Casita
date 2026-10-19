@@ -8,6 +8,8 @@ It is based on the `ExposedEntity` schema in Grocy's tagged
 Status meanings:
 
 - **Implemented**: Registered in Nuestra Casita and included in `sync all`.
+- **Read capability**: Normalized for application and CLI reads but excluded
+  from declarative synchronization because the backend owns live activity.
 - **Planned**: A native Grocy resource that may be synchronized in a future
   milestone.
 - **Not Applicable**: Runtime, derived, security, journal, or internal data
@@ -22,8 +24,8 @@ Status meanings:
 | `locations` | Implemented | Stock locations |
 | `quantity_units` | Implemented | Quantity unit master data |
 | `quantity_unit_conversions` | Planned | Quantity unit conversion rules |
-| `shopping_list` | Not Applicable | Runtime shopping-list items |
-| `shopping_lists` | Planned | Named shopping lists |
+| `shopping_list` | Read capability | Grocy-owned runtime items; never synchronized from Git |
+| `shopping_lists` | Read capability | Named lists grouped with their current items |
 | `shopping_locations` | Implemented | Shopping stores and locations |
 | `recipes` | Implemented | Declarative Recipe definitions; ingredients and runtime serving state are excluded |
 | `recipes_pos` | Implemented | Declarative Recipe ingredients; fulfillment and calculated state are excluded |

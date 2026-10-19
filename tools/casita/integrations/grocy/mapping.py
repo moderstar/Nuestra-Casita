@@ -188,15 +188,38 @@ def map_shopping_lists(
 ) -> tuple[ShoppingList, ...]:
     """Translate named Grocy shopping lists and their current items."""
 
+    lists_by_id = rows_by_id(list_rows)
     grouped_items: dict[str, list[ShoppingItem]] = defaultdict(list)
     item_timestamps: dict[str, list[datetime]] = defaultdict(list)
 
     for item in item_rows:
         list_id = identity_key(item.get("shopping_list_id", 1))
-        product = products.get(identity_key(item.get("product_id")), {})
+        if list_id not in lists_by_id:
+            raise ValueError(
+                "Grocy shopping item references unknown shopping list "
+                f"{list_id!r}."
+            )
+
+        product_id = identity_key(item.get("product_id"))
+        product = products.get(product_id, {})
+
+        if product_id not in ("", "None") and not product:
+            raise ValueError(
+                "Grocy shopping item references unknown product "
+                f"{product_id!r}."
+            )
+
         note = str(item.get("note") or "").strip()
         name = str(product.get("name") or note or "Shopping item").strip()
-        unit = units.get(identity_key(item.get("qu_id")), {})
+        unit_id = identity_key(item.get("qu_id"))
+        unit = units.get(unit_id, {})
+
+        if unit_id not in ("", "None") and not unit:
+            raise ValueError(
+                "Grocy shopping item references unknown quantity unit "
+                f"{unit_id!r}."
+            )
+
         timestamp = datetime_value(
             item.get("row_created_timestamp"),
             local_timezone,
@@ -218,7 +241,7 @@ def map_shopping_lists(
 
     lists = []
 
-    for shopping_list in list_rows:
+    for shopping_list in lists_by_id.values():
         list_id = shopping_list.get("id")
         list_key = identity_key(list_id)
         timestamps = item_timestamps.get(list_key, [])

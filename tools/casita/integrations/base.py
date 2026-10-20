@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal
 from enum import Enum
 from typing import Protocol, TypeAlias, runtime_checkable
 
@@ -259,3 +260,93 @@ class RuntimeInspectableIntegration(Integration, Protocol):
 
     def runtime(self) -> IntegrationRuntime:
         """Return normalized integration status and aggregate metrics."""
+
+
+class OperationNotFound(ValueError):
+    """Report that an opaque household object no longer exists."""
+
+
+class OperationConflict(ValueError):
+    """Report a safe conflict with current authoritative state."""
+
+
+@dataclass(frozen=True, slots=True)
+class ShoppingProductOption:
+    """Expose a bounded product choice without backend identifiers."""
+
+    id: str
+    name: str
+    unit_id: str
+    unit: str
+
+
+@dataclass(frozen=True, slots=True)
+class AddShoppingItem:
+    """Request one validated live shopping-list item."""
+
+    household_id: str
+    shopping_list_id: str
+    quantity: Decimal
+    product_id: str | None = None
+    unit_id: str | None = None
+    note: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class ShoppingItemStateChange:
+    """Request one explicit shopping-item state transition."""
+
+    household_id: str
+    shopping_list_id: str
+    item_id: str
+    purchased: bool
+
+
+@dataclass(frozen=True, slots=True)
+class RemoveShoppingItem:
+    """Request removal of one exact shopping-list item."""
+
+    household_id: str
+    shopping_list_id: str
+    item_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class CompleteChore:
+    """Request a normal completion of one existing chore."""
+
+    household_id: str
+    chore_id: str
+
+
+@runtime_checkable
+class ShoppingMutationIntegration(Integration, Protocol):
+    """Optional narrow write contract for live shopping activity."""
+
+    def search_shopping_products(
+        self,
+        query: str,
+        *,
+        limit: int,
+    ) -> tuple[ShoppingProductOption, ...]:
+        """Return bounded product choices."""
+
+    def add_shopping_item(self, command: AddShoppingItem) -> None:
+        """Add one product or note item."""
+
+    def set_shopping_item_purchased(
+        self,
+        command: ShoppingItemStateChange,
+    ) -> None:
+        """Set the non-stock-affecting purchased marker."""
+
+    def remove_shopping_item(self, command: RemoveShoppingItem) -> None:
+        """Remove one exact live item."""
+
+
+@runtime_checkable
+class ChoreMutationIntegration(Integration, Protocol):
+    """Optional narrow write contract for live chore activity."""
+
+    def complete_chore(self, command: CompleteChore) -> None:
+        """Record a normal completion while preserving its definition."""

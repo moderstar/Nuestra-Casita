@@ -83,6 +83,12 @@ failures rather than leaking malformed data into a dashboard snapshot.
 The services intentionally contain little business logic. Rules should be
 added only when a household workflow requires them.
 
+Shopping and Chore services also expose narrow activity commands. They locate
+exactly one capability owner through `IntegrationDirectory`, validate
+backend-neutral input, execute the optional mutation contract, and then use
+their normal read path. They contain no Grocy endpoints, native IDs, or
+payloads; the HTTP layer remains transport and security only.
+
 ### `application.dashboard`
 
 `DashboardService` coordinates the capability services and builds a complete

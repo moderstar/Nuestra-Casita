@@ -24,6 +24,17 @@ docker compose logs kitchen-dashboard
 docker compose down
 ```
 
+For a no-write smoke test, sign in, inspect every page, use Refresh, and verify
+that the Shopping and Chores controls render. Automated tests use mocked Grocy
+responses and never modify household data. Test live writes only with
+household-approved disposable shopping data and a due chore.
+
+Rollback is a normal Git/container rollback: stop the services, check out the
+prior known-good commit (`82f08db94460c05b17e3315443f0bb929943d7dd` for
+Milestone 16), rebuild, and start Compose. No migration, volume, or persistent
+dashboard state needs reversal. Activity already confirmed by Grocy remains
+Grocy-owned and is not undone automatically.
+
 The API is exposed only to the Compose network. The separate frontend service
 publishes host port `8085` by default and proxies `/api/` to
 `dashboard-api:8080`; the browser therefore uses one origin and the existing

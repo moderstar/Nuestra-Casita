@@ -1,6 +1,6 @@
 # Kitchen Dashboard Frontend
 
-Milestone 16 adds a read-only React and TypeScript interface for the version-1
+Milestone 17 extends the React and TypeScript interface for the version-1
 Dashboard API. It is designed for an iPad in landscape orientation and adapts
 to portrait tablets, desktop browsers, and phones.
 
@@ -19,15 +19,24 @@ the normalized snapshot and support available, empty, degraded, and stale
 states. All presented data comes from the API.
 
 Supported pages are Home, Shopping, Inventory, Recipes, Meal Plan, Chores, and
-Tasks. The UI deliberately has no completion, editing, or deletion controls.
+Tasks. Shopping supports product search, free-text items, decimal quantities,
+multiple lists, purchased state, and confirmed removal. Chores can be completed
+through Grocy's execution operation. Successful writes trigger an authoritative
+dashboard refresh before confirmation is shown.
+
+Chore creation is intentionally not a live operation. Definitions and recurring
+schedules are Git-managed in `catalog/chores.csv`; a live-only definition would
+make synchronization ambiguous. The Add chore control explains that workflow.
 
 ## Authentication
 
 The login form sends `{"password":"..."}` to `POST /api/v1/session` with
 `credentials: "include"`. The API sets its signed, expiring, HTTP-only cookie.
-JavaScript receives neither the cookie value nor backend secrets. A `401` from
-any dashboard request returns the user to login. Logout calls
-`DELETE /api/v1/session` and clears local view state.
+JavaScript receives neither the session cookie nor backend secrets. A `401`
+from any dashboard request returns the user to login. Logout calls
+`DELETE /api/v1/session` and clears local view state. A signed double-submit
+CSRF token protects logout and activity mutations, and an idempotency key
+protects each submitted write from duplicate taps or retries.
 
 Do not store `CASITA_API_PASSWORD`, `CASITA_API_SESSION_SECRET`, or
 `GROCY_API_KEY` in frontend files or browser storage.
@@ -87,5 +96,5 @@ adopt section-specific refresh without changing page components.
 | Old UI after an update | Reload once; `index.html` is not cached and hashed assets are immutable. |
 | Limited/stale banner | Check `docker compose logs dashboard-api`; prior data is intentionally retained. |
 
-Calendar, budgets, Home Assistant controls, media, notifications, write
-operations, offline writes, and public internet exposure remain future work.
+Calendar, budgets, Home Assistant controls, media, notifications, offline
+writes, and public internet exposure remain future work.

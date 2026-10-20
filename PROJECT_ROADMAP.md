@@ -193,8 +193,10 @@ Initial dashboard areas are expected to include:
 The versioned dashboard contract, authenticated HTTP transport, and responsive
 touch-friendly interface are complete. The production container serves the
 frontend and proxies API requests on one origin. Current pages cover Grocy-
-backed Shopping, Inventory, Recipes, Meal Plan, Chores, and Tasks without
-adding unsafe write operations.
+backed Shopping, Inventory, Recipes, Meal Plan, Chores, and Tasks. Milestone 17
+adds narrowly scoped, CSRF-protected, idempotent activity operations for
+Shopping Lists and chore completion. Chore definitions remain Git-managed;
+stock booking and general entity writes are not exposed.
 
 Future dashboard milestones may add calendar, budget, home control, media, and
 notification integrations as their backend capabilities become available.

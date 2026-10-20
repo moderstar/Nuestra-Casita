@@ -105,6 +105,24 @@ Milestone 16 can build the iPad browser interface against the authenticated
 API. Caching or a new database remains unnecessary until measured behavior
 demonstrates that need.
 
+## Interactive Shopping and Chore Findings
+
+Grocy 4.6 stores list definitions in `shopping_lists` and live entries in the
+separate `shopping_list` entity. Nuestra Casita uses the generic object create,
+update, and delete endpoints for exact live items. Product entries reference a
+Product and its purchase quantity unit; note-only entries have neither. Named
+lists remain independent.
+
+The `done` field is only the Shopping UI's purchased marker and does not book
+stock. Decimal amounts are sent as decimal strings. Grocy 4.6's specialized
+shopping add/remove-product routes have a decimal truncation defect fixed in
+4.7, so this integration deliberately uses the generic object API.
+
+Chore completion uses `POST /chores/{choreId}/execute` and then refreshes the
+authoritative projections. Chore creation remains with the Git-managed catalog
+and sync workflow. The dashboard exposes no generic write proxy and performs
+no stock booking, bulk deletion, chore deletion, or Task completion.
+
 ## Product Barcode API Findings
 
 Grocy 4.6 exposes `product_barcodes` through the generic object endpoints:

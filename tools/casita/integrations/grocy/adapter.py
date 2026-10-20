@@ -3,23 +3,30 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Callable, Protocol
+from typing import Any, Callable, Iterable, Mapping, Protocol
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from casita.integrations import (
     AppliedChange,
+    AddShoppingItem,
     Capability,
     CapabilityData,
     DiagnosticCheck,
+    CompleteChore,
     HealthStatus,
     IntegrationDescriptor,
     IntegrationHealth,
     IntegrationRuntime,
     IntegrationSnapshot,
+    OperationConflict,
+    OperationNotFound,
     FieldDifference,
     PlannedChange,
     ReadRequest,
+    RemoveShoppingItem,
+    ShoppingItemStateChange,
+    ShoppingProductOption,
     SyncAction,
     SyncRequest,
     SynchronizationPlan,
@@ -27,6 +34,7 @@ from casita.integrations import (
 )
 from casita.integrations.grocy.client import GrocyApiClient
 from casita.integrations.grocy.mapping import (
+    domain_id,
     map_chores,
     map_inventory,
     map_meal_plan,
@@ -42,6 +50,15 @@ class GrocyReader(Protocol):
 
     def get(self, endpoint: str) -> Any:
         """Return one decoded Grocy API response."""
+
+    def post(self, endpoint: str, payload: Mapping[str, Any]) -> Any:
+        """Create or execute one explicitly supported operation."""
+
+    def put(self, endpoint: str, payload: Mapping[str, Any]) -> Any:
+        """Update one explicitly supported object."""
+
+    def delete(self, endpoint: str) -> Any:
+        """Delete one explicitly supported object."""
 
 
 class GrocyReadAdapter:
@@ -331,6 +348,167 @@ class GrocyReadAdapter:
                 ("locations", len(locations)),
             ),
         )
+
+    def search_shopping_products(
+        self,
+        query: str,
+        *,
+        limit: int,
+    ) -> tuple[ShoppingProductOption, ...]:
+        """Return active Grocy products with their purchase unit."""
+
+        products = self._rows("/objects/products")
+        units = rows_by_id(self._rows("/objects/quantity_units"))
+        needle = query.casefold()
+        options = []
+
+        for product in products:
+            name = str(product.get("name") or "").strip()
+            if needle not in name.casefold():
+                continue
+            if str(product.get("active", 1)).strip().casefold() in {"0", "false"}:
+                continue
+            native_unit_id = product.get("qu_id_purchase")
+            unit = units.get(str(native_unit_id).strip())
+            if native_unit_id is None or unit is None:
+                continue
+            options.append(
+                ShoppingProductOption(
+                    id=domain_id("product", product.get("id")),
+                    name=name,
+                    unit_id=domain_id("quantity-unit", native_unit_id),
+                    unit=str(unit.get("name") or "").strip(),
+                )
+            )
+
+        return tuple(
+            sorted(options, key=lambda item: item.name.casefold())[:limit]
+        )
+
+    def add_shopping_item(self, command: AddShoppingItem) -> None:
+        """Create one exact live shopping item through the generic API."""
+
+        shopping_list = self._resolve(
+            "shopping-list",
+            command.shopping_list_id,
+            self._rows("/objects/shopping_lists"),
+        )
+        product_id = None
+        unit_id = None
+
+        if command.product_id is not None:
+            product = self._resolve(
+                "product",
+                command.product_id,
+                self._rows("/objects/products"),
+            )
+            product_id = product["id"]
+            native_purchase_unit = product.get("qu_id_purchase")
+            if native_purchase_unit is None:
+                raise OperationConflict("The selected product has no purchase unit.")
+            expected_unit_id = domain_id("quantity-unit", native_purchase_unit)
+            if command.unit_id not in (None, expected_unit_id):
+                raise OperationConflict(
+                    "The selected quantity unit is not compatible with this product."
+                )
+            self._resolve(
+                "quantity-unit",
+                expected_unit_id,
+                self._rows("/objects/quantity_units"),
+            )
+            unit_id = native_purchase_unit
+        elif command.unit_id is not None:
+            raise OperationConflict("A note-only item cannot select a quantity unit.")
+
+        self._client.post(
+            "/objects/shopping_list",
+            {
+                "shopping_list_id": shopping_list["id"],
+                "product_id": product_id,
+                "amount": format(command.quantity, "f"),
+                "qu_id": unit_id,
+                "note": command.note.strip(),
+                "done": 0,
+            },
+        )
+
+    def set_shopping_item_purchased(
+        self,
+        command: ShoppingItemStateChange,
+    ) -> None:
+        """Set Grocy's list-only done marker without a stock booking."""
+
+        item = self._shopping_item(command.shopping_list_id, command.item_id)
+        desired = 1 if command.purchased else 0
+        current = str(item.get("done", 0)).strip().casefold() in {
+            "1", "true", "yes", "on"
+        }
+        if current != command.purchased:
+            self._client.put(
+                f"/objects/shopping_list/{item['id']}",
+                {"done": desired},
+            )
+
+    def remove_shopping_item(self, command: RemoveShoppingItem) -> None:
+        """Remove one exact item after verifying its list membership."""
+
+        item = self._shopping_item(command.shopping_list_id, command.item_id)
+        self._client.delete(f"/objects/shopping_list/{item['id']}")
+
+    def complete_chore(self, command: CompleteChore) -> None:
+        """Record a normal Grocy chore execution using the API-key user."""
+
+        chore = self._resolve(
+            "chore",
+            command.chore_id,
+            self._rows("/objects/chores"),
+        )
+        self._client.post(
+            f"/chores/{chore['id']}/execute",
+            {"tracked_time": "", "done_by": ""},
+        )
+
+    def _shopping_item(
+        self,
+        shopping_list_id: str,
+        item_id: str,
+    ) -> Mapping[str, Any]:
+        shopping_list = self._resolve(
+            "shopping-list",
+            shopping_list_id,
+            self._rows("/objects/shopping_lists"),
+        )
+        item = self._resolve(
+            "shopping-item",
+            item_id,
+            self._rows("/objects/shopping_list"),
+        )
+        if str(item.get("shopping_list_id", 1)) != str(shopping_list["id"]):
+            raise OperationConflict("The shopping item is not on the selected list.")
+        return item
+
+    def _rows(self, endpoint: str) -> list[dict[str, Any]]:
+        response = self._client.get(endpoint)
+        if not isinstance(response, list) or not all(
+            isinstance(item, dict) for item in response
+        ):
+            raise ValueError(f"Grocy endpoint {endpoint!r} returned invalid data.")
+        return response
+
+    @staticmethod
+    def _resolve(
+        resource: str,
+        opaque_id: str,
+        rows: Iterable[Mapping[str, Any]],
+    ) -> Mapping[str, Any]:
+        matches = [
+            row for row in rows
+            if row.get("id") is not None
+            and domain_id(resource, row.get("id")) == opaque_id
+        ]
+        if len(matches) != 1:
+            raise OperationNotFound(f"The selected {resource} no longer exists.")
+        return matches[0]
 
     def read(self, request: ReadRequest) -> IntegrationSnapshot:
         """Read requested capabilities and return normalized domain records."""

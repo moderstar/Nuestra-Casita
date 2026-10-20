@@ -56,6 +56,13 @@ export interface ShoppingList {
   updated_at: string | null;
 }
 
+export interface ShoppingProductOption {
+  id: string;
+  name: string;
+  unit_id: string;
+  unit: string;
+}
+
 export interface InventoryItem {
   id: string;
   name: string;

@@ -1,89 +1,44 @@
-# Milestone 3 Report: Quantity Units
+# Milestone 17 Report: Interactive Grocy Activity
 
 ## Summary
 
-Milestone 3 adds Quantity Units as a first-class Nuestra Casita resource.
+Milestone 17 adds safe everyday Shopping List and chore interactions to the
+kitchen dashboard without changing the backend-neutral structure. Application
+services expose narrow mutation contracts, Grocy resolves opaque IDs, and each
+successful write is followed by an authoritative read.
 
-Quantity Units now use the existing registry, generic planning engine, generic
-apply engine, payload-builder interface, resource-definition interface, and
-generic CLI used by Products and Product Groups.
+Shopping supports product search, free-text items, decimal quantities,
+multiple lists, purchased/unpurchased state, and confirmed exact removal.
+Chores support completion through Grocy's execution operation. Chore creation
+is deferred because definitions are Git-authoritative in `catalog/chores.csv`.
 
-The managed Grocy 4.6 fields are:
+## Safety
 
-- `name`
-- `name_plural`
-- `plural_forms`
-- `description`
-- `active`
+- Signed sessions and double-submit CSRF validation protect every write.
+- Required idempotency keys prevent duplicate retries within the API process.
+- Bounded request models and application validation reject invalid input.
+- Opaque domain IDs are resolved against fresh backend collections.
+- Unexpected Grocy errors receive safe HTTP responses.
+- Shopping completion never books stock.
+- No generic proxy, bulk delete, live chore creation, Task operation, or schema
+  migration was added.
 
-## Modified Files
+## Compatibility
 
-### Added
+Grocy 4.6 generic `shopping_list` object endpoints avoid the specialized
+endpoint's decimal truncation defect fixed in 4.7. Chore completion uses
+`/chores/{id}/execute`. Existing CLI commands and the two-container deployment
+topology remain unchanged.
 
-- `catalog/quantity_units.csv`
-- `tools/casita/payloads/quantity_units.py`
-- `tools/casita/resources/quantity_units.py`
-- `MILESTONE_REPORT.md`
+## Validation
 
-### Updated
+Automated validation is fully mocked and performs no live Grocy writes:
 
-- `tools/casita/payloads/__init__.py`
-- `tools/casita/resources/__init__.py`
-- `tools/casita/registry.py`
-- `docs/ARCHITECTURE.md`
-- `PROJECT_ROADMAP.md`
-
-## Verification Performed
-
-- Confirmed the Quantity Units schema against the Grocy 4.6.0 source.
-- Compiled all Python files under `tools`.
-- Confirmed `quantity-units` is present in the resource registry.
-- Verified Quantity Unit planning with four create operations.
-- Verified Quantity Unit payload generation for all managed Grocy 4.6 fields.
-- Verified Quantity Unit apply routing to `/objects/quantity_units`.
-- Verified Quantity Units do not load lookup tables.
-- Verified all required Quantity Units, Product Groups, and Products CLI
-  commands against an isolated Grocy 4.6-compatible API fixture.
-- Ran `git diff --check`.
-
-## Commands Executed
-
-```bash
-python -m compileall -q tools
-python tools/casita.py sync quantity-units
-python tools/casita.py sync quantity-units --apply
-python tools/casita.py sync product-groups
-python tools/casita.py sync product-groups --apply
-python tools/casita.py sync products
-python tools/casita.py sync products --apply
-git diff --check
-```
-
-Every required synchronization command completed with exit code 0.
-
-## Architectural Changes
-
-No framework redesign or unrelated refactoring was performed.
-
-The only architectural extension was registering one additional resource,
-`quantity-units`, through the existing resource registry. The generic CLI
-discovers the new command from that registry without Quantity Unit-specific
-command routing.
-
-## Known Limitations
-
-- The six-command verification used an isolated Grocy 4.6-compatible API
-  fixture and did not modify the live Grocy instance.
-- The initial catalog manages the four Quantity Units currently referenced by
-  `catalog/products.csv`: Each, Bag, Package, and Bottle.
-- Quantity Units already present in Grocy but absent from
-  `catalog/quantity_units.csv` are left unmanaged; the synchronization engine
-  does not delete them.
-- Quantity Unit conversions are a separate Grocy resource and are not part of
-  this milestone.
-
-## Suggested Next Milestone
-
-Milestone 4 should implement Locations as the next first-class Grocy resource,
-using the same focused resource, payload, registry, planning, apply, CLI, and
-verification pattern.
+- Python: 146 tests passed; `compileall` passed.
+- Frontend: 9 tests passed; TypeScript and production Vite build passed.
+- Dependency boundary: application/domain packages contain no Grocy imports.
+- CLI: eight existing command/help surfaces were byte-identical to Milestone 16.
+- Deployment: static Compose validation confirmed two services, private API,
+  and frontend port 8085. The Docker executable was unavailable for a live
+  Compose render or launch.
+- Whitespace: `git diff --check` passed.

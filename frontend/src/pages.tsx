@@ -1,9 +1,11 @@
-import { useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { addShoppingItem, completeChore, removeShoppingItem, searchShoppingProducts, setShoppingItemPurchased } from "./api";
 import { Card, EmptyState, ItemRow, PageHeading } from "./components";
 import { formatDate, formatQuantity, isToday } from "./format";
-import type { DashboardSnapshot, MealPlanEntry, Recipe } from "./types";
+import type { DashboardSnapshot, MealPlanEntry, Recipe, ShoppingProductOption } from "./types";
 
 interface PageProps { dashboard: DashboardSnapshot }
+interface InteractivePageProps extends PageProps { onRefresh: () => Promise<void> }
 
 const active = <span className="read-only-tag">Read only</span>;
 
@@ -53,16 +55,71 @@ export function HomePage({ dashboard }: PageProps) {
   </>;
 }
 
-export function ShoppingPage({ dashboard }: PageProps) {
+function AddShoppingDialog({ lists, selectedListId, onClose, onSaved }: { lists: DashboardSnapshot["shopping_lists"]; selectedListId: string; onClose: () => void; onSaved: () => Promise<void> }) {
+  const [listId, setListId] = useState(selectedListId);
+  const [mode, setMode] = useState<"product" | "note">("product");
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<ShoppingProductOption[]>([]);
+  const [product, setProduct] = useState<ShoppingProductOption | null>(null);
+  const [note, setNote] = useState("");
+  const [quantity, setQuantity] = useState("1");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (mode !== "product" || query.trim().length < 1 || product) { setResults([]); return; }
+    const timer = window.setTimeout(() => {
+      void searchShoppingProducts(query).then(setResults).catch((reason: Error) => setError(reason.message));
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [mode, query, product]);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (busy || !listId || (mode === "product" ? !product : !note.trim())) return;
+    setBusy(true); setError("");
+    try {
+      await addShoppingItem(listId, { product_id: mode === "product" ? product?.id ?? null : null, unit_id: mode === "product" ? product?.unit_id ?? null : null, quantity, note: mode === "note" ? note.trim() : note.trim() });
+      await onSaved();
+      onClose();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "The item could not be added."); }
+    finally { setBusy(false); }
+  }
+
+  return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="add-shopping-title">
+    <header><div><span className="eyebrow">Live Grocy activity</span><h2 id="add-shopping-title">Add shopping item</h2></div><button className="close-button" type="button" onClick={onClose} aria-label="Close">×</button></header>
+    <form onSubmit={submit}>
+      <label>Shopping list<select value={listId} onChange={(event) => setListId(event.target.value)}>{lists.map((list) => <option value={list.id} key={list.id}>{list.name}</option>)}</select></label>
+      <div className="segmented" role="group" aria-label="Item type"><button type="button" className={mode === "product" ? "selected" : ""} onClick={() => { setMode("product"); setProduct(null); }}>Product</button><button type="button" className={mode === "note" ? "selected" : ""} onClick={() => { setMode("note"); setProduct(null); }}>Free-text item</button></div>
+      {mode === "product" ? <div className="product-search"><label>Product<input value={product?.name ?? query} onChange={(event) => { setProduct(null); setQuery(event.target.value); setError(""); }} maxLength={80} autoFocus placeholder="Search Grocy products" /></label>{results.length > 0 && <div className="search-results" role="listbox">{results.map((item) => <button type="button" key={item.id} onClick={() => { setProduct(item); setQuery(item.name); setResults([]); }}><strong>{item.name}</strong><span>{item.unit}</span></button>)}</div>}</div> : <label>Item description<input value={note} onChange={(event) => setNote(event.target.value)} maxLength={500} autoFocus placeholder="What do you need?" /></label>}
+      <div className="field-row"><label>Quantity<input type="number" min="0.000001" max="1000000" step="any" inputMode="decimal" value={quantity} onChange={(event) => setQuantity(event.target.value)} required /></label><label>Unit<input value={product?.unit ?? (mode === "note" ? "No unit" : "Select a product")} disabled /></label></div>
+      {mode === "product" && <label>Note (optional)<input value={note} onChange={(event) => setNote(event.target.value)} maxLength={500} /></label>}
+      {error && <div className="form-error" role="alert">{error}</div>}
+      <div className="modal-actions"><button type="button" className="secondary-button" onClick={onClose}>Cancel</button><button className="primary-button compact" disabled={busy || !listId || (mode === "product" ? !product : !note.trim())}>{busy ? "Adding…" : "Add item"}</button></div>
+    </form>
+  </section></div>;
+}
+
+export function ShoppingPage({ dashboard, onRefresh }: InteractivePageProps) {
   const [selected, setSelected] = useState(dashboard.shopping_lists[0]?.id ?? "");
+  const [adding, setAdding] = useState(false);
+  const [busyItem, setBusyItem] = useState("");
+  const [message, setMessage] = useState("");
   const list = dashboard.shopping_lists.find((item) => item.id === selected) ?? dashboard.shopping_lists[0];
-  return <><PageHeading eyebrow="Groceries & errands" title="Shopping" detail="Live shopping activity from your connected household backend." action={active} />
+  async function changeItem(itemId: string, operation: () => Promise<void>, success: string) {
+    setBusyItem(itemId); setMessage("");
+    try { await operation(); await onRefresh(); setMessage(success); }
+    catch (reason) { setMessage(reason instanceof Error ? reason.message : "The shopping list could not be changed."); }
+    finally { setBusyItem(""); }
+  }
+  return <><PageHeading eyebrow="Groceries & errands" title="Shopping" detail="Live shopping activity from your connected household backend." action={dashboard.shopping_lists.length ? <button className="primary-button compact" onClick={() => setAdding(true)}>＋ Add item</button> : undefined} />
+    {message && <p className="operation-message" role="status">{message}</p>}
     {!dashboard.shopping_lists.length ? <Card title="Shopping lists" icon="cart"><EmptyState title="No shopping lists" detail="Create a list in Grocy and it will appear here." /></Card> : <div className="split-layout">
       <nav className="list-selector" aria-label="Shopping lists">{dashboard.shopping_lists.map((entry) => <button key={entry.id} className={entry.id === list.id ? "selected" : ""} onClick={() => setSelected(entry.id)}><span>{entry.name}</span><strong>{entry.items.filter((item) => !item.checked).length}</strong></button>)}</nav>
       <Card title={list.name} icon="cart" action={<span className="muted">{list.items.length} items</span>}>
-        {!list.items.length ? <EmptyState title="This list is empty" detail="Items added in Grocy will appear here." /> : <div className="row-list spacious">{list.items.map((item) => <ItemRow key={item.id} title={item.name} detail={item.note} meta={formatQuantity(item.quantity, item.unit)} completed={item.checked} />)}</div>}
+        {!list.items.length ? <EmptyState title="This list is empty" detail="Add a product or free-text item when you need it." /> : <div className="row-list spacious">{list.items.map((item) => <div className={`interactive-row${item.checked ? " completed" : ""}`} key={item.id}><button className="check-button" disabled={busyItem === item.id} aria-label={item.checked ? `Mark ${item.name} not purchased` : `Mark ${item.name} purchased`} onClick={() => void changeItem(item.id, () => setShoppingItemPurchased(list.id, item.id, !item.checked), item.checked ? "Item reopened." : "Item marked purchased.")}>{item.checked ? "✓" : ""}</button><div className="item-copy"><strong>{item.name}</strong>{item.note && <span>{item.note}</span>}</div><span className="item-meta">{formatQuantity(item.quantity, item.unit)}</span><button className="remove-button" disabled={busyItem === item.id} aria-label={`Remove ${item.name}`} onClick={() => { if (window.confirm(`Remove “${item.name}” from ${list.name}?`)) void changeItem(item.id, () => removeShoppingItem(list.id, item.id), "Item removed."); }}>Remove</button></div>)}</div>}
       </Card>
-    </div>}
+    </div>}{adding && <AddShoppingDialog lists={dashboard.shopping_lists} selectedListId={list.id} onClose={() => setAdding(false)} onSaved={onRefresh} />}
   </>;
 }
 
@@ -93,8 +150,10 @@ export function MealPlanPage({ dashboard }: PageProps) {
   </>;
 }
 
-export function ChoresPage({ dashboard }: PageProps) {
-  return <><PageHeading eyebrow="Household rhythm" title="Chores" detail="Recurring household work and its current due status." action={active} /><Card title="Household chores" icon="chores" action={<span className="muted">{dashboard.chores.length} total</span>}>{!dashboard.chores.length ? <EmptyState title="No chores available" detail="Configured chores will appear here." /> : <div className="row-list spacious">{dashboard.chores.map((chore) => <ItemRow key={chore.id} title={chore.name} detail={[chore.description, chore.assigned_person_id ? "Assigned" : ""].filter(Boolean).join(" · ")} meta={formatDate(chore.due_at)} completed={chore.completed} />)}</div>}</Card></>;
+export function ChoresPage({ dashboard, onRefresh }: InteractivePageProps) {
+  const [busy, setBusy] = useState(""); const [message, setMessage] = useState(""); const [showPolicy, setShowPolicy] = useState(false);
+  async function finish(id: string) { setBusy(id); setMessage(""); try { await completeChore(id); await onRefresh(); setMessage("Chore completed."); } catch (reason) { setMessage(reason instanceof Error ? reason.message : "The chore could not be completed."); } finally { setBusy(""); } }
+  return <><PageHeading eyebrow="Household rhythm" title="Chores" detail="Recurring household work and its current due status." action={<button className="secondary-button" onClick={() => setShowPolicy(true)}>＋ Add chore</button>} />{message && <p className="operation-message" role="status">{message}</p>}<Card title="Household chores" icon="chores" action={<span className="muted">{dashboard.chores.length} total</span>}>{!dashboard.chores.length ? <EmptyState title="No chores available" detail="Configured chores will appear here." /> : <div className="row-list spacious">{dashboard.chores.map((chore) => <div className={`interactive-row chore-row${chore.completed ? " completed" : ""}`} key={chore.id}><span className="item-dot">{chore.completed ? "✓" : ""}</span><div className="item-copy"><strong>{chore.name}</strong><span>{[chore.description, chore.assigned_person_id ? "Assigned" : ""].filter(Boolean).join(" · ")}</span></div><span className="item-meta">{formatDate(chore.due_at)}</span><button className="secondary-button row-action" disabled={busy === chore.id || chore.completed} onClick={() => void finish(chore.id)}>{busy === chore.id ? "Saving…" : chore.completed ? "Done" : "Complete"}</button></div>)}</div>}</Card>{showPolicy && <div className="modal-backdrop" role="presentation"><section className="modal compact-modal" role="dialog" aria-modal="true" aria-labelledby="chore-policy-title"><header><div><span className="eyebrow">Managed configuration</span><h2 id="chore-policy-title">Add a chore</h2></div><button className="close-button" onClick={() => setShowPolicy(false)} aria-label="Close">×</button></header><p>Chore definitions are managed in <code>catalog/chores.csv</code> so recurring schedules remain reproducible. Add the definition there, validate it, and use the existing synchronization command.</p><button className="primary-button compact" onClick={() => setShowPolicy(false)}>Got it</button></section></div>}</>;
 }
 
 export function TasksPage({ dashboard }: PageProps) {

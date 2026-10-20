@@ -55,6 +55,20 @@ database description, aggregate metrics, connectivity, and errors for
 dashboard presentation. Neither contract permits raw vendor responses to
 cross the adapter boundary.
 
+## Optional Activity Interfaces
+
+Interactive household activity uses capability-specific contracts rather than
+a generic object API. `ShoppingMutationIntegration` supports bounded product
+search, add, purchased-state, and exact removal commands.
+`ChoreMutationIntegration` supports completion of an existing definition.
+Commands contain opaque domain IDs and decimal-safe quantities; adapters alone
+resolve native IDs and payloads. Each operation writes through one configured
+capability owner and immediately reads authoritative state back.
+
+These interfaces do not alter declarative ownership. Shopping items remain
+live Grocy activity, while chore definitions remain Git-managed. Chore
+creation, stock booking, bulk removal, and arbitrary mutation are excluded.
+
 ## Planned Adapters
 
 ### Grocy

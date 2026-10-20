@@ -64,7 +64,7 @@ function useClock() {
   return now;
 }
 
-function DashboardShell({ envelope, stale, refreshing, onRefresh, onLogout }: { envelope: ApiEnvelope<DashboardSnapshot>; stale: boolean; refreshing: boolean; onRefresh: () => void; onLogout: () => void }) {
+function DashboardShell({ envelope, stale, refreshing, onRefresh, onLogout }: { envelope: ApiEnvelope<DashboardSnapshot>; stale: boolean; refreshing: boolean; onRefresh: () => Promise<void>; onLogout: () => void }) {
   const [page, setPage] = useState<PageName>("home");
   const [menuOpen, setMenuOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>("system");
@@ -77,11 +77,11 @@ function DashboardShell({ envelope, stale, refreshing, onRefresh, onLogout }: { 
 
   const pages: Record<PageName, React.ReactNode> = {
     home: <HomePage dashboard={dashboard} />,
-    shopping: <ShoppingPage dashboard={dashboard} />,
+    shopping: <ShoppingPage dashboard={dashboard} onRefresh={onRefresh} />,
     inventory: <InventoryPage dashboard={dashboard} />,
     recipes: <RecipesPage dashboard={dashboard} />,
     "meal-plan": <MealPlanPage dashboard={dashboard} />,
-    chores: <ChoresPage dashboard={dashboard} />,
+    chores: <ChoresPage dashboard={dashboard} onRefresh={onRefresh} />,
     tasks: <TasksPage dashboard={dashboard} />,
   };
 
@@ -96,7 +96,7 @@ function DashboardShell({ envelope, stale, refreshing, onRefresh, onLogout }: { 
       <div className="topbar-center"><strong>{new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric" }).format(now)}</strong><span>{new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(now)}</span></div>
       <div className="topbar-actions">
         <StatusBadge state={envelope.state} stale={stale || dashboard.stale_sections.length > 0} />
-        <button className="icon-button" aria-label="Refresh dashboard" onClick={onRefresh} disabled={refreshing}><Icon name="refresh"/><span className="desktop-only">{refreshing ? "Refreshing" : "Refresh"}</span></button>
+        <button className="icon-button" aria-label="Refresh dashboard" onClick={() => void onRefresh()} disabled={refreshing}><Icon name="refresh"/><span className="desktop-only">{refreshing ? "Refreshing" : "Refresh"}</span></button>
         <div className="account-menu"><button className="icon-button" aria-label="Open settings" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><Icon name="settings"/></button>{menuOpen && <div className="menu-popover">
           <span className="menu-label">Appearance</span>
           <div className="theme-options">{(["system", "light", "dark"] as Theme[]).map((item) => <button key={item} className={theme === item ? "active" : ""} onClick={() => setTheme(item)}>{item === "dark" ? <Icon name="moon" size={17}/> : <Icon name="sun" size={17}/>} {item}</button>)}</div>
@@ -157,5 +157,5 @@ export default function App() {
 
   if (authenticated === null) return <main className="boot-screen"><span className="house-mark">NC</span><p>Opening Nuestra Casita…</p></main>;
   if (!authenticated || !dashboard) return <LoginScreen onAuthenticated={refresh} />;
-  return <DashboardShell envelope={dashboard} stale={stale} refreshing={refreshing} onRefresh={() => void refresh()} onLogout={() => void signOut()} />;
+  return <DashboardShell envelope={dashboard} stale={stale} refreshing={refreshing} onRefresh={refresh} onLogout={() => void signOut()} />;
 }

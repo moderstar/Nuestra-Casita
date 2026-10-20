@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal
 from typing import Generic, TypeVar
 from zoneinfo import ZoneInfo
 
@@ -29,7 +30,16 @@ from casita.domain import (
     Recipe,
     ShoppingList,
 )
-from casita.integrations import Capability
+from casita.integrations import (
+    AddShoppingItem,
+    Capability,
+    ChoreMutationIntegration,
+    CompleteChore,
+    RemoveShoppingItem,
+    ShoppingItemStateChange,
+    ShoppingMutationIntegration,
+    ShoppingProductOption,
+)
 
 
 RecordType = TypeVar("RecordType")
@@ -98,6 +108,64 @@ class ShoppingService(CapabilityService[ShoppingList]):
     capability = Capability.SHOPPING
     record_type = ShoppingList
 
+    def search_products(
+        self,
+        query: str,
+        *,
+        limit: int = 20,
+    ) -> tuple[ShoppingProductOption, ...]:
+        """Search bounded backend-neutral product choices."""
+
+        text = query.strip()
+        if not 1 <= len(text) <= 80:
+            raise ValueError("Product search must contain 1 to 80 characters.")
+        if not 1 <= limit <= 25:
+            raise ValueError("Product search limit must be between 1 and 25.")
+        return self._writer().search_shopping_products(text, limit=limit)
+
+    def add_item(
+        self,
+        command: AddShoppingItem,
+    ) -> ServiceResult[ShoppingList]:
+        """Add one live item and return authoritative refreshed lists."""
+
+        if command.quantity <= Decimal("0") or not command.quantity.is_finite():
+            raise ValueError("Shopping quantity must be a positive finite decimal.")
+        if command.quantity > Decimal("1000000"):
+            raise ValueError("Shopping quantity is too large.")
+        if command.product_id is None and command.note.strip() == "":
+            raise ValueError("A product or a note is required.")
+        self._writer().add_shopping_item(command)
+        return self.read(command.household_id)
+
+    def set_purchased(
+        self,
+        command: ShoppingItemStateChange,
+    ) -> ServiceResult[ShoppingList]:
+        """Set Grocy's purchased marker and return refreshed lists."""
+
+        self._writer().set_shopping_item_purchased(command)
+        return self.read(command.household_id)
+
+    def remove_item(
+        self,
+        command: RemoveShoppingItem,
+    ) -> ServiceResult[ShoppingList]:
+        """Remove one exact live item and return refreshed lists."""
+
+        self._writer().remove_shopping_item(command)
+        return self.read(command.household_id)
+
+    def _writer(self) -> ShoppingMutationIntegration:
+        integrations = self._integrations.integrations_for(self.capability)
+        writers = tuple(
+            item for item in integrations
+            if isinstance(item, ShoppingMutationIntegration)
+        )
+        if len(writers) != 1:
+            raise RuntimeError("Shopping mutations require exactly one owner.")
+        return writers[0]
+
 
 class InventoryService(CapabilityService[Inventory]):
     """Provide normalized household inventory projections."""
@@ -118,6 +186,19 @@ class ChoreService(CapabilityService[Chore]):
 
     capability = Capability.CHORES
     record_type = Chore
+
+    def complete(self, command: CompleteChore) -> ServiceResult[Chore]:
+        """Record activity through the owner and return refreshed chores."""
+
+        integrations = self._integrations.integrations_for(self.capability)
+        writers = tuple(
+            item for item in integrations
+            if isinstance(item, ChoreMutationIntegration)
+        )
+        if len(writers) != 1:
+            raise RuntimeError("Chore mutations require exactly one owner.")
+        writers[0].complete_chore(command)
+        return self.read(command.household_id)
 
 
 class MealPlanService(CapabilityService[MealPlanEntry]):

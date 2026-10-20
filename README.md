@@ -16,8 +16,9 @@ their data without exposing vendor APIs to future clients.
 - Versioned internal contract for the future kitchen dashboard
 - Architecture designed for reproducible Docker and Proxmox deployments
 
-The terminal dashboard, unified CLI, and authenticated read-only Dashboard API
-are implemented. No web frontend or platform database is implemented yet.
+The terminal dashboard, unified CLI, authenticated read-only Dashboard API,
+and responsive kitchen dashboard frontend are implemented. No platform
+database is required.
 
 ## Architecture
 
@@ -30,7 +31,7 @@ are implemented. No web frontend or platform database is implemented yet.
 - [Dashboard contract](docs/DASHBOARD_CONTRACT.md)
 - [Dashboard API](docs/DASHBOARD_API.md)
 - [Dashboard API deployment](docs/DASHBOARD_API_DEPLOYMENT.md)
-- [Milestone 16 UI handoff](docs/MILESTONE_16_HANDOFF.md)
+- [Kitchen dashboard frontend](docs/KITCHEN_DASHBOARD.md)
 - [Grocy integration architecture](docs/ARCHITECTURE.md)
 - [Project roadmap](PROJECT_ROADMAP.md)
 - [Grocy 4.6 API inventory](docs/GROCY_4_6_API_RESOURCES.md)
@@ -40,6 +41,7 @@ are implemented. No web frontend or platform database is implemented yet.
 ```text
 catalog/                  Git-backed declarative catalogs
 docs/                     Platform and integration documentation
+frontend/                 React/TypeScript kitchen dashboard and Nginx proxy
 tools/casita/domain/      Household domain models
 tools/casita/integrations Integration contracts
 tools/casita/integrations/grocy
@@ -50,6 +52,18 @@ tools/casita/dashboard/   Internal dashboard contract
 tools/casita/payloads/    Grocy payload builders
 tools/casita/resources/   Grocy resource definitions
 ```
+
+## Kitchen Dashboard
+
+Copy `.env.dashboard.example` to `.env`, configure the API credentials, then:
+
+```bash
+docker compose build
+docker compose up -d
+```
+
+The frontend binds to `127.0.0.1:8085` by default. See the deployment guide
+before enabling private LAN access or HTTPS cookies.
 
 ## Grocy Synchronization
 

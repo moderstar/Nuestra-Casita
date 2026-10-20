@@ -20,6 +20,15 @@ The foundational code packages are:
 - `casita.application`: household services and dashboard assembly
 - `casita.bootstrap`: explicit application construction and object lifetime
 - `casita.dashboard`: the internal kitchen-dashboard data contract
+- `frontend`: read-only React presentation of the versioned HTTP contract
+
+## Kitchen Dashboard Flow
+
+The production browser path is `Browser → Nginx frontend → same-origin /api
+proxy → Dashboard API → Application Services → Integration Contracts`. Nginx
+serves static assets and proxies only API traffic to the private API container.
+Frontend code has no Grocy dependency and no backend credential. See
+[KITCHEN_DASHBOARD.md](KITCHEN_DASHBOARD.md).
 
 The existing Grocy implementation remains unchanged and operational while a
 Grocy read adapter translates runtime data into platform domain models.

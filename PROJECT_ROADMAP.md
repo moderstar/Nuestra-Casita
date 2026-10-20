@@ -95,6 +95,7 @@ these integrations.
 - [ ] Add normalized platform events and notifications
 - [x] Add authenticated, read-only Dashboard HTTP API
 - [x] Add normalized Meal Plan and Task read projections
+- [x] Add responsive, authenticated kitchen dashboard frontend
 
 ## Current Development Priority
 
@@ -189,10 +190,14 @@ Initial dashboard areas are expected to include:
 - Home status and common automations
 - Family photos
 
-The versioned dashboard contract, authenticated HTTP transport, and Docker
-deployment are defined. The touch-friendly Dashboard UI remains deferred.
-The Grocy resource milestone and Dashboard API are complete. Milestone 16 can
-build the touch-friendly iPad interface against the versioned HTTP contract.
+The versioned dashboard contract, authenticated HTTP transport, and responsive
+touch-friendly interface are complete. The production container serves the
+frontend and proxies API requests on one origin. Current pages cover Grocy-
+backed Shopping, Inventory, Recipes, Meal Plan, Chores, and Tasks without
+adding unsafe write operations.
+
+Future dashboard milestones may add calendar, budget, home control, media, and
+notification integrations as their backend capabilities become available.
 
 ## Reproducibility Goal
 

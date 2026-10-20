@@ -1,7 +1,8 @@
-# Milestone 16 — iPad UI Handoff
+# Milestone 16 — Kitchen Dashboard Implementation
 
-The browser UI can rely on the version-1 endpoints and envelope in
-`DASHBOARD_API.md`.
+The browser UI described by this handoff is implemented in `frontend/`. See
+`KITCHEN_DASHBOARD.md` for architecture, development, deployment, testing, and
+troubleshooting guidance.
 
 - Login through `POST /api/v1/session` using same-origin credentialed requests.
 - Never persist the household password or a backend token in JavaScript.
@@ -14,6 +15,5 @@ The browser UI can rely on the version-1 endpoints and envelope in
   stale. The server has no cache.
 
 Calendar, budget, Home Assistant controls, photos, notifications, mutations,
-and offline writes remain unsupported. Build a same-origin responsive web app
-behind the same private HTTPS reverse proxy so the HTTP-only cookie works
-naturally on the kitchen iPad without broad CORS.
+and offline writes remain unsupported. The implemented Nginx service provides
+the same-origin `/api/` reverse proxy needed by the HTTP-only session cookie.

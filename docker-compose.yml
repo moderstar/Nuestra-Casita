@@ -7,8 +7,23 @@ services:
     environment:
       CASITA_API_HOST: 0.0.0.0
       CASITA_API_PORT: 8080
+    expose:
+      - "8080"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+  kitchen-dashboard:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      dashboard-api:
+        condition: service_healthy
     ports:
-      - "${CASITA_API_BIND_ADDRESS:-127.0.0.1}:${CASITA_API_PORT:-8080}:8080"
+      - "${CASITA_FRONTEND_BIND_ADDRESS:-127.0.0.1}:${CASITA_FRONTEND_PORT:-8085}:8080"
     read_only: true
     tmpfs:
       - /tmp

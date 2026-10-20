@@ -133,7 +133,18 @@ class Chore:
     description: str = ""
     due_at: datetime | None = None
     assigned_person_id: str | None = None
+    assigned_person_name: str = ""
     completed: bool = False
+    active: bool = True
+    schedule_type: str = "manually"
+    schedule_interval: int = 1
+    schedule_day: int = 1
+    schedule_weekdays: tuple[str, ...] = ()
+    start_at: datetime | None = None
+    start_at_editable: bool = True
+    assignment_type: str = "no-assignment"
+    assignment_user_ids: tuple[str, ...] = ()
+    assignment_user_names: tuple[str, ...] = ()
     source_references: tuple[SourceReference, ...] = ()
 
 

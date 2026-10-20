@@ -27,11 +27,12 @@ docker compose down
 For a no-write smoke test, sign in, inspect every page, use Refresh, and verify
 that the Shopping and Chores controls render. Automated tests use mocked Grocy
 responses and never modify household data. Test live writes only with
-household-approved disposable shopping data and a due chore.
+household-approved disposable shopping data and a disposable Chore. Chore
+deactivation is safe for history; deletion is intentionally unavailable.
 
 Rollback is a normal Git/container rollback: stop the services, check out the
-prior known-good commit (`82f08db94460c05b17e3315443f0bb929943d7dd` for
-Milestone 16), rebuild, and start Compose. No migration, volume, or persistent
+prior known-good commit (`e4107ad61f8f597778da47a9658a88e2c7189d07` before
+Milestone 18), rebuild, and start Compose. No migration, volume, or persistent
 dashboard state needs reversal. Activity already confirmed by Grocy remains
 Grocy-owned and is not undone automatically.
 

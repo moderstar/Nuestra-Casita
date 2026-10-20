@@ -333,15 +333,27 @@ def map_chores(
     definition_rows: Iterable[GrocyRow],
     current_rows: Iterable[GrocyRow],
     local_timezone: ZoneInfo,
+    log_rows: Iterable[GrocyRow] = (),
+    users: Mapping[str, GrocyRow] | None = None,
 ) -> tuple[Chore, ...]:
     """Translate Grocy chore definitions and current due state."""
 
     definitions = rows_by_id(definition_rows)
+    current_by_id = {
+        identity_key(row.get("chore_id")): row
+        for row in current_rows
+    }
+    logged_chore_ids = {
+        identity_key(row.get("chore_id"))
+        for row in log_rows
+    }
+    users = users or {}
     chores = []
 
-    for current in current_rows:
-        chore_id = current.get("chore_id")
-        definition = definitions.get(identity_key(chore_id), {})
+    for definition in definitions.values():
+        chore_id = definition.get("id")
+        chore_key = identity_key(chore_id)
+        current = current_by_id.get(chore_key, {})
         due_at = datetime_value(
             current.get("next_estimated_execution_time"),
             local_timezone,
@@ -352,6 +364,16 @@ def map_chores(
 
         assigned_user_id = current.get(
             "next_execution_assigned_to_user_id"
+        )
+        assigned_user = users.get(identity_key(assigned_user_id), {})
+        assignment_user_ids = tuple(
+            item.strip()
+            for item in str(definition.get("assignment_config") or "").split(",")
+            if item.strip()
+        )
+        assignment_users = tuple(
+            users.get(user_id, {})
+            for user_id in assignment_user_ids
         )
         chores.append(
             Chore(
@@ -371,7 +393,40 @@ def map_chores(
                     if assigned_user_id is not None
                     else None
                 ),
+                assigned_person_name=str(
+                    assigned_user.get("display_name") or ""
+                ).strip(),
                 completed=False,
+                active=boolean_value(definition.get("active", 1)),
+                schedule_type=str(
+                    definition.get("period_type") or "manually"
+                ).strip(),
+                schedule_interval=int(
+                    definition.get("period_interval") or 1
+                ),
+                schedule_day=int(definition.get("period_days") or 1),
+                schedule_weekdays=tuple(
+                    day.strip()
+                    for day in str(
+                        definition.get("period_config") or ""
+                    ).split(",")
+                    if day.strip()
+                ),
+                start_at=datetime_value(
+                    definition.get("start_date"), local_timezone
+                ),
+                start_at_editable=chore_key not in logged_chore_ids,
+                assignment_type=str(
+                    definition.get("assignment_type") or "no-assignment"
+                ).strip(),
+                assignment_user_ids=tuple(
+                    domain_id("person", user_id)
+                    for user_id in assignment_user_ids
+                ),
+                assignment_user_names=tuple(
+                    str(user.get("display_name") or "").strip()
+                    for user in assignment_users
+                ),
             )
         )
 

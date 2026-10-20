@@ -319,6 +319,57 @@ class CompleteChore:
     chore_id: str
 
 
+@dataclass(frozen=True, slots=True)
+class ChoreUserOption:
+    """Expose an assignable backend user without its native identifier."""
+
+    id: str
+    display_name: str
+
+
+@dataclass(frozen=True, slots=True)
+class ChoreDefinition:
+    """Describe one backend-neutral, backend-owned chore definition."""
+
+    household_id: str
+    name: str
+    description: str
+    schedule_type: str
+    schedule_interval: int
+    schedule_day: int
+    schedule_weekdays: tuple[str, ...]
+    start_at: datetime
+    assignment_type: str
+    assignment_user_ids: tuple[str, ...]
+    active: bool
+
+
+@dataclass(frozen=True, slots=True)
+class UpdateChoreDefinition:
+    """Replace the managed fields of one existing chore definition."""
+
+    household_id: str
+    chore_id: str
+    name: str
+    description: str
+    schedule_type: str
+    schedule_interval: int
+    schedule_day: int
+    schedule_weekdays: tuple[str, ...]
+    start_at: datetime
+    assignment_type: str
+    assignment_user_ids: tuple[str, ...]
+    active: bool
+
+
+@dataclass(frozen=True, slots=True)
+class DeactivateChore:
+    """Safely retire a chore without deleting execution history."""
+
+    household_id: str
+    chore_id: str
+
+
 @runtime_checkable
 class ShoppingMutationIntegration(Integration, Protocol):
     """Optional narrow write contract for live shopping activity."""
@@ -347,6 +398,18 @@ class ShoppingMutationIntegration(Integration, Protocol):
 @runtime_checkable
 class ChoreMutationIntegration(Integration, Protocol):
     """Optional narrow write contract for live chore activity."""
+
+    def list_chore_users(self) -> tuple[ChoreUserOption, ...]:
+        """Return assignable users with opaque identities."""
+
+    def create_chore(self, command: ChoreDefinition) -> None:
+        """Create one Grocy-owned chore definition."""
+
+    def update_chore(self, command: UpdateChoreDefinition) -> None:
+        """Update one existing chore without touching its history."""
+
+    def deactivate_chore(self, command: DeactivateChore) -> None:
+        """Deactivate one chore instead of deleting its history."""
 
     def complete_chore(self, command: CompleteChore) -> None:
         """Record a normal completion while preserving its definition."""

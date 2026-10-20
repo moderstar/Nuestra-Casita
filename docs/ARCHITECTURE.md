@@ -201,27 +201,25 @@ preserved and automatic deletion is unsupported.
 
 ### Chores
 
-- Catalog: `catalog/chores.csv`
-- Grocy endpoint: `/objects/chores`
-- Managed definition fields: `name`, `description`, `period_type`,
-  `period_interval`, `period_days`, `period_config`, `track_date_only`,
-  `rollover`, `consume_product_on_execution`, `product_id`,
-  `product_amount`, and `active`
-- `start_date` is required for creation but intentionally excluded from
-  updates because Grocy treats it as immutable after the first execution
-- Optional product consumption resolves `product_id` through the Products
-  lookup
-- Task Categories are not related to Chores in the native Grocy 4.6 schema
-- CLI: `python tools/casita.py sync chores [--apply]`
+- Authority: Grocy 4.6 definitions, schedules, assignments, active state, and
+  execution history
+- Read endpoints: `/objects/chores`, `/chores`, `/objects/chores_log`, and
+  `/users`
+- Write endpoints: `/objects/chores`, `/objects/chores/{id}`,
+  `/chores/{id}/execute`, and `/chores/executions/calculate-next-assignments`
+- Dashboard API: authenticated create, edit, complete, and deactivate actions
 
-Chore assignment fields are intentionally not managed. Grocy stores assigned
-users as instance-specific IDs and recalculates the next assignment through a
-separate operational API after edits. New synchronized Chores default to
-`no-assignment`; existing assignment configuration remains untouched.
+The application contract uses opaque chore and user identifiers; only the
+Grocy adapter resolves them to native IDs. Grocy's native assignment modes and
+schedule fields pass through a validated backend-neutral definition. After a
+create or edit, the adapter explicitly asks Grocy to recalculate the next
+assignment, matching the Grocy 4.6 web application's behavior.
 
-Chore runtime fields are also excluded: `next_execution_assigned_to_user_id`,
-`rescheduled_date`, `rescheduled_next_execution_assigned_to_user_id`,
-`row_created_timestamp`, and all `chores_log` execution history.
+The legacy catalog and `sync chores` resource are retired. Chores are excluded
+from `sync all`, so synchronization cannot overwrite live Grocy definitions.
+Deletion is deliberately unavailable: Grocy 4.6 cascades a chore deletion to
+its execution log. Deactivation is the safe lifecycle operation and preserves
+history.
 
 ### Batteries
 

@@ -16,7 +16,7 @@ inside the adapter package.
 | Inventory | `/stock`, Quantity Units | `Inventory` and `InventoryItem` |
 | Shopping | Shopping Lists, Shopping List Items, Products, Quantity Units | `ShoppingList` and `ShoppingItem` |
 | Recipes | Recipes, Recipe Positions, Products, Quantity Units | `Recipe` and `RecipeIngredient` |
-| Chores | `/chores`, Chore definitions | `Chore` |
+| Chores | `/chores`, definitions, logs, users | `Chore` |
 
 The adapter requests only the endpoints needed for each requested capability.
 It validates that list endpoints return dictionaries before translation.
@@ -76,8 +76,10 @@ shopping-list state, costs, and stock calculations remain excluded.
 
 ### Chores
 
-Chore definitions provide name and description. `/chores` provides current
-due and assignment state. The adapter does not expose Chore execution logs.
+Chore definitions provide schedule, active state, and assignment configuration.
+`/chores` provides current due and next-assignee state. Execution logs are read
+only to determine whether Grocy has locked the start date; journal entries are
+not exposed to clients. Inactive definitions remain visible for reactivation.
 The domain `completed` value remains false because the native current Chore
 projection represents the next occurrence rather than a completed instance.
 

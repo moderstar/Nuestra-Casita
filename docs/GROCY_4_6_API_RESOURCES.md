@@ -97,7 +97,7 @@ because they can orphan or reinterpret existing custom data.
 | Chores read | Implemented and normalized |
 | Tasks read | Implemented and normalized |
 | Dashboard snapshot assembly | Implemented with versioned backend-neutral contract |
-| API transport | Implemented as versioned read-only FastAPI endpoints |
+| API transport | Implemented as versioned authenticated FastAPI endpoints |
 | Authentication | Signed HTTP-only cookie session implemented |
 | Docker deployment | Dedicated non-root Dashboard API service implemented |
 
@@ -119,9 +119,23 @@ shopping add/remove-product routes have a decimal truncation defect fixed in
 4.7, so this integration deliberately uses the generic object API.
 
 Chore completion uses `POST /chores/{choreId}/execute` and then refreshes the
-authoritative projections. Chore creation remains with the Git-managed catalog
-and sync workflow. The dashboard exposes no generic write proxy and performs
-no stock booking, bulk deletion, chore deletion, or Task completion.
+authoritative projections. Milestone 18 also uses the generic Chore object
+create/update endpoints and recalculates the next assignment through
+`POST /chores/executions/calculate-next-assignments`, as Grocy's own form does.
+Available users come from `/users`; browser clients receive only opaque domain
+identifiers.
+
+Grocy 4.6 supports `hourly`, `daily`, `weekly`, `monthly`, `yearly`,
+`manually`, and `adaptive` period types, plus native `no-assignment`, `random`,
+`in-alphabetical-order`, and `who-least-did-first` assignment modes. Once a
+chore has log entries, the dashboard keeps its start date read-only in line
+with Grocy's UI restriction.
+
+Deleting a row from `chores` triggers Grocy's `cascade_chore_removal` database
+trigger, which removes matching `chores_log` history. Nuestra Casita therefore
+does not expose chore deletion; deactivation is the non-destructive lifecycle
+operation. The dashboard exposes no generic write proxy and performs no stock
+booking, bulk deletion, chore deletion, or Task completion.
 
 ## Product Barcode API Findings
 

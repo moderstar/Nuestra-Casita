@@ -170,6 +170,17 @@ completion timestamps, assignment, creation timestamps, userfields, and other
 runtime state are never placed in synchronization payloads. No Task is deleted
 for being absent from the catalog.
 
+## Chores are not catalog-managed
+
+Chore definitions no longer have a CSV catalog. Grocy is authoritative for
+their names, schedules, assignments, active state, and execution history.
+Manage chores from the kitchen dashboard or Grocy itself. The retired
+`sync chores` resource is not registered and `sync all` does not include it,
+which prevents a Git catalog from overwriting live household activity.
+
+The dashboard offers deactivation instead of deletion because Grocy 4.6
+deletes the associated execution log when a chore definition is deleted.
+
 ## Meal Plan Sections
 
 `catalog/meal_plan_sections.csv` contains:

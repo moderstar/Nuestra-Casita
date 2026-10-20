@@ -19,6 +19,10 @@ Grocy directly. Interactive writes use narrow shopping and chore contracts.
 | PUT | `/api/v1/shopping-lists/{list}/items/{item}` | Cookie + CSRF | Set purchased marker |
 | DELETE | `/api/v1/shopping-lists/{list}/items/{item}` | Cookie + CSRF | Remove exact item |
 | POST | `/api/v1/chores/{chore}/complete` | Cookie + CSRF | Record chore completion |
+| GET | `/api/v1/chore-users` | Cookie | Native Grocy assignment choices |
+| POST | `/api/v1/chores` | Cookie + CSRF | Create a chore definition |
+| PUT | `/api/v1/chores/{chore}` | Cookie + CSRF | Edit or reactivate a chore |
+| POST | `/api/v1/chores/{chore}/deactivate` | Cookie + CSRF | Preserve history and deactivate |
 
 Responses use `{"version":"1","state":"available","data":[],"errors":[]}`.
 State is `available`, `empty`, or `degraded`. Errors expose only a safe code,
@@ -48,3 +52,9 @@ resolved against current backend state. Missing records and conflicts receive
 safe explicit responses, while unexpected upstream details remain private.
 Task completion and generic object proxying are absent. One integration
 failure still degrades its section without blocking unrelated data.
+
+Chore definitions are Grocy-owned. Creation and editing support native period
+and assignment modes and recalculate the next assignment after a successful
+write. Grocy 4.6 deletes all `chores_log` rows when a chore definition is
+deleted, so the API intentionally exposes no chore `DELETE` route. Deactivation
+sets `active=0` and preserves execution history.

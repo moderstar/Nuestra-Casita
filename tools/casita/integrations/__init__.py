@@ -6,7 +6,10 @@ from casita.integrations.base import (
     Capability,
     CapabilityData,
     ChoreMutationIntegration,
+    ChoreDefinition,
+    ChoreUserOption,
     CompleteChore,
+    DeactivateChore,
     DiagnosableIntegration,
     DiagnosticCheck,
     FieldDifference,
@@ -30,6 +33,7 @@ from casita.integrations.base import (
     SynchronizationPlan,
     SynchronizationResult,
     SynchronizingIntegration,
+    UpdateChoreDefinition,
 )
 
 __all__ = [
@@ -38,7 +42,10 @@ __all__ = [
     "Capability",
     "CapabilityData",
     "ChoreMutationIntegration",
+    "ChoreDefinition",
+    "ChoreUserOption",
     "CompleteChore",
+    "DeactivateChore",
     "DiagnosableIntegration",
     "DiagnosticCheck",
     "FieldDifference",
@@ -62,4 +69,5 @@ __all__ = [
     "SynchronizationPlan",
     "SynchronizationResult",
     "SynchronizingIntegration",
+    "UpdateChoreDefinition",
 ]

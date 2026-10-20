@@ -16,7 +16,7 @@ their data without exposing vendor APIs to future clients.
 - Versioned internal contract for the future kitchen dashboard
 - Architecture designed for reproducible Docker and Proxmox deployments
 
-The terminal dashboard, unified CLI, authenticated read-only Dashboard API,
+The terminal dashboard, unified CLI, authenticated Dashboard API,
 and responsive kitchen dashboard frontend are implemented. No platform
 database is required.
 

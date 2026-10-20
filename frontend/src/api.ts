@@ -18,7 +18,7 @@ function generateIdempotencyKey(): string {
   ].join("-");
 }
 
-import type { ApiEnvelope, DashboardSnapshot, ShoppingProductOption } from "./types";
+import type { ApiEnvelope, ChoreDefinitionInput, ChoreUserOption, DashboardSnapshot, ShoppingProductOption } from "./types";
 
 export class UnauthorizedError extends Error {
   constructor() {
@@ -105,4 +105,22 @@ export async function removeShoppingItem(listId: string, itemId: string): Promis
 
 export async function completeChore(choreId: string): Promise<void> {
   await request(`/api/v1/chores/${encodeURIComponent(choreId)}/complete`, { method: "POST" });
+}
+
+export async function getChoreUsers(): Promise<ChoreUserOption[]> {
+  const response = await request("/api/v1/chore-users");
+  const payload = await response.json() as ApiEnvelope<ChoreUserOption[]>;
+  return payload.data;
+}
+
+export async function createChore(input: ChoreDefinitionInput): Promise<void> {
+  await request("/api/v1/chores", { method: "POST", body: JSON.stringify(input) });
+}
+
+export async function updateChore(choreId: string, input: ChoreDefinitionInput): Promise<void> {
+  await request(`/api/v1/chores/${encodeURIComponent(choreId)}`, { method: "PUT", body: JSON.stringify(input) });
+}
+
+export async function deactivateChore(choreId: string): Promise<void> {
+  await request(`/api/v1/chores/${encodeURIComponent(choreId)}/deactivate`, { method: "POST" });
 }

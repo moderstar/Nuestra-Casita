@@ -1,8 +1,8 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { addShoppingItem, completeChore, removeShoppingItem, searchShoppingProducts, setShoppingItemPurchased } from "./api";
+import { addShoppingItem, completeChore, createChore, deactivateChore, getChoreUsers, removeShoppingItem, searchShoppingProducts, setShoppingItemPurchased, updateChore } from "./api";
 import { Card, EmptyState, ItemRow, PageHeading } from "./components";
 import { formatDate, formatQuantity, isToday } from "./format";
-import type { DashboardSnapshot, MealPlanEntry, Recipe, ShoppingProductOption } from "./types";
+import type { Chore, ChoreDefinitionInput, ChoreUserOption, DashboardSnapshot, MealPlanEntry, Recipe, ShoppingProductOption } from "./types";
 
 interface PageProps { dashboard: DashboardSnapshot }
 interface InteractivePageProps extends PageProps { onRefresh: () => Promise<void> }
@@ -150,10 +150,85 @@ export function MealPlanPage({ dashboard }: PageProps) {
   </>;
 }
 
+const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+function datetimeLocalValue(value?: string | null): string {
+  const date = value ? new Date(value) : new Date();
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 19);
+}
+
+function scheduleLabel(chore: Chore): string {
+  if (chore.schedule_type === "manually") return "Manual";
+  if (chore.schedule_type === "adaptive") return "Adaptive";
+  if (chore.schedule_type === "weekly") return `Every ${chore.schedule_interval > 1 ? `${chore.schedule_interval} weeks · ` : "week · "}${chore.schedule_weekdays.map((day) => day.slice(0, 3)).join(", ")}`;
+  if (chore.schedule_type === "monthly") return `Every ${chore.schedule_interval > 1 ? `${chore.schedule_interval} months` : "month"} · day ${chore.schedule_day}`;
+  return `Every ${chore.schedule_interval > 1 ? `${chore.schedule_interval} ` : ""}${chore.schedule_type}${chore.schedule_interval > 1 ? "s" : ""}`;
+}
+
+function ChoreDialog({ chore, onClose, onSaved }: { chore: Chore | null; onClose: () => void; onSaved: () => Promise<void> }) {
+  const [name, setName] = useState(chore?.name ?? "");
+  const [description, setDescription] = useState(chore?.description ?? "");
+  const [scheduleType, setScheduleType] = useState(chore?.schedule_type ?? "weekly");
+  const [interval, setInterval] = useState(chore?.schedule_interval ?? 1);
+  const [scheduleDay, setScheduleDay] = useState(chore?.schedule_day ?? 1);
+  const [selectedDays, setSelectedDays] = useState<string[]>(chore?.schedule_weekdays ?? ["monday"]);
+  const [startAt, setStartAt] = useState(datetimeLocalValue(chore?.start_at));
+  const [assignmentType, setAssignmentType] = useState(chore?.assignment_type ?? "no-assignment");
+  const [assignedUsers, setAssignedUsers] = useState<string[]>(chore?.assignment_user_ids ?? []);
+  const [active, setActive] = useState(chore?.active ?? true);
+  const [users, setUsers] = useState<ChoreUserOption[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    void getChoreUsers().then(setUsers).catch((reason: Error) => setError(reason.message));
+  }, []);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (busy) return;
+    if (scheduleType === "weekly" && !selectedDays.length) { setError("Choose at least one weekday."); return; }
+    if (assignmentType !== "no-assignment" && !assignedUsers.length) { setError("Choose at least one person for this assignment mode."); return; }
+    setBusy(true); setError("");
+    const input: ChoreDefinitionInput = {
+      name: name.trim(), description: description.trim(), schedule_type: scheduleType,
+      schedule_interval: ["manually", "adaptive"].includes(scheduleType) ? 1 : interval,
+      schedule_day: scheduleType === "monthly" ? scheduleDay : 1,
+      schedule_weekdays: scheduleType === "weekly" ? weekdays.filter((day) => selectedDays.includes(day)) : [],
+      start_at: new Date(startAt).toISOString(), assignment_type: assignmentType,
+      assignment_user_ids: assignmentType === "no-assignment" ? [] : assignedUsers,
+      active,
+    };
+    try {
+      if (chore) await updateChore(chore.id, input); else await createChore(input);
+      await onSaved(); onClose();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "The chore could not be saved."); }
+    finally { setBusy(false); }
+  }
+
+  function toggleUser(id: string) {
+    setAssignedUsers((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  }
+
+  return <div className="modal-backdrop" role="presentation"><section className="modal chore-modal" role="dialog" aria-modal="true" aria-labelledby="chore-dialog-title"><header><div><span className="eyebrow">Grocy chore</span><h2 id="chore-dialog-title">{chore ? "Edit chore" : "Create chore"}</h2></div><button className="close-button" type="button" onClick={onClose} aria-label="Close">×</button></header><form onSubmit={submit}>
+    <label>Name<input value={name} onChange={(event) => setName(event.target.value)} maxLength={100} required autoFocus /></label>
+    <label>Description (optional)<textarea value={description} onChange={(event) => setDescription(event.target.value)} maxLength={500} rows={3} /></label>
+    <div className="field-row"><label>Schedule<select value={scheduleType} onChange={(event) => setScheduleType(event.target.value)}><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="manually">Manual</option><option value="hourly">Hourly</option><option value="yearly">Yearly</option><option value="adaptive">Adaptive</option></select></label>{!["manually", "adaptive"].includes(scheduleType) && <label>Repeat every<input type="number" min="1" max="10000" value={interval} onChange={(event) => setInterval(Number(event.target.value))} required /></label>}</div>
+    {scheduleType === "weekly" && <fieldset className="choice-field"><legend>Weekdays</legend><div className="choice-grid">{weekdays.map((day) => <label key={day}><input type="checkbox" checked={selectedDays.includes(day)} onChange={() => setSelectedDays((current) => current.includes(day) ? current.filter((item) => item !== day) : [...current, day])} />{day.slice(0, 3)}</label>)}</div></fieldset>}
+    {scheduleType === "monthly" && <label>Day of month<input type="number" min="1" max="31" value={scheduleDay} onChange={(event) => setScheduleDay(Number(event.target.value))} required /></label>}
+    <label>Start date<input type="datetime-local" step="1" value={startAt} onChange={(event) => setStartAt(event.target.value)} disabled={chore ? !chore.start_at_editable : false} required />{chore && !chore.start_at_editable && <small>Grocy locks the start date after the first execution.</small>}</label>
+    <label>Assignment<select value={assignmentType} onChange={(event) => { setAssignmentType(event.target.value); if (event.target.value === "no-assignment") setAssignedUsers([]); }}><option value="no-assignment">No assignment</option><option value="in-alphabetical-order">Rotate alphabetically</option><option value="who-least-did-first">Person with fewest completions</option><option value="random">Random rotation</option></select></label>
+    {assignmentType !== "no-assignment" && <fieldset className="choice-field"><legend>Assign to</legend>{users.length ? <div className="choice-grid users">{users.map((user) => <label key={user.id}><input type="checkbox" checked={assignedUsers.includes(user.id)} onChange={() => toggleUser(user.id)} />{user.display_name}</label>)}</div> : <p className="muted">No assignable Grocy users are available.</p>}</fieldset>}
+    <label className="toggle-label"><input type="checkbox" checked={active} onChange={(event) => setActive(event.target.checked)} /> Active</label>
+    {error && <div className="form-error" role="alert">{error}</div>}<div className="modal-actions"><button type="button" className="secondary-button" onClick={onClose}>Cancel</button><button className="primary-button compact" disabled={busy || !name.trim()}>{busy ? "Saving…" : chore ? "Save changes" : "Create chore"}</button></div>
+  </form></section></div>;
+}
+
 export function ChoresPage({ dashboard, onRefresh }: InteractivePageProps) {
-  const [busy, setBusy] = useState(""); const [message, setMessage] = useState(""); const [showPolicy, setShowPolicy] = useState(false);
+  const [busy, setBusy] = useState(""); const [message, setMessage] = useState(""); const [editing, setEditing] = useState<Chore | null | undefined>(undefined);
   async function finish(id: string) { setBusy(id); setMessage(""); try { await completeChore(id); await onRefresh(); setMessage("Chore completed."); } catch (reason) { setMessage(reason instanceof Error ? reason.message : "The chore could not be completed."); } finally { setBusy(""); } }
-  return <><PageHeading eyebrow="Household rhythm" title="Chores" detail="Recurring household work and its current due status." action={<button className="secondary-button" onClick={() => setShowPolicy(true)}>＋ Add chore</button>} />{message && <p className="operation-message" role="status">{message}</p>}<Card title="Household chores" icon="chores" action={<span className="muted">{dashboard.chores.length} total</span>}>{!dashboard.chores.length ? <EmptyState title="No chores available" detail="Configured chores will appear here." /> : <div className="row-list spacious">{dashboard.chores.map((chore) => <div className={`interactive-row chore-row${chore.completed ? " completed" : ""}`} key={chore.id}><span className="item-dot">{chore.completed ? "✓" : ""}</span><div className="item-copy"><strong>{chore.name}</strong><span>{[chore.description, chore.assigned_person_id ? "Assigned" : ""].filter(Boolean).join(" · ")}</span></div><span className="item-meta">{formatDate(chore.due_at)}</span><button className="secondary-button row-action" disabled={busy === chore.id || chore.completed} onClick={() => void finish(chore.id)}>{busy === chore.id ? "Saving…" : chore.completed ? "Done" : "Complete"}</button></div>)}</div>}</Card>{showPolicy && <div className="modal-backdrop" role="presentation"><section className="modal compact-modal" role="dialog" aria-modal="true" aria-labelledby="chore-policy-title"><header><div><span className="eyebrow">Managed configuration</span><h2 id="chore-policy-title">Add a chore</h2></div><button className="close-button" onClick={() => setShowPolicy(false)} aria-label="Close">×</button></header><p>Chore definitions are managed in <code>catalog/chores.csv</code> so recurring schedules remain reproducible. Add the definition there, validate it, and use the existing synchronization command.</p><button className="primary-button compact" onClick={() => setShowPolicy(false)}>Got it</button></section></div>}</>;
+  async function deactivate(chore: Chore) { if (!window.confirm(`Deactivate “${chore.name}”? Its execution history will be preserved.`)) return; setBusy(chore.id); setMessage(""); try { await deactivateChore(chore.id); await onRefresh(); setMessage("Chore deactivated. Its history remains in Grocy."); } catch (reason) { setMessage(reason instanceof Error ? reason.message : "The chore could not be deactivated."); } finally { setBusy(""); } }
+  return <><PageHeading eyebrow="Household rhythm" title="Chores" detail="Grocy-owned definitions, schedules, assignments, and completion history." action={<button className="primary-button compact" onClick={() => setEditing(null)}>＋ Add chore</button>} />{message && <p className="operation-message" role="status">{message}</p>}<Card title="Household chores" icon="chores" action={<span className="muted">{dashboard.chores.filter((item) => item.active).length} active · {dashboard.chores.length} total</span>}>{!dashboard.chores.length ? <EmptyState title="No chores available" detail="Create the first household chore here; it will be stored in Grocy." /> : <div className="row-list spacious">{dashboard.chores.map((chore) => <div className={`chore-management-row${!chore.active ? " inactive" : ""}`} key={chore.id}><span className="item-dot" /><div className="item-copy"><strong>{chore.name}{!chore.active && <small className="inactive-badge">Inactive</small>}</strong><span>{[chore.description, scheduleLabel(chore), chore.assigned_person_name || chore.assignment_user_names.join(", ")].filter(Boolean).join(" · ")}</span></div><span className="item-meta">{chore.active ? formatDate(chore.due_at) : "Not scheduled"}</span><div className="row-actions"><button className="secondary-button" disabled={busy === chore.id} onClick={() => setEditing(chore)}>Edit</button><button className="secondary-button" disabled={busy === chore.id || !chore.active} onClick={() => void finish(chore.id)}>{busy === chore.id ? "Saving…" : "Complete"}</button>{chore.active && <button className="remove-button" disabled={busy === chore.id} onClick={() => void deactivate(chore)}>Deactivate</button>}</div></div>)}</div>}</Card>{editing !== undefined && <ChoreDialog chore={editing} onClose={() => setEditing(undefined)} onSaved={onRefresh} />}</>;
 }
 
 export function TasksPage({ dashboard }: PageProps) {

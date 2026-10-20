@@ -1,44 +1,36 @@
-# Milestone 17 Report: Interactive Grocy Activity
+# Milestone 18 Report: Grocy-Native Chore Management
 
 ## Summary
 
-Milestone 17 adds safe everyday Shopping List and chore interactions to the
-kitchen dashboard without changing the backend-neutral structure. Application
-services expose narrow mutation contracts, Grocy resolves opaque IDs, and each
-successful write is followed by an authoritative read.
+Milestone 18 makes Grocy 4.6 the sole authority for chore definitions,
+schedules, assignments, active state, and execution history. The authenticated
+kitchen dashboard can create, edit, complete, activate, and deactivate chores
+through backend-neutral application contracts and the existing Grocy adapter.
 
-Shopping supports product search, free-text items, decimal quantities,
-multiple lists, purchased/unpurchased state, and confirmed exact removal.
-Chores support completion through Grocy's execution operation. Chore creation
-is deferred because definitions are Git-authoritative in `catalog/chores.csv`.
+The legacy header-only chore catalog and synchronization resource are removed.
+`sync chores` is rejected and `sync all` no longer contains a chore stage, so
+CLI synchronization cannot overwrite live Grocy chores. All unrelated catalog
+resources retain their established behavior.
 
-## Safety
+## Safety and Compatibility
 
-- Signed sessions and double-submit CSRF validation protect every write.
-- Required idempotency keys prevent duplicate retries within the API process.
-- Bounded request models and application validation reject invalid input.
-- Opaque domain IDs are resolved against fresh backend collections.
-- Unexpected Grocy errors receive safe HTTP responses.
-- Shopping completion never books stock.
-- No generic proxy, bulk delete, live chore creation, Task operation, or schema
-  migration was added.
-
-## Compatibility
-
-Grocy 4.6 generic `shopping_list` object endpoints avoid the specialized
-endpoint's decimal truncation defect fixed in 4.7. Chore completion uses
-`/chores/{id}/execute`. Existing CLI commands and the two-container deployment
-topology remain unchanged.
+- Every dashboard write retains signed-session, CSRF, validation, and
+  idempotency protection.
+- Browser clients see opaque chore and user identifiers; Grocy credentials and
+  native IDs stay server-side.
+- Daily, weekly, monthly, manual, hourly, yearly, and adaptive schedules map to
+  Grocy 4.6 native fields.
+- Native assignment modes use the current `/users` collection and trigger
+  Grocy's next-assignment recalculation after create or edit.
+- A start date becomes immutable in the dashboard when execution history
+  exists, matching Grocy's own form behavior.
+- Deletion is intentionally unavailable because Grocy 4.6 cascades Chore
+  deletion to `chores_log`; deactivation preserves all history.
+- Chore completion continues to use `/chores/{id}/execute`.
+- UUID fallback behavior remains compatible with plain HTTP on a private LAN.
 
 ## Validation
 
-Automated validation is fully mocked and performs no live Grocy writes:
-
-- Python: 146 tests passed; `compileall` passed.
-- Frontend: 9 tests passed; TypeScript and production Vite build passed.
-- Dependency boundary: application/domain packages contain no Grocy imports.
-- CLI: eight existing command/help surfaces were byte-identical to Milestone 16.
-- Deployment: static Compose validation confirmed two services, private API,
-  and frontend port 8085. The Docker executable was unavailable for a live
-  Compose render or launch.
-- Whitespace: `git diff --check` passed.
+Automated validation uses mocked Grocy responses and performs no live writes.
+Final test counts, CLI comparisons, dependency checks, bundle identity, and
+checksum are recorded in the Milestone 18 handoff document.

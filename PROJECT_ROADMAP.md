@@ -103,7 +103,7 @@ The current priority is preserving the robust Grocy 4.6 integration while
 building the orchestration layer one demonstrated integration at a time.
 
 Products, Product Groups, Quantity Units, Locations, Shopping Locations,
-Task Categories, Chores, Batteries, Recipe Definitions, Recipe Positions,
+Task Categories, Batteries, Recipe Definitions, Recipe Positions,
 Equipment, User Entity definitions, and Userfields are implemented through
 the generic synchronization framework.
 
@@ -116,7 +116,7 @@ the generic synchronization framework.
 - [x] Locations
 - [x] Shopping Locations
 - [x] Task Categories
-- [x] Chores
+- [x] Chores (Grocy-native dashboard management; legacy sync retired)
 - [x] Batteries
 - [x] Recipe Definitions
 - [x] Recipe Positions
@@ -193,10 +193,10 @@ Initial dashboard areas are expected to include:
 The versioned dashboard contract, authenticated HTTP transport, and responsive
 touch-friendly interface are complete. The production container serves the
 frontend and proxies API requests on one origin. Current pages cover Grocy-
-backed Shopping, Inventory, Recipes, Meal Plan, Chores, and Tasks. Milestone 17
-adds narrowly scoped, CSRF-protected, idempotent activity operations for
-Shopping Lists and chore completion. Chore definitions remain Git-managed;
-stock booking and general entity writes are not exposed.
+backed Shopping, Inventory, Recipes, Meal Plan, Chores, and Tasks. Milestone 18
+makes Grocy authoritative for chore definitions, schedules, assignments, and
+history, with CSRF-protected and idempotent dashboard management. Destructive
+chore deletion, stock booking, and general entity writes are not exposed.
 
 Future dashboard milestones may add calendar, budget, home control, media, and
 notification integrations as their backend capabilities become available.

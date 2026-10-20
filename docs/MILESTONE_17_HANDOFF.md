@@ -1,5 +1,8 @@
 # Milestone 17 Handoff — Interactive Grocy Activity
 
+> Historical handoff: Milestone 18 supersedes the Git-owned chore-definition
+> policy below and makes Grocy authoritative for chore management.
+
 ## Scope
 
 - Add product or free-text shopping items with decimal quantity and list choice.

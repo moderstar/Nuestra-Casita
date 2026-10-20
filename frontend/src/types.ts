@@ -102,7 +102,36 @@ export interface Chore {
   description: string;
   due_at: string | null;
   assigned_person_id: string | null;
+  assigned_person_name: string;
   completed: boolean;
+  active: boolean;
+  schedule_type: string;
+  schedule_interval: number;
+  schedule_day: number;
+  schedule_weekdays: string[];
+  start_at: string | null;
+  start_at_editable: boolean;
+  assignment_type: string;
+  assignment_user_ids: string[];
+  assignment_user_names: string[];
+}
+
+export interface ChoreUserOption {
+  id: string;
+  display_name: string;
+}
+
+export interface ChoreDefinitionInput {
+  name: string;
+  description: string;
+  schedule_type: string;
+  schedule_interval: number;
+  schedule_day: number;
+  schedule_weekdays: string[];
+  start_at: string;
+  assignment_type: string;
+  assignment_user_ids: string[];
+  active: boolean;
 }
 
 export type MealPlanEntryType = "recipe" | "product" | "note";

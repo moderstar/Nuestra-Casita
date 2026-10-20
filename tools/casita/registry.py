@@ -9,7 +9,6 @@ from typing import Any
 
 from casita.resources import (
     BATTERY_RESOURCE,
-    CHORE_RESOURCE,
     EQUIPMENT_RESOURCE,
     LOCATION_RESOURCE,
     MEAL_PLAN_RESOURCE,
@@ -31,7 +30,6 @@ from casita.resources import (
 
 RESOURCES: dict[str, dict[str, Any]] = {
     BATTERY_RESOURCE["name"]: BATTERY_RESOURCE,
-    CHORE_RESOURCE["name"]: CHORE_RESOURCE,
     EQUIPMENT_RESOURCE["name"]: EQUIPMENT_RESOURCE,
     LOCATION_RESOURCE["name"]: LOCATION_RESOURCE,
     MEAL_PLAN_RESOURCE["name"]: MEAL_PLAN_RESOURCE,
@@ -66,7 +64,6 @@ SYNC_RESOURCE_ORDER = (
     "quantity-unit-conversions",
     "task-categories",
     "tasks",
-    "chores",
     "batteries",
     "equipment",
     "recipes",

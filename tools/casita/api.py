@@ -23,11 +23,14 @@ from casita.bootstrap.application import NuestraCasitaApplication
 from casita.domain import Household
 from casita.integrations import (
     AddShoppingItem,
+    ChoreDefinition,
     CompleteChore,
+    DeactivateChore,
     OperationConflict,
     OperationNotFound,
     RemoveShoppingItem,
     ShoppingItemStateChange,
+    UpdateChoreDefinition,
 )
 
 
@@ -114,6 +117,21 @@ class ShoppingItemStateRequest(BaseModel):
     """Explicit requested purchased state."""
 
     purchased: bool
+
+
+class ChoreDefinitionRequest(BaseModel):
+    """Bounded dashboard input for a Grocy-owned chore definition."""
+
+    name: str = Field(min_length=1, max_length=100)
+    description: str = Field(default="", max_length=500)
+    schedule_type: str = Field(min_length=1, max_length=32)
+    schedule_interval: int = Field(default=1, ge=1, le=10000)
+    schedule_day: int = Field(default=1, ge=1, le=31)
+    schedule_weekdays: list[str] = Field(default_factory=list, max_length=7)
+    start_at: datetime
+    assignment_type: str = Field(default="no-assignment", max_length=40)
+    assignment_user_ids: list[str] = Field(default_factory=list, max_length=100)
+    active: bool = True
 
 
 def json_value(value: Any) -> Any:
@@ -371,6 +389,15 @@ def create_dashboard_api(
         except Exception as error:
             raise HTTPException(status_code=502, detail="Product search failed.") from error
 
+    @api.get("/api/v1/chore-users", dependencies=[Depends(authenticate)])
+    def chore_users():
+        try:
+            return envelope(services.chores.users())
+        except Exception as error:
+            raise HTTPException(
+                status_code=502, detail="Chore assignment users could not be loaded."
+            ) from error
+
     @api.post(
         "/api/v1/shopping-lists/{shopping_list_id}/items",
         dependencies=write_dependencies,
@@ -459,6 +486,89 @@ def create_dashboard_api(
             command,
             lambda: envelope(
                 (result := services.chores.complete(command)).records,
+                result.failures,
+            ),
+        )
+
+    def chore_definition(
+        request: ChoreDefinitionRequest,
+    ) -> ChoreDefinition:
+        return ChoreDefinition(
+            household_id=household_id,
+            name=request.name,
+            description=request.description,
+            schedule_type=request.schedule_type,
+            schedule_interval=request.schedule_interval,
+            schedule_day=request.schedule_day,
+            schedule_weekdays=tuple(request.schedule_weekdays),
+            start_at=request.start_at,
+            assignment_type=request.assignment_type,
+            assignment_user_ids=tuple(request.assignment_user_ids),
+            active=request.active,
+        )
+
+    @api.post("/api/v1/chores", dependencies=write_dependencies)
+    def create_chore(
+        request: ChoreDefinitionRequest,
+        idempotency_key: str | None = Header(default=None),
+    ):
+        command = chore_definition(request)
+        return mutation(
+            "chore-create",
+            idempotency_key,
+            command,
+            lambda: envelope(
+                (result := services.chores.create(command)).records,
+                result.failures,
+            ),
+        )
+
+    @api.put("/api/v1/chores/{chore_id}", dependencies=write_dependencies)
+    def update_chore(
+        chore_id: str,
+        request: ChoreDefinitionRequest,
+        idempotency_key: str | None = Header(default=None),
+    ):
+        definition = chore_definition(request)
+        command = UpdateChoreDefinition(
+            household_id=definition.household_id,
+            chore_id=chore_id,
+            name=definition.name,
+            description=definition.description,
+            schedule_type=definition.schedule_type,
+            schedule_interval=definition.schedule_interval,
+            schedule_day=definition.schedule_day,
+            schedule_weekdays=definition.schedule_weekdays,
+            start_at=definition.start_at,
+            assignment_type=definition.assignment_type,
+            assignment_user_ids=definition.assignment_user_ids,
+            active=definition.active,
+        )
+        return mutation(
+            "chore-update",
+            idempotency_key,
+            command,
+            lambda: envelope(
+                (result := services.chores.update(command)).records,
+                result.failures,
+            ),
+        )
+
+    @api.post(
+        "/api/v1/chores/{chore_id}/deactivate",
+        dependencies=write_dependencies,
+    )
+    def deactivate_chore(
+        chore_id: str,
+        idempotency_key: str | None = Header(default=None),
+    ):
+        command = DeactivateChore(household_id, chore_id)
+        return mutation(
+            "chore-deactivate",
+            idempotency_key,
+            command,
+            lambda: envelope(
+                (result := services.chores.deactivate(command)).records,
                 result.failures,
             ),
         )

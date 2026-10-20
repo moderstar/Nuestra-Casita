@@ -51,4 +51,47 @@ describe("kitchen dashboard", () => {
     await waitFor(() => expect(screen.getByRole("heading", { name: "Shopping" })).toBeInTheDocument());
     expect(shopping).toHaveAttribute("aria-current", "page");
   });
+
+  it("creates a Grocy-owned chore from the dashboard form", async () => {
+    const fetch = vi.fn(async (path: string, init?: RequestInit) => {
+      if (path === "/api/v1/chore-users") return Response.json({ version: "1", state: "available", data: [{ id: "person-1", display_name: "Miguel" }], errors: [] });
+      if (path === "/api/v1/chores" && init?.method === "POST") return Response.json({ version: "1", state: "available", data: snapshot.chores, errors: [] });
+      return Response.json(envelope);
+    });
+    vi.stubGlobal("fetch", fetch);
+    render(<App />);
+    await screen.findAllByText("Our Home");
+    await userEvent.click(screen.getByRole("button", { name: /Chores/ }));
+    await userEvent.click(screen.getByRole("button", { name: /Add chore/ }));
+    await userEvent.type(screen.getByLabelText("Name"), "Water plants");
+    await userEvent.click(screen.getByRole("button", { name: "Create chore" }));
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith(
+      "/api/v1/chores",
+      expect.objectContaining({ method: "POST" }),
+    ));
+    const createCall = fetch.mock.calls.find(([path, init]) => path === "/api/v1/chores" && init?.method === "POST");
+    expect(JSON.parse(String(createCall?.[1]?.body))).toEqual(expect.objectContaining({ name: "Water plants", schedule_type: "weekly" }));
+  });
+
+  it("edits and safely deactivates chores without a delete action", async () => {
+    const fetch = vi.fn(async (path: string, _init?: RequestInit) => {
+      if (path === "/api/v1/chore-users") return Response.json({ version: "1", state: "available", data: [{ id: "person-1", display_name: "Miguel" }], errors: [] });
+      return Response.json(envelope);
+    });
+    vi.stubGlobal("fetch", fetch);
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    render(<App />);
+    await screen.findAllByText("Our Home");
+    await userEvent.click(screen.getByRole("button", { name: /Chores/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+    expect(await screen.findByRole("heading", { name: "Edit chore" })).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Start date/)).toBeDisabled();
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await userEvent.click(screen.getByRole("button", { name: "Deactivate" }));
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith(
+      "/api/v1/chores/chore-1/deactivate",
+      expect.objectContaining({ method: "POST" }),
+    ));
+    expect(fetch.mock.calls.some(([, init]) => init?.method === "DELETE")).toBe(false);
+  });
 });

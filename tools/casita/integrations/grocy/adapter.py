@@ -12,8 +12,11 @@ from casita.integrations import (
     AddShoppingItem,
     Capability,
     CapabilityData,
+    ChoreDefinition,
+    ChoreUserOption,
     DiagnosticCheck,
     CompleteChore,
+    DeactivateChore,
     HealthStatus,
     IntegrationDescriptor,
     IntegrationHealth,
@@ -31,10 +34,12 @@ from casita.integrations import (
     SyncRequest,
     SynchronizationPlan,
     SynchronizationResult,
+    UpdateChoreDefinition,
 )
 from casita.integrations.grocy.client import GrocyApiClient
 from casita.integrations.grocy.mapping import (
     domain_id,
+    datetime_value,
     map_chores,
     map_inventory,
     map_meal_plan,
@@ -468,6 +473,115 @@ class GrocyReadAdapter:
             {"tracked_time": "", "done_by": ""},
         )
 
+    def list_chore_users(self) -> tuple[ChoreUserOption, ...]:
+        """Return Grocy users as opaque assignment choices."""
+
+        return tuple(
+            sorted(
+                (
+                    ChoreUserOption(
+                        id=domain_id("person", user["id"]),
+                        display_name=str(
+                            user.get("display_name")
+                            or user.get("username")
+                            or ""
+                        ).strip(),
+                    )
+                    for user in self._rows("/users")
+                    if user.get("id") is not None
+                ),
+                key=lambda item: item.display_name.casefold(),
+            )
+        )
+
+    def create_chore(self, command: ChoreDefinition) -> None:
+        """Create one native chore and calculate its first assignment."""
+
+        chores = self._rows("/objects/chores")
+        if any(
+            str(row.get("name") or "").strip().casefold()
+            == command.name.strip().casefold()
+            for row in chores
+        ):
+            raise OperationConflict("A chore with that name already exists.")
+        payload = self._chore_payload(command)
+        result = self._client.post("/objects/chores", payload)
+        if not isinstance(result, dict) or result.get("created_object_id") is None:
+            raise ValueError("Grocy did not return the created chore identity.")
+        self._client.post(
+            "/chores/executions/calculate-next-assignments",
+            {"chore_id": result["created_object_id"]},
+        )
+
+    def update_chore(self, command: UpdateChoreDefinition) -> None:
+        """Update managed fields while preserving history and locked dates."""
+
+        chores = self._rows("/objects/chores")
+        chore = self._resolve("chore", command.chore_id, chores)
+        if any(
+            row.get("id") != chore.get("id")
+            and str(row.get("name") or "").strip().casefold()
+            == command.name.strip().casefold()
+            for row in chores
+        ):
+            raise OperationConflict("A chore with that name already exists.")
+
+        logs = self._rows("/objects/chores_log")
+        has_history = any(
+            str(row.get("chore_id")) == str(chore["id"])
+            for row in logs
+        )
+        current_start = datetime_value(chore.get("start_date"), self._timezone)
+        requested_start = command.start_at.astimezone(timezone.utc).replace(microsecond=0)
+        if has_history and current_start != requested_start:
+            raise OperationConflict(
+                "The start date cannot change after a chore has execution history."
+            )
+
+        payload = self._chore_payload(command)
+        if has_history:
+            payload.pop("start_date", None)
+        self._client.put(f"/objects/chores/{chore['id']}", payload)
+        self._client.post(
+            "/chores/executions/calculate-next-assignments",
+            {"chore_id": chore["id"]},
+        )
+
+    def deactivate_chore(self, command: DeactivateChore) -> None:
+        """Deactivate a chore because native deletion cascades its history."""
+
+        chore = self._resolve(
+            "chore", command.chore_id, self._rows("/objects/chores")
+        )
+        if str(chore.get("active", 1)).strip().casefold() not in {
+            "0", "false", "no", "off"
+        }:
+            self._client.put(f"/objects/chores/{chore['id']}", {"active": 0})
+
+    def _chore_payload(
+        self,
+        command: ChoreDefinition | UpdateChoreDefinition,
+    ) -> dict[str, Any]:
+        users = self._rows("/users")
+        native_user_ids = [
+            self._resolve("person", user_id, users)["id"]
+            for user_id in command.assignment_user_ids
+        ]
+        return {
+            "name": command.name.strip(),
+            "description": command.description.strip(),
+            "period_type": command.schedule_type,
+            "period_interval": command.schedule_interval,
+            "period_days": command.schedule_day,
+            "period_config": ",".join(command.schedule_weekdays),
+            "start_date": command.start_at.astimezone(self._timezone).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            ),
+            "assignment_type": command.assignment_type,
+            "assignment_config": ",".join(str(item) for item in native_user_ids),
+            "active": 1 if command.active else 0,
+        }
+
     def _shopping_item(
         self,
         shopping_list_id: str,
@@ -578,11 +692,14 @@ class GrocyReadAdapter:
                     rows_by_id(rows("/objects/quantity_units")),
                 )
             elif capability == Capability.CHORES:
+                users = rows_by_id(rows("/users"))
                 records = map_chores(
                     request.household_id,
                     rows("/objects/chores"),
                     rows("/chores"),
                     self._timezone,
+                    rows("/objects/chores_log"),
+                    users,
                 )
             elif capability == Capability.MEAL_PLAN:
                 records = map_meal_plan(

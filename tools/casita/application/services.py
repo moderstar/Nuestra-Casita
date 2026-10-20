@@ -33,12 +33,16 @@ from casita.domain import (
 from casita.integrations import (
     AddShoppingItem,
     Capability,
+    ChoreDefinition,
     ChoreMutationIntegration,
+    ChoreUserOption,
     CompleteChore,
+    DeactivateChore,
     RemoveShoppingItem,
     ShoppingItemStateChange,
     ShoppingMutationIntegration,
     ShoppingProductOption,
+    UpdateChoreDefinition,
 )
 
 
@@ -187,9 +191,47 @@ class ChoreService(CapabilityService[Chore]):
     capability = Capability.CHORES
     record_type = Chore
 
+    def users(self) -> tuple[ChoreUserOption, ...]:
+        """Return assignable users from the configured chore owner."""
+
+        return self._writer().list_chore_users()
+
+    def create(
+        self,
+        command: ChoreDefinition,
+    ) -> ServiceResult[Chore]:
+        """Create a Grocy-owned definition and return refreshed chores."""
+
+        self._validate_definition(command)
+        self._writer().create_chore(command)
+        return self.read(command.household_id)
+
+    def update(
+        self,
+        command: UpdateChoreDefinition,
+    ) -> ServiceResult[Chore]:
+        """Update a Grocy-owned definition and return refreshed chores."""
+
+        self._validate_definition(command)
+        self._writer().update_chore(command)
+        return self.read(command.household_id)
+
+    def deactivate(
+        self,
+        command: DeactivateChore,
+    ) -> ServiceResult[Chore]:
+        """Deactivate without invoking Grocy's history-deleting operation."""
+
+        self._writer().deactivate_chore(command)
+        return self.read(command.household_id)
+
     def complete(self, command: CompleteChore) -> ServiceResult[Chore]:
         """Record activity through the owner and return refreshed chores."""
 
+        self._writer().complete_chore(command)
+        return self.read(command.household_id)
+
+    def _writer(self) -> ChoreMutationIntegration:
         integrations = self._integrations.integrations_for(self.capability)
         writers = tuple(
             item for item in integrations
@@ -197,8 +239,64 @@ class ChoreService(CapabilityService[Chore]):
         )
         if len(writers) != 1:
             raise RuntimeError("Chore mutations require exactly one owner.")
-        writers[0].complete_chore(command)
-        return self.read(command.household_id)
+        return writers[0]
+
+    @staticmethod
+    def _validate_definition(
+        command: ChoreDefinition | UpdateChoreDefinition,
+    ) -> None:
+        name = command.name.strip()
+        if not 1 <= len(name) <= 100:
+            raise ValueError("Chore name must contain 1 to 100 characters.")
+        if len(command.description.strip()) > 500:
+            raise ValueError("Chore description cannot exceed 500 characters.")
+        if command.start_at.tzinfo is None or command.start_at.utcoffset() is None:
+            raise ValueError("Chore start date must include a timezone.")
+
+        period_types = {
+            "adaptive", "daily", "hourly", "manually",
+            "monthly", "weekly", "yearly",
+        }
+        if command.schedule_type not in period_types:
+            raise ValueError("Unsupported chore schedule type.")
+        if not 1 <= command.schedule_interval <= 10000:
+            raise ValueError("Chore schedule interval must be between 1 and 10000.")
+        if command.schedule_type in {"adaptive", "manually"} and command.schedule_interval != 1:
+            raise ValueError("Adaptive and manual chores must use interval 1.")
+        if command.schedule_type == "monthly":
+            if not 1 <= command.schedule_day <= 31:
+                raise ValueError("Monthly chore day must be between 1 and 31.")
+        elif command.schedule_day != 1:
+            raise ValueError("Schedule day is only supported for monthly chores.")
+
+        weekdays = (
+            "monday", "tuesday", "wednesday", "thursday",
+            "friday", "saturday", "sunday",
+        )
+        if command.schedule_type == "weekly":
+            if not command.schedule_weekdays:
+                raise ValueError("Weekly chores require at least one weekday.")
+            if (
+                len(set(command.schedule_weekdays)) != len(command.schedule_weekdays)
+                or any(day not in weekdays for day in command.schedule_weekdays)
+            ):
+                raise ValueError("Weekly chore weekdays are invalid or duplicated.")
+        elif command.schedule_weekdays:
+            raise ValueError("Weekdays are only supported for weekly chores.")
+
+        assignment_types = {
+            "no-assignment", "random", "in-alphabetical-order",
+            "who-least-did-first",
+        }
+        if command.assignment_type not in assignment_types:
+            raise ValueError("Unsupported chore assignment type.")
+        if command.assignment_type == "no-assignment":
+            if command.assignment_user_ids:
+                raise ValueError("Unassigned chores cannot select users.")
+        elif not command.assignment_user_ids:
+            raise ValueError("The selected assignment mode requires users.")
+        if len(set(command.assignment_user_ids)) != len(command.assignment_user_ids):
+            raise ValueError("Chore assignment users cannot be duplicated.")
 
 
 class MealPlanService(CapabilityService[MealPlanEntry]):

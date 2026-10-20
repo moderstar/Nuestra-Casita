@@ -11,17 +11,6 @@ from casita.payloads.batteries import (
     parse_active as parse_battery_active,
     parse_charge_interval_days as parse_battery_charge_interval_days,
 )
-from casita.payloads.chores import (
-    build_chore_create_payload,
-    build_chore_update_payload,
-    parse_active as parse_chore_active,
-    parse_boolean as parse_chore_boolean,
-    parse_period_config as parse_chore_period_config,
-    parse_period_type as parse_chore_period_type,
-    parse_positive_integer as parse_chore_positive_integer,
-    parse_positive_number as parse_chore_positive_number,
-    parse_start_date as parse_chore_start_date,
-)
 from casita.payloads.equipment import (
     build_equipment_create_payload,
     build_equipment_update_payload,
@@ -128,8 +117,6 @@ from casita.payloads.user_entities import (
 __all__ = [
     "build_battery_create_payload",
     "build_battery_update_payload",
-    "build_chore_create_payload",
-    "build_chore_update_payload",
     "build_equipment_create_payload",
     "build_equipment_update_payload",
     "build_location_create_payload",
@@ -199,11 +186,4 @@ __all__ = [
     "parse_userfield_sort_number",
     "parse_userfield_type",
     "userfield_display_name",
-    "parse_chore_active",
-    "parse_chore_boolean",
-    "parse_chore_period_config",
-    "parse_chore_period_type",
-    "parse_chore_positive_integer",
-    "parse_chore_positive_number",
-    "parse_chore_start_date",
 ]

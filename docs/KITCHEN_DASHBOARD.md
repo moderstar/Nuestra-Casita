@@ -1,6 +1,6 @@
 # Kitchen Dashboard Frontend
 
-Milestone 17 extends the React and TypeScript interface for the version-1
+Milestone 18 extends the React and TypeScript interface for the version-1
 Dashboard API. It is designed for an iPad in landscape orientation and adapts
 to portrait tablets, desktop browsers, and phones.
 
@@ -20,13 +20,16 @@ states. All presented data comes from the API.
 
 Supported pages are Home, Shopping, Inventory, Recipes, Meal Plan, Chores, and
 Tasks. Shopping supports product search, free-text items, decimal quantities,
-multiple lists, purchased state, and confirmed removal. Chores can be completed
-through Grocy's execution operation. Successful writes trigger an authoritative
-dashboard refresh before confirmation is shown.
+multiple lists, purchased state, and confirmed removal. Chores can be created,
+edited, activated, deactivated, assigned, and completed through Grocy-native
+operations. Daily, weekly, monthly, manual, hourly, yearly, and adaptive
+schedules are supported. Successful writes trigger an authoritative dashboard
+refresh before confirmation is shown.
 
-Chore creation is intentionally not a live operation. Definitions and recurring
-schedules are Git-managed in `catalog/chores.csv`; a live-only definition would
-make synchronization ambiguous. The Add chore control explains that workflow.
+Grocy owns chore definitions, schedules, assignment rotation, and execution
+history. Start dates are disabled after the first execution, matching Grocy's
+own restriction. Deactivate replaces Delete because Grocy 4.6 cascades chore
+deletion to its execution journal.
 
 ## Authentication
 

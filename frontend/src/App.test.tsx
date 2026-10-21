@@ -52,6 +52,29 @@ describe("kitchen dashboard", () => {
     expect(shopping).toHaveAttribute("aria-current", "page");
   });
 
+  it("hides inactive chores from the homepage and To Do count", async () => {
+    const data = {
+      ...snapshot,
+      chores: [
+        { ...snapshot.chores[0], id: "active-test", name: "Active Test Chore", active: true, completed: false },
+        { ...snapshot.chores[0], id: "inactive-test", name: "Inactive Test Chore", active: false, completed: false },
+      ],
+      tasks: [],
+    };
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
+      Response.json({ ...envelope, data })
+    ));
+
+    render(<App />);
+
+    expect(await screen.findByText("Active Test Chore")).toBeInTheDocument();
+    expect(screen.queryByText("Inactive Test Chore")).not.toBeInTheDocument();
+
+    const overview = screen.getByText("To do").parentElement;
+    expect(overview).toHaveTextContent("1");
+  });
+
   it("creates a Grocy-owned chore from the dashboard form", async () => {
     const fetch = vi.fn(async (path: string, init?: RequestInit) => {
       if (path === "/api/v1/chore-users") return Response.json({ version: "1", state: "available", data: [{ id: "person-1", display_name: "Miguel" }], errors: [] });

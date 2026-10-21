@@ -20,7 +20,7 @@ function groupBy<T>(items: T[], key: (item: T) => string): Map<string, T[]> {
 
 export function HomePage({ dashboard }: PageProps) {
   const shopping = dashboard.shopping_lists.flatMap((list) => list.items).filter((item) => !item.checked);
-  const chores = dashboard.chores.filter((item) => !item.completed);
+  const chores = dashboard.chores.filter((item) => item.active && !item.completed);
   const tasks = dashboard.tasks.filter((item) => !item.completed);
   const meals = dashboard.meal_plan.filter((item) => isToday(item.day));
   const inventory = dashboard.inventory?.items ?? [];

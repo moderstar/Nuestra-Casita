@@ -234,6 +234,7 @@ class HomeAssistantAdapterTests(TestCase):
         self.assertNotIn("token", failed.message)
 
 
+@patch("casita.bootstrap.configuration.load_dotenv", new=lambda *args, **kwargs: None)
 class HomeAssistantConfigurationTests(TestCase):
     def test_missing_optional_configuration_disables_integration(self):
         with patch.dict(os.environ, {}, clear=True):

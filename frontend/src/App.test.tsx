@@ -1,8 +1,12 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { envelope, snapshot } from "./test/fixtures";
+
+beforeEach(() => {
+  window.history.replaceState({}, "", "/");
+});
 
 afterEach(() => {
   vi.clearAllTimers();

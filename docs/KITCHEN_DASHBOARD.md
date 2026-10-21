@@ -29,6 +29,12 @@ operations. Daily, weekly, monthly, manual, hourly, yearly, and adaptive
 schedules are supported. Successful writes trigger an authoritative dashboard
 refresh before confirmation is shown.
 
+Each page has a stable browser route: `/`, `/home-status`, `/shopping`,
+`/inventory`, `/recipes`, `/meal-plan`, `/chores`, and `/tasks`. Navigation uses
+the browser History API, so links survive reloads and Back/Forward navigation
+without reloading the application. Unknown routes are safely canonicalized to
+the Overview at `/`. Nginx's existing index fallback serves direct route loads.
+
 Grocy owns chore definitions, schedules, assignment rotation, and execution
 history. Start dates are disabled after the first execution, matching Grocy's
 own restriction. Deactivate replaces Delete because Grocy 4.6 cascades chore
@@ -73,15 +79,20 @@ npm run build
 
 ## Refresh and failure behavior
 
-The complete dashboard is fetched after authentication, every 60 seconds while
-the document is visible, on foreground resume, and when Refresh is selected.
-Polling pauses while the page is hidden. A temporary network failure preserves
-the previous snapshot and marks it stale. Backend degraded state and stale
-sections remain visible without exposing upstream error details.
+The complete dashboard is fetched after authentication and every 30 seconds;
+the authenticated `/api/v1/devices` projection refreshes Home Assistant state
+every 10 seconds. Both refresh immediately when a hidden document becomes
+visible, and the manual Refresh control remains available. Polling pauses while
+the page is hidden.
 
-The current API returns a complete aggregate, so one aggregate refresh is used
-instead of separate overlapping section polls. Future contract versions can
-adopt section-specific refresh without changing page components.
+Only one request of each type can be active. Sequence-aware merging prevents
+older responses from replacing newer data: a newer device result survives an
+older aggregate response, while a device request older than an applied
+aggregate is ignored. Timers and pending requests are cleaned up with the
+application. Temporary failures preserve the previous snapshot or device
+states and mark the affected data stale. These background prop updates keep
+the selected page, dialogs, and unfinished form state mounted without a
+loading-screen transition.
 
 ## Accessibility and responsive behavior
 

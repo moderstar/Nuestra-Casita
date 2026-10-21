@@ -18,7 +18,7 @@ function generateIdempotencyKey(): string {
   ].join("-");
 }
 
-import type { ApiEnvelope, ChoreDefinitionInput, ChoreUserOption, DashboardSnapshot, ShoppingProductOption } from "./types";
+import type { ApiEnvelope, ChoreDefinitionInput, ChoreUserOption, DashboardSnapshot, Device, ShoppingProductOption } from "./types";
 
 export class UnauthorizedError extends Error {
   constructor() {
@@ -50,7 +50,8 @@ async function request(path: string, init?: RequestInit): Promise<Response> {
       credentials: "include",
       headers,
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
     throw new ApiRequestError();
   }
   if (response.status === 401) throw new UnauthorizedError();
@@ -76,11 +77,20 @@ export async function logout(): Promise<void> {
   await request("/api/v1/session", { method: "DELETE" });
 }
 
-export async function getDashboard(): Promise<ApiEnvelope<DashboardSnapshot>> {
-  const response = await request("/api/v1/dashboard");
+export async function getDashboard(signal?: AbortSignal): Promise<ApiEnvelope<DashboardSnapshot>> {
+  const response = await request("/api/v1/dashboard", { signal });
   const payload = (await response.json()) as ApiEnvelope<DashboardSnapshot>;
   if (payload.version !== "1" || !payload.data || !payload.data.household) {
     throw new ApiRequestError("The dashboard returned an unsupported response.");
+  }
+  return payload;
+}
+
+export async function getDevices(signal?: AbortSignal): Promise<ApiEnvelope<Device[]>> {
+  const response = await request("/api/v1/devices", { signal });
+  const payload = (await response.json()) as ApiEnvelope<Device[]>;
+  if (payload.version !== "1" || !Array.isArray(payload.data)) {
+    throw new ApiRequestError("The device endpoint returned an unsupported response.");
   }
   return payload;
 }

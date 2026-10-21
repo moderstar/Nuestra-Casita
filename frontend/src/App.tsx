@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import { ApiRequestError, getDashboard, login, logout, UnauthorizedError } from "./api";
+import { ApiRequestError, getDashboard, getDevices, login, logout, UnauthorizedError } from "./api";
 import { Icon, type IconName, StatusBadge } from "./components";
 import { ChoresPage, HomePage, HomeStatusPage, InventoryPage, MealPlanPage, RecipesPage, ShoppingPage, TasksPage } from "./pages";
 import type { ApiEnvelope, DashboardSnapshot } from "./types";
@@ -17,6 +17,25 @@ const nav: { id: PageName; label: string; icon: IconName }[] = [
   { id: "chores", label: "Chores", icon: "chores" },
   { id: "tasks", label: "Tasks", icon: "tasks" },
 ];
+
+export const DASHBOARD_POLL_INTERVAL_MS = 30_000;
+export const DEVICE_POLL_INTERVAL_MS = 10_000;
+
+const pagePaths: Record<PageName, string> = {
+  home: "/",
+  "home-status": "/home-status",
+  shopping: "/shopping",
+  inventory: "/inventory",
+  recipes: "/recipes",
+  "meal-plan": "/meal-plan",
+  chores: "/chores",
+  tasks: "/tasks",
+};
+
+function pageFromPath(pathname: string): PageName | null {
+  const normalized = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  return (Object.entries(pagePaths).find(([, path]) => path === normalized)?.[0] as PageName | undefined) ?? null;
+}
 
 function LoginScreen({ onAuthenticated }: { onAuthenticated: () => Promise<void> }) {
   const [password, setPassword] = useState("");
@@ -66,7 +85,7 @@ function useClock() {
 }
 
 function DashboardShell({ envelope, stale, refreshing, onRefresh, onLogout }: { envelope: ApiEnvelope<DashboardSnapshot>; stale: boolean; refreshing: boolean; onRefresh: () => Promise<void>; onLogout: () => void }) {
-  const [page, setPage] = useState<PageName>("home");
+  const [page, setPage] = useState<PageName>(() => pageFromPath(window.location.pathname) ?? "home");
   const [menuOpen, setMenuOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>("system");
   const now = useClock();
@@ -75,6 +94,18 @@ function DashboardShell({ envelope, stale, refreshing, onRefresh, onLogout }: { 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    if (!pageFromPath(window.location.pathname)) window.history.replaceState({}, "", pagePaths.home);
+    const navigateFromHistory = () => {
+      const next = pageFromPath(window.location.pathname) ?? "home";
+      if (!pageFromPath(window.location.pathname)) window.history.replaceState({}, "", pagePaths.home);
+      setPage(next);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+    window.addEventListener("popstate", navigateFromHistory);
+    return () => window.removeEventListener("popstate", navigateFromHistory);
+  }, []);
 
   const pages: Record<PageName, React.ReactNode> = {
     home: <HomePage dashboard={dashboard} />,
@@ -88,6 +119,7 @@ function DashboardShell({ envelope, stale, refreshing, onRefresh, onLogout }: { 
   };
 
   function selectPage(next: PageName) {
+    if (window.location.pathname !== pagePaths[next]) window.history.pushState({}, "", pagePaths[next]);
     setPage(next);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -118,41 +150,162 @@ export default function App() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [stale, setStale] = useState(false);
-  const refreshRef = useRef<() => Promise<void>>(async () => undefined);
+  const dashboardRef = useRef<ApiEnvelope<DashboardSnapshot> | null>(null);
+  const authenticatedRef = useRef<boolean | null>(null);
+  const sequenceRef = useRef(0);
+  const fullAppliedSequenceRef = useRef(0);
+  const deviceAppliedSequenceRef = useRef(0);
+  const fullRequestRef = useRef<{ controller: AbortController; promise: Promise<void> } | null>(null);
+  const deviceRequestRef = useRef<{ controller: AbortController; promise: Promise<void> } | null>(null);
 
-  const refresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      const next = await getDashboard();
-      setDashboard(next);
-      setAuthenticated(true);
-      setStale(false);
-    } catch (reason) {
-      if (reason instanceof UnauthorizedError) {
-        setAuthenticated(false);
-        setDashboard(null);
-      } else if (reason instanceof ApiRequestError) {
-        setStale(true);
-        setAuthenticated((current) => current ?? false);
+  const commitDashboard = useCallback((next: ApiEnvelope<DashboardSnapshot>) => {
+    dashboardRef.current = next;
+    setDashboard(next);
+  }, []);
+
+  const expireSession = useCallback(() => {
+    fullRequestRef.current?.controller.abort();
+    deviceRequestRef.current?.controller.abort();
+    dashboardRef.current = null;
+    authenticatedRef.current = false;
+    setDashboard(null);
+    setAuthenticated(false);
+  }, []);
+
+  const refreshDashboard = useCallback((interactive = false): Promise<void> => {
+    const active = fullRequestRef.current;
+    if (active) {
+      if (interactive) {
+        setRefreshing(true);
+        void active.promise.finally(() => setRefreshing(false));
       }
-    } finally {
-      setRefreshing(false);
+      return active.promise;
     }
-  }, []);
-  refreshRef.current = refresh;
 
-  useEffect(() => { void refresh(); }, [refresh]);
+    const controller = new AbortController();
+    const sequence = ++sequenceRef.current;
+    if (interactive) setRefreshing(true);
+    const promise = (async () => {
+      try {
+        const next = await getDashboard(controller.signal);
+        if (controller.signal.aborted || sequence <= fullAppliedSequenceRef.current) return;
+        fullAppliedSequenceRef.current = sequence;
+        const current = dashboardRef.current;
+        const data = { ...next.data };
+        if (current) {
+          const preservedSections: Record<string, keyof DashboardSnapshot> = {
+            today: "today", shopping: "shopping_lists", inventory: "inventory", recipes: "recipes",
+            chores: "chores", "meal-plan": "meal_plan", tasks: "tasks", budget: "budget",
+            home: "devices", media: "media", notifications: "notifications",
+          };
+          for (const section of next.data.stale_sections) {
+            const field = preservedSections[section];
+            if (field) (data as unknown as Record<string, unknown>)[field] = current.data[field];
+          }
+          if (deviceAppliedSequenceRef.current > sequence) data.devices = current.data.devices;
+        }
+        commitDashboard({ ...next, data });
+        authenticatedRef.current = true;
+        setAuthenticated(true);
+        setStale(false);
+      } catch (reason) {
+        if (controller.signal.aborted) return;
+        if (reason instanceof UnauthorizedError) expireSession();
+        else if (reason instanceof ApiRequestError) {
+          setStale(true);
+          setAuthenticated((current) => current ?? false);
+        }
+      } finally {
+        if (fullRequestRef.current?.controller === controller) fullRequestRef.current = null;
+        if (interactive) setRefreshing(false);
+      }
+    })();
+    fullRequestRef.current = { controller, promise };
+    return promise;
+  }, [commitDashboard, expireSession]);
+
+  const refreshDevices = useCallback((): Promise<void> => {
+    if (authenticatedRef.current !== true || !dashboardRef.current) return Promise.resolve();
+    if (deviceRequestRef.current) return deviceRequestRef.current.promise;
+
+    const controller = new AbortController();
+    const sequence = ++sequenceRef.current;
+    const promise = (async () => {
+      try {
+        const next = await getDevices(controller.signal);
+        if (controller.signal.aborted || sequence <= deviceAppliedSequenceRef.current || sequence < fullAppliedSequenceRef.current) return;
+        deviceAppliedSequenceRef.current = sequence;
+        const current = dashboardRef.current;
+        if (!current) return;
+        const failed = next.state === "degraded" || next.errors.length > 0;
+        const errors = [
+          ...current.errors.filter((error) => error.capability !== "devices"),
+          ...(failed ? next.errors : []),
+        ];
+        const staleSections = failed
+          ? Array.from(new Set([...current.data.stale_sections, "home"]))
+          : current.data.stale_sections.filter((section) => section !== "home");
+        commitDashboard({
+          ...current,
+          state: errors.length || staleSections.length ? "degraded" : "available",
+          errors,
+          data: {
+            ...current.data,
+            devices: failed ? current.data.devices : next.data,
+            stale_sections: staleSections,
+            issues: errors,
+          },
+        });
+      } catch (reason) {
+        if (controller.signal.aborted) return;
+        if (reason instanceof UnauthorizedError) expireSession();
+        else if (reason instanceof ApiRequestError) {
+          const current = dashboardRef.current;
+          if (current) commitDashboard({
+            ...current,
+            state: "degraded",
+            data: { ...current.data, stale_sections: Array.from(new Set([...current.data.stale_sections, "home"])) },
+          });
+        }
+      } finally {
+        if (deviceRequestRef.current?.controller === controller) deviceRequestRef.current = null;
+      }
+    })();
+    deviceRequestRef.current = { controller, promise };
+    return promise;
+  }, [commitDashboard, expireSession]);
+
+  const refresh = useCallback(() => refreshDashboard(true), [refreshDashboard]);
+
+  useEffect(() => { void refreshDashboard(false); }, [refreshDashboard]);
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") void refreshRef.current();
-    }, 60_000);
-    const visible = () => { if (document.visibilityState === "visible") void refreshRef.current(); };
+    const dashboardTimer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void refreshDashboard(false);
+    }, DASHBOARD_POLL_INTERVAL_MS);
+    const deviceTimer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void refreshDevices();
+    }, DEVICE_POLL_INTERVAL_MS);
+    const visible = () => {
+      if (document.visibilityState !== "visible") return;
+      void refreshDashboard(false);
+      void refreshDevices();
+    };
     document.addEventListener("visibilitychange", visible);
-    return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", visible); };
-  }, []);
+    return () => {
+      window.clearInterval(dashboardTimer);
+      window.clearInterval(deviceTimer);
+      document.removeEventListener("visibilitychange", visible);
+      fullRequestRef.current?.controller.abort();
+      deviceRequestRef.current?.controller.abort();
+    };
+  }, [refreshDashboard, refreshDevices]);
 
   async function signOut() {
     try { await logout(); } catch { /* A failed logout still clears local authenticated state. */ }
+    fullRequestRef.current?.controller.abort();
+    deviceRequestRef.current?.controller.abort();
+    dashboardRef.current = null;
+    authenticatedRef.current = false;
     setDashboard(null);
     setAuthenticated(false);
   }

@@ -12,6 +12,25 @@ Grocy synchronization and interactive household activity are unchanged. Home
 Assistant remains authoritative, and normal operation requires only local
 network access.
 
+## Live validation follow-up
+
+The post-deployment follow-up adds independent, non-overlapping browser polls:
+the aggregate dashboard refreshes every 30 seconds and the read-only Home
+Assistant device endpoint refreshes every 10 seconds. Polling pauses while the
+document is hidden and both sources refresh when it becomes visible. Ordered
+merging and abort cleanup preserve valid data through delayed or failed
+requests without remounting active forms.
+
+Dashboard navigation now uses stable same-origin paths and the native History
+API. Direct URLs, reloads, and browser Back/Forward retain the selected page;
+unknown routes fall back to Overview. This introduces no routing dependency,
+backend endpoint, credential exposure, or Home Assistant write capability.
+
+Follow-up validation completed with 173 backend tests and 26 frontend tests.
+Python compilation, dependency-boundary coverage, TypeScript validation, the
+production Vite build, and whitespace checks pass. No backend, Grocy adapter,
+synchronization, Compose, Nginx, or environment configuration file changed.
+
 ## Security and failure isolation
 
 - The long-lived access token is loaded only from process configuration.

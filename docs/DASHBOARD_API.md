@@ -14,6 +14,7 @@ Grocy directly. Interactive writes use narrow shopping and chore contracts.
 | GET | `/api/v1/chores` | Cookie | Chores |
 | GET | `/api/v1/meal-plan` | Cookie | Meal Plan |
 | GET | `/api/v1/tasks` | Cookie | Tasks |
+| GET | `/api/v1/devices` | Cookie | Allowlisted Home Assistant states |
 | GET | `/api/v1/shopping-products?query=` | Cookie | Bounded product choices |
 | POST | `/api/v1/shopping-lists/{list}/items` | Cookie + CSRF | Add product or note |
 | PUT | `/api/v1/shopping-lists/{list}/items/{item}` | Cookie + CSRF | Set purchased marker |
@@ -28,6 +29,11 @@ Responses use `{"version":"1","state":"available","data":[],"errors":[]}`.
 State is `available`, `empty`, or `degraded`. Errors expose only a safe code,
 source, capability, and generic message. Decimal values are strings and dates
 and datetimes are ISO 8601. Opaque domain IDs replace Grocy database IDs.
+
+Home Assistant device responses contain normalized friendly name, entity
+domain, current value, unit, availability, and safe display attributes. They
+never contain the long-lived access token or an Authorization header. There
+are no device POST, PUT, PATCH, DELETE, service-call, or automation routes.
 
 ## Authentication and security
 

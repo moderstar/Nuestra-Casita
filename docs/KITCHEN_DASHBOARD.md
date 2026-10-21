@@ -1,6 +1,6 @@
 # Kitchen Dashboard Frontend
 
-Milestone 18 extends the React and TypeScript interface for the version-1
+Milestone 19 extends the React and TypeScript interface for the version-1
 Dashboard API. It is designed for an iPad in landscape orientation and adapts
 to portrait tablets, desktop browsers, and phones.
 
@@ -18,8 +18,11 @@ Browser -> kitchen-dashboard (Nginx) -> /api proxy -> dashboard-api -> services
 the normalized snapshot and support available, empty, degraded, and stale
 states. All presented data comes from the API.
 
-Supported pages are Home, Shopping, Inventory, Recipes, Meal Plan, Chores, and
-Tasks. Shopping supports product search, free-text items, decimal quantities,
+Supported pages are Home, Home Status, Shopping, Inventory, Recipes, Meal
+Plan, Chores, and Tasks. Home Status displays only configured Home Assistant
+entities with their friendly name, domain, state, unit, and availability. It
+is intentionally read-only and contains no toggles, sliders, service calls, or
+automation actions. Shopping supports product search, free-text items, decimal quantities,
 multiple lists, purchased state, and confirmed removal. Chores can be created,
 edited, activated, deactivated, assigned, and completed through Grocy-native
 operations. Daily, weekly, monthly, manual, hourly, yearly, and adaptive
@@ -41,8 +44,9 @@ from any dashboard request returns the user to login. Logout calls
 CSRF token protects logout and activity mutations, and an idempotency key
 protects each submitted write from duplicate taps or retries.
 
-Do not store `CASITA_API_PASSWORD`, `CASITA_API_SESSION_SECRET`, or
-`GROCY_API_KEY` in frontend files or browser storage.
+Do not store `CASITA_API_PASSWORD`, `CASITA_API_SESSION_SECRET`,
+`GROCY_API_KEY`, or `HOME_ASSISTANT_TOKEN` in frontend files or browser
+storage.
 
 ## Local development
 
@@ -98,6 +102,8 @@ adopt section-specific refresh without changing page components.
 | UI only works on the Docker VM | Bind `CASITA_FRONTEND_BIND_ADDRESS` to the VM LAN IP or `0.0.0.0`. |
 | Old UI after an update | Reload once; `index.html` is not cached and hashed assets are immutable. |
 | Limited/stale banner | Check `docker compose logs dashboard-api`; prior data is intentionally retained. |
+| Home Status is empty | Configure `HOME_ASSISTANT_URL`, `HOME_ASSISTANT_TOKEN`, and the comma-separated `HOME_ASSISTANT_ENTITY_IDS` allowlist. |
+| Home Status is limited | Verify the URL from the API container, token validity, and exact entity IDs in Home Assistant Developer Tools. |
 
 Calendar, budgets, Home Assistant controls, media, notifications, offline
 writes, and public internet exposure remain future work.

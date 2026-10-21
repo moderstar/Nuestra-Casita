@@ -362,6 +362,7 @@ def create_dashboard_api(
         "/api/v1/chores": services.chores,
         "/api/v1/meal-plan": services.meal_plan,
         "/api/v1/tasks": services.tasks,
+        "/api/v1/devices": services.devices,
     }
 
     def make_service_handler(service):

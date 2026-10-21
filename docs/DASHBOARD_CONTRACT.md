@@ -91,6 +91,11 @@ cache service will decide whether previously known records can also be served.
 
 All contents use models from `casita.domain`.
 
+Device records contain an opaque platform ID, household ID, friendly name,
+kind, normalized availability, current display value, unit, safe scalar
+attributes, and source references. `available`, `unavailable`, and `unknown`
+are distinct. The contract contains no device-control operation.
+
 The terminal dashboard wraps the snapshot in the backend-neutral `Dashboard`
 contract. It adds normalized integration connectivity, version, database
 description, aggregate resource counts, configuration state, missing

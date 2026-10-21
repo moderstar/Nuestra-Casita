@@ -24,12 +24,65 @@ class ApplicationConfiguration:
     household_id: str
     household_name: str
     request_timeout_seconds: float = 10.0
+    home_assistant_url: str = ""
+    home_assistant_token: str = ""
+    home_assistant_entity_ids: tuple[str, ...] = ()
 
     @property
     def exists(self) -> bool:
         """Return whether configuration came from a file or environment."""
 
         return bool(self.grocy_url and self.grocy_api_key)
+
+    @property
+    def home_assistant_configured(self) -> bool:
+        """Return whether the optional Home Assistant integration is enabled."""
+
+        return bool(self.home_assistant_url and self.home_assistant_token)
+
+
+def _home_assistant_entity_ids(value: str) -> tuple[str, ...]:
+    """Parse a stable, deduplicated Home Assistant entity allowlist."""
+
+    entity_ids = tuple(item.strip() for item in value.split(",") if item.strip())
+    unique = tuple(dict.fromkeys(entity_ids))
+
+    for entity_id in unique:
+        parts = entity_id.split(".")
+        if (
+            len(parts) != 2
+            or any(
+                not part
+                or not all(
+                    character.islower()
+                    or character.isdigit()
+                    or character == "_"
+                    for character in part
+                )
+                for part in parts
+            )
+        ):
+            raise RuntimeError(
+                "HOME_ASSISTANT_ENTITY_IDS must contain comma-separated entity IDs."
+            )
+
+    return unique
+
+
+def _request_timeout_seconds(value: str) -> float:
+    """Validate a finite, bounded integration request timeout."""
+
+    try:
+        timeout = float(value)
+    except ValueError as error:
+        raise RuntimeError(
+            "CASITA_REQUEST_TIMEOUT_SECONDS must be a number."
+        ) from error
+    if not 0.1 <= timeout <= 60:
+        raise RuntimeError(
+            "CASITA_REQUEST_TIMEOUT_SECONDS must be between 0.1 and 60."
+        )
+    return timeout
 
 
 def load_configuration(
@@ -58,6 +111,16 @@ def load_configuration(
 
     grocy_url = os.getenv("GROCY_URL", "").strip()
     grocy_api_key = os.getenv("GROCY_API_KEY", "").strip()
+    home_assistant_url = os.getenv("HOME_ASSISTANT_URL", "").strip()
+    home_assistant_token = os.getenv("HOME_ASSISTANT_TOKEN", "").strip()
+    if bool(home_assistant_url) != bool(home_assistant_token):
+        raise RuntimeError(
+            "HOME_ASSISTANT_URL and HOME_ASSISTANT_TOKEN must be configured together."
+        )
+    if home_assistant_url and not home_assistant_url.startswith(
+        ("http://", "https://")
+    ):
+        raise RuntimeError("HOME_ASSISTANT_URL must use http:// or https://.")
     missing = [
         name
         for name, value in (
@@ -86,7 +149,12 @@ def load_configuration(
             "CASITA_HOUSEHOLD_NAME",
             "Nuestra Casita",
         ).strip() or "Nuestra Casita",
-        request_timeout_seconds=float(
+        request_timeout_seconds=_request_timeout_seconds(
             os.getenv("CASITA_REQUEST_TIMEOUT_SECONDS", "10")
+        ),
+        home_assistant_url=home_assistant_url,
+        home_assistant_token=home_assistant_token,
+        home_assistant_entity_ids=_home_assistant_entity_ids(
+            os.getenv("HOME_ASSISTANT_ENTITY_IDS", "")
         ),
     )

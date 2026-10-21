@@ -43,6 +43,10 @@ from casita.dashboard import (
 )
 from casita.integrations import Capability
 from casita.integrations.grocy import GrocyReadAdapter
+from casita.integrations.home_assistant import (
+    HomeAssistantApiClient,
+    HomeAssistantReadAdapter,
+)
 
 
 class GrocyBackendProvider:
@@ -135,9 +139,25 @@ def build_grocy_application(
         default_key=GrocyBackendProvider.key,
     ).resolve()
 
+    integrations = backend.integrations
+    capability_owners = dict(backend.capability_owners)
+    if config.home_assistant_configured:
+        home_assistant = HomeAssistantReadAdapter(
+            HomeAssistantApiClient(
+                config.home_assistant_url,
+                config.home_assistant_token,
+                timeout=config.request_timeout_seconds,
+            ),
+            entity_ids=config.home_assistant_entity_ids,
+        )
+        integrations = (*integrations, home_assistant)
+        capability_owners[Capability.DEVICES] = (
+            home_assistant.descriptor.key,
+        )
+
     application = build_application(
-        integrations=backend.integrations,
-        capability_owners=backend.capability_owners,
+        integrations=integrations,
+        capability_owners=capability_owners,
         dashboard_contract=dashboard_contract,
     )
     catalog_service = CatalogApplicationService(

@@ -148,6 +148,19 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .empty-state p { max-width: 320px; margin: 5px 0 0; line-height: 1.45; }
 .empty-mark { margin-bottom: 8px; color: var(--accent); font-size: 23px; }
 .all-good { margin: 20px 0; color: var(--green); text-align: center; }
+.device-summary, .device-list { display: grid; }
+.device-row { min-height: 72px; padding: 10px 0; display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; gap: 11px; border-bottom: 1px solid var(--line); }
+.device-row:last-child { border-bottom: 0; }
+.device-row.compact { min-height: 58px; }
+.availability-dot { width: 13px; height: 13px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px var(--green-soft); }
+.device-row.unavailable .availability-dot { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.device-row.unknown .availability-dot { background: var(--muted); box-shadow: 0 0 0 4px var(--surface-2); }
+.device-reading { display: grid; justify-items: end; gap: 2px; text-align: right; }
+.device-reading strong { font-size: 16px; }
+.device-reading span { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.device-row.unavailable .device-reading strong { color: var(--accent); }
+.device-row.unknown .device-reading strong { color: var(--muted); }
+.device-grid .card-header h2 { text-transform: capitalize; }
 .split-layout { display: grid; grid-template-columns: minmax(230px, .42fr) minmax(0, 1fr); gap: 20px; align-items: start; }
 .list-selector { padding: 8px; display: grid; gap: 5px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow); }
 .list-selector button { min-height: 54px; padding: 9px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; border: 0; border-radius: 10px; background: transparent; text-align: left; cursor: pointer; }

@@ -1,14 +1,15 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { ApiRequestError, getDashboard, login, logout, UnauthorizedError } from "./api";
 import { Icon, type IconName, StatusBadge } from "./components";
-import { ChoresPage, HomePage, InventoryPage, MealPlanPage, RecipesPage, ShoppingPage, TasksPage } from "./pages";
+import { ChoresPage, HomePage, HomeStatusPage, InventoryPage, MealPlanPage, RecipesPage, ShoppingPage, TasksPage } from "./pages";
 import type { ApiEnvelope, DashboardSnapshot } from "./types";
 
-type PageName = "home" | "shopping" | "inventory" | "recipes" | "meal-plan" | "chores" | "tasks";
+type PageName = "home" | "home-status" | "shopping" | "inventory" | "recipes" | "meal-plan" | "chores" | "tasks";
 type Theme = "system" | "light" | "dark";
 
 const nav: { id: PageName; label: string; icon: IconName }[] = [
   { id: "home", label: "Home", icon: "home" },
+  { id: "home-status", label: "Home Status", icon: "status" },
   { id: "shopping", label: "Shopping", icon: "cart" },
   { id: "inventory", label: "Inventory", icon: "box" },
   { id: "recipes", label: "Recipes", icon: "book" },
@@ -77,6 +78,7 @@ function DashboardShell({ envelope, stale, refreshing, onRefresh, onLogout }: { 
 
   const pages: Record<PageName, React.ReactNode> = {
     home: <HomePage dashboard={dashboard} />,
+    "home-status": <HomeStatusPage dashboard={dashboard} />,
     shopping: <ShoppingPage dashboard={dashboard} onRefresh={onRefresh} />,
     inventory: <InventoryPage dashboard={dashboard} />,
     recipes: <RecipesPage dashboard={dashboard} />,

@@ -1,7 +1,7 @@
 import type { PropsWithChildren, ReactNode } from "react";
 import type { ApiState } from "./types";
 
-export type IconName = "home" | "cart" | "box" | "book" | "meal" | "chores" | "tasks" | "refresh" | "settings" | "moon" | "sun" | "logout" | "wifi";
+export type IconName = "home" | "cart" | "box" | "book" | "meal" | "chores" | "tasks" | "status" | "refresh" | "settings" | "moon" | "sun" | "logout" | "wifi";
 
 const paths: Record<IconName, ReactNode> = {
   home: <><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10M9 20v-6h6v6"/></>,
@@ -11,6 +11,7 @@ const paths: Record<IconName, ReactNode> = {
   meal: <><path d="M7 3v8M4 3v5a3 3 0 0 0 6 0V3M7 11v10M16 3v18M16 3c5 3 5 9 0 11"/></>,
   chores: <><path d="M9 4h6M9 2v4M5 7h14l-1 14H6Z"/><path d="M9 11v6M15 11v6"/></>,
   tasks: <><rect x="4" y="3" width="16" height="18" rx="2"/><path d="m8 9 2 2 4-4M8 16h8"/></>,
+  status: <><path d="M4 13a8 8 0 0 1 16 0"/><path d="M7 13a5 5 0 0 1 10 0"/><circle cx="12" cy="13" r="2"/><path d="M12 15v6"/></>,
   refresh: <><path d="M20 6v5h-5M4 18v-5h5"/><path d="M18 10a7 7 0 0 0-12-3L4 11M6 14a7 7 0 0 0 12 3l2-4"/></>,
   settings: <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a2 2 0 0 0 .4 2.2l.1.1-2.6 2.6-.1-.1A2 2 0 0 0 15 19.4a2 2 0 0 0-1.2 1.8V21h-3.6v-.2A2 2 0 0 0 9 19.4a2 2 0 0 0-2.2.4l-.1.1-2.6-2.6.1-.1A2 2 0 0 0 4.6 15a2 2 0 0 0-1.8-1.2H3v-3.6h.2A2 2 0 0 0 4.6 9a2 2 0 0 0-.4-2.2l-.1-.1 2.6-2.6.1.1A2 2 0 0 0 9 4.6a2 2 0 0 0 1.2-1.8V3h3.6v.2A2 2 0 0 0 15 4.6a2 2 0 0 0 2.2-.4l.1-.1 2.6 2.6-.1.1A2 2 0 0 0 19.4 9a2 2 0 0 0 1.8 1.2h.2v3.6h-.2A2 2 0 0 0 19.4 15Z"/></>,
   moon: <path d="M20 15a8 8 0 0 1-11-11 8 8 0 1 0 11 11Z"/>,

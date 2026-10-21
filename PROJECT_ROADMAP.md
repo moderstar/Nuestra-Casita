@@ -139,9 +139,12 @@ additional infrastructure is introduced.
 
 ### Home Assistant
 
-- Expose household data to dashboards and automations
+- [x] Read explicitly allowlisted entity states through the Devices capability
+- [x] Display read-only Home Status in the kitchen dashboard
+- [x] Isolate Home Assistant outages from unrelated dashboard sections
+- Expose additional household data to dashboards and automations
 - Connect inventory and chore states to household workflows
-- Support the future kitchen tablet interface
+- Add controls only after a separate write-safety design
 
 ### Nextcloud
 
@@ -197,6 +200,10 @@ backed Shopping, Inventory, Recipes, Meal Plan, Chores, and Tasks. Milestone 18
 makes Grocy authoritative for chore definitions, schedules, assignments, and
 history, with CSRF-protected and idempotent dashboard management. Destructive
 chore deletion, stock booking, and general entity writes are not exposed.
+
+Milestone 19 adds an optional Home Assistant read adapter. Only configured
+entity IDs are projected as backend-neutral Devices, and the Home Status page
+does not expose service calls, controls, or the long-lived access token.
 
 Future dashboard milestones may add calendar, budget, home control, media, and
 notification integrations as their backend capabilities become available.

@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { addShoppingItem, completeChore, createChore, deactivateChore, getChoreUsers, removeShoppingItem, searchShoppingProducts, setShoppingItemPurchased, updateChore } from "./api";
 import { Card, EmptyState, ItemRow, PageHeading } from "./components";
 import { formatDate, formatQuantity, isToday } from "./format";
-import type { Chore, ChoreDefinitionInput, ChoreUserOption, DashboardSnapshot, MealPlanEntry, Recipe, ShoppingProductOption } from "./types";
+import type { Chore, ChoreDefinitionInput, ChoreUserOption, DashboardSnapshot, Device, MealPlanEntry, Recipe, ShoppingProductOption } from "./types";
 
 interface PageProps { dashboard: DashboardSnapshot }
 interface InteractivePageProps extends PageProps { onRefresh: () => Promise<void> }
@@ -51,7 +51,31 @@ export function HomePage({ dashboard }: PageProps) {
       <Card title="Open tasks" icon="tasks" action={<strong className="card-count">{tasks.length}</strong>}>
         {!tasks.length ? <EmptyState title="No open tasks" detail="Your household task list is clear." /> : <div className="row-list">{tasks.slice(0, 4).map((task) => <ItemRow key={task.id} title={task.name} detail={task.category} meta={formatDate(task.due_on)} />)}</div>}
       </Card>
+      <Card title="Home status" icon="status" action={<strong className="card-count">{dashboard.devices.length}</strong>}>
+        {!dashboard.devices.length ? <EmptyState title="No home status selected" detail="Allowlisted Home Assistant entities will appear here." /> : <div className="device-summary">{dashboard.devices.slice(0, 4).map((device) => <DeviceRow key={device.id} device={device} compact />)}</div>}
+      </Card>
     </div>
+  </>;
+}
+
+function displayDeviceValue(device: Device): string {
+  if (device.state === "unavailable") return "Unavailable";
+  if (device.state === "unknown") return "Unknown";
+  return `${device.value}${device.unit ? ` ${device.unit}` : ""}`;
+}
+
+function DeviceRow({ device, compact = false }: { device: Device; compact?: boolean }) {
+  return <div className={`device-row ${device.state}${compact ? " compact" : ""}`}>
+    <span className="availability-dot" aria-hidden="true" />
+    <div className="item-copy"><strong>{device.name}</strong><span>{device.kind.replaceAll("_", " ")}</span></div>
+    <div className="device-reading"><strong>{displayDeviceValue(device)}</strong><span>{device.state}</span></div>
+  </div>;
+}
+
+export function HomeStatusPage({ dashboard }: PageProps) {
+  const grouped = groupBy(dashboard.devices, (device) => device.kind || "device");
+  return <><PageHeading eyebrow="Local home telemetry" title="Home Status" detail="Read-only states from explicitly selected Home Assistant entities." action={active} />
+    {!dashboard.devices.length ? <Card title="Home Assistant" icon="status"><EmptyState title="No entities selected" detail="Configure HOME_ASSISTANT_ENTITY_IDS to show household-safe entities here." /></Card> : <div className="section-grid device-grid">{Array.from(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([kind, devices]) => <Card key={kind} title={kind.replaceAll("_", " ")} icon="status" action={<span className="muted">{devices.length}</span>}><div className="device-list">{devices.map((device) => <DeviceRow key={device.id} device={device} />)}</div></Card>)}</div>}
   </>;
 }
 

@@ -54,6 +54,13 @@ ownership, catalog planner, and catalog executor. Concrete resource
 registries, configuration loading, and native synchronization callbacks
 remain confined to this composition boundary.
 
+When optional Home Assistant credentials are complete, the same composition
+root constructs one `HomeAssistantApiClient` and `HomeAssistantReadAdapter`,
+registers it alongside Grocy, and assigns only `Capability.DEVICES` to it.
+This is an additional integration, not a replacement synchronization backend;
+Grocy remains the selected backend provider and its planner/executor are
+unchanged. With no Home Assistant configuration, no adapter is registered.
+
 ## Object Lifetime
 
 The object graph has application scope:
@@ -90,7 +97,7 @@ Without ownership configuration, all adapters declaring a capability
 contribute in registration order. An ownership mapping can select and order
 specific providers for a capability.
 
-Adding Home Assistant, PantryParty, a test backend, or another provider will
+Adding PantryParty, a test backend, or another replacement provider will
 require:
 
 1. Implementing the existing integration contracts.

@@ -21,7 +21,26 @@ export const snapshot: DashboardSnapshot = {
   meal_plan: [],
   tasks: [],
   budget: null,
-  devices: [],
+  devices: [
+    {
+      id: "home-device-1", household_id: "home", name: "Kitchen Temperature",
+      kind: "sensor", state: "available", value: "72.4", unit: "°F",
+      attributes: [["device_class", "temperature"]],
+      source_references: [{ integration: "home-assistant", external_id: "sensor.kitchen_temperature", external_type: "sensor" }],
+    },
+    {
+      id: "home-device-2", household_id: "home", name: "Garage Door",
+      kind: "binary_sensor", state: "unavailable", value: "unavailable", unit: "",
+      attributes: [["device_class", "garage_door"]],
+      source_references: [{ integration: "home-assistant", external_id: "binary_sensor.garage_door", external_type: "binary_sensor" }],
+    },
+    {
+      id: "home-device-3", household_id: "home", name: "Weather Summary",
+      kind: "sensor", state: "unknown", value: "unknown", unit: "",
+      attributes: [],
+      source_references: [{ integration: "home-assistant", external_id: "sensor.weather_summary", external_type: "sensor" }],
+    },
+  ],
   media: [],
   notifications: [],
   stale_sections: [],

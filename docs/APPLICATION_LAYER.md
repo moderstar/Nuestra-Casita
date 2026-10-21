@@ -178,9 +178,10 @@ This supports use cases such as:
 Cross-source deduplication is deferred until real integrations demonstrate the
 identity rules it requires.
 
-The production Grocy read adapter now demonstrates this boundary. Application
-services discover its declared capabilities through `IntegrationDirectory`;
-they do not import the adapter or inspect Grocy records.
+The production Grocy and Home Assistant read adapters demonstrate this
+boundary. Application services discover their declared capabilities through
+`IntegrationDirectory`; they do not import either adapter or inspect native
+records.
 
 ## Dashboard Assembly Flow
 

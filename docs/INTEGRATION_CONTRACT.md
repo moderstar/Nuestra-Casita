@@ -87,14 +87,16 @@ resource, comparison, and apply logic.
 
 ### Home Assistant
 
-Expected capabilities:
+Implemented capability:
 
 - Devices
-- Notifications
-- Selected household state
 
-Entity IDs, service calls, areas, and device registries stay inside the
-adapter.
+The adapter reads only explicitly allowlisted entity states and maps them to
+`Device`. Native state values, units, entity domains, availability, and a
+small safe set of scalar display attributes are normalized at the boundary.
+Opaque domain IDs prevent native entity IDs from becoming application
+identity; `SourceReference` retains traceability. Service calls, controls,
+areas, registries, and event subscriptions are not implemented.
 
 ### Nextcloud
 
@@ -144,11 +146,9 @@ Asset IDs, thumbnails, albums, and signed media URLs stay inside the adapter.
 - Application orchestration decides whether stale data is displayed.
 - Dashboard clients receive stale-section metadata, not backend exceptions.
 
-## Future Integration Registry
+## Integration Registration
 
-The current registry is Grocy-resource-specific and remains unchanged.
-
-A future platform registry will manage adapter instances, capability
-ownership, and household configuration. It should be implemented when the
-second real integration is added so its API is based on demonstrated needs
-rather than assumptions.
+`IntegrationDirectory` now coordinates Grocy and the optional Home Assistant
+adapter by declared capability and explicit ownership. Backend replacement
+continues to use `BackendRegistry`; adding a read-only secondary integration
+does not require another registry or synchronization engine.

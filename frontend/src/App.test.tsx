@@ -52,6 +52,34 @@ describe("kitchen dashboard", () => {
     expect(shopping).toHaveAttribute("aria-current", "page");
   });
 
+  it("renders allowlisted Home Assistant entities as read-only states", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json(envelope)));
+    render(<App />);
+    await screen.findAllByText("Our Home");
+    await userEvent.click(screen.getByRole("button", { name: "Home Status" }));
+    expect(await screen.findByRole("heading", { name: "Home Status" })).toBeInTheDocument();
+    expect(screen.getByText("Kitchen Temperature")).toBeInTheDocument();
+    expect(screen.getByText("72.4 °F")).toBeInTheDocument();
+    expect(screen.getByText("Garage Door")).toBeInTheDocument();
+    expect(screen.getByText("Unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Weather Summary")).toBeInTheDocument();
+    expect(screen.getByText("Unknown")).toBeInTheDocument();
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+    expect(screen.queryByRole("slider")).not.toBeInTheDocument();
+  });
+
+  it("shows a safe Home Status empty state when no entities are configured", async () => {
+    const empty = {
+      ...envelope,
+      data: { ...snapshot, devices: [] },
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json(empty)));
+    render(<App />);
+    await screen.findAllByText("Our Home");
+    await userEvent.click(screen.getByRole("button", { name: "Home Status" }));
+    expect(await screen.findByText("No entities selected")).toBeInTheDocument();
+  });
+
   it("hides inactive chores from the homepage and To Do count", async () => {
     const data = {
       ...snapshot,

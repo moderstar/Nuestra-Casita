@@ -1,36 +1,34 @@
-# Milestone 18 Report: Grocy-Native Chore Management
+# Milestone 19 Report: Home Assistant Read-Only Integration
 
 ## Summary
 
-Milestone 18 makes Grocy 4.6 the sole authority for chore definitions,
-schedules, assignments, active state, and execution history. The authenticated
-kitchen dashboard can create, edit, complete, activate, and deactivate chores
-through backend-neutral application contracts and the existing Grocy adapter.
+Milestone 19 adds the first Home Assistant integration through the existing
+backend-neutral Devices capability. An optional authenticated REST adapter
+reads current state for explicitly allowlisted entities and maps them into
+`Device` records. The kitchen dashboard adds a touch-friendly Home Status page
+and a compact overview card.
 
-The legacy header-only chore catalog and synchronization resource are removed.
-`sync chores` is rejected and `sync all` no longer contains a chore stage, so
-CLI synchronization cannot overwrite live Grocy chores. All unrelated catalog
-resources retain their established behavior.
+Grocy synchronization and interactive household activity are unchanged. Home
+Assistant remains authoritative, and normal operation requires only local
+network access.
 
-## Safety and Compatibility
+## Security and failure isolation
 
-- Every dashboard write retains signed-session, CSRF, validation, and
-  idempotency protection.
-- Browser clients see opaque chore and user identifiers; Grocy credentials and
-  native IDs stay server-side.
-- Daily, weekly, monthly, manual, hourly, yearly, and adaptive schedules map to
-  Grocy 4.6 native fields.
-- Native assignment modes use the current `/users` collection and trigger
-  Grocy's next-assignment recalculation after create or edit.
-- A start date becomes immutable in the dashboard when execution history
-  exists, matching Grocy's own form behavior.
-- Deletion is intentionally unavailable because Grocy 4.6 cascades Chore
-  deletion to `chores_log`; deactivation preserves all history.
-- Chore completion continues to use `/chores/{id}/execute`.
-- UUID fallback behavior remains compatible with plain HTTP on a private LAN.
+- The long-lived access token is loaded only from process configuration.
+- Browser responses never contain the token or Authorization header.
+- An empty allowlist exposes no entities; non-allowlisted entities are never
+  projected.
+- Only `GET /api/` and `GET /api/states` are implemented by the integration
+  client. No state writes, service calls, automations, or controls exist.
+- Requests use the configured timeout, validated between 0.1 and 60 seconds.
+- Authentication, connection, timeout, status, JSON, and schema failures are
+  converted into a degraded Home dashboard section without breaking Grocy
+  sections or exposing upstream details.
+- Available, unavailable, unknown, and missing allowlisted states remain
+  distinct.
 
 ## Validation
 
-Automated validation uses mocked Grocy responses and performs no live writes.
-Final test counts, CLI comparisons, dependency checks, bundle identity, and
-checksum are recorded in the Milestone 18 handoff document.
+All automated Home Assistant tests use mocked responses and perform no live
+network calls. Final test counts, dependency validation, CLI regression,
+bundle identity, and checksum are recorded in the Milestone 19 handoff.

@@ -249,6 +249,8 @@ class Device:
     name: str
     kind: str
     state: DeviceState = DeviceState.UNKNOWN
+    value: str = ""
+    unit: str = ""
     attributes: tuple[tuple[str, str], ...] = ()
     source_references: tuple[SourceReference, ...] = ()
 

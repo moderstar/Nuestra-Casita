@@ -161,6 +161,20 @@ export interface HouseholdTask {
   completed: boolean;
 }
 
+export type DeviceAvailability = "available" | "unavailable" | "unknown";
+
+export interface Device {
+  id: string;
+  household_id: string;
+  name: string;
+  kind: string;
+  state: DeviceAvailability;
+  value: string;
+  unit: string;
+  attributes: [string, string][];
+  source_references: SourceReference[];
+}
+
 export interface DashboardSnapshot {
   contract_version: "1";
   generated_at: string;
@@ -173,7 +187,7 @@ export interface DashboardSnapshot {
   meal_plan: MealPlanEntry[];
   tasks: HouseholdTask[];
   budget: unknown | null;
-  devices: unknown[];
+  devices: Device[];
   media: unknown[];
   notifications: unknown[];
   stale_sections: string[];

@@ -9,6 +9,7 @@ The core architecture is documented in:
 - [APPLICATION_LAYER.md](APPLICATION_LAYER.md)
 - [COMPOSITION_ROOT.md](COMPOSITION_ROOT.md)
 - [GROCY_READ_ADAPTER.md](GROCY_READ_ADAPTER.md)
+- [HOME_ASSISTANT.md](HOME_ASSISTANT.md)
 - [INTEGRATION_CONTRACT.md](INTEGRATION_CONTRACT.md)
 - [DASHBOARD_CONTRACT.md](DASHBOARD_CONTRACT.md)
 - [COMMAND_FRAMEWORK.md](COMMAND_FRAMEWORK.md)
@@ -27,11 +28,17 @@ The foundational code packages are:
 The production browser path is `Browser → Nginx frontend → same-origin /api
 proxy → Dashboard API → Application Services → Integration Contracts`. Nginx
 serves static assets and proxies only API traffic to the private API container.
-Frontend code has no Grocy dependency and no backend credential. See
+Frontend code has no Grocy or Home Assistant dependency and no backend
+credential. See
 [KITCHEN_DASHBOARD.md](KITCHEN_DASHBOARD.md).
 
 The existing Grocy implementation remains unchanged and operational while a
 Grocy read adapter translates runtime data into platform domain models.
+
+The optional Home Assistant adapter is registered alongside the selected
+Grocy backend and owns only `Capability.DEVICES`. Application services and the
+dashboard assembler see normalized Devices rather than REST responses. See
+[HOME_ASSISTANT.md](HOME_ASSISTANT.md).
 
 ## Application Command Flow
 

@@ -14,6 +14,7 @@ their data without exposing vendor APIs to future clients.
 - Backend-neutral household domain models
 - Common integration and synchronization contracts
 - Versioned internal contract for the future kitchen dashboard
+- Optional read-only Home Assistant entity states with an explicit allowlist
 - Architecture designed for reproducible Docker and Proxmox deployments
 
 The terminal dashboard, unified CLI, authenticated Dashboard API,
@@ -26,6 +27,7 @@ database is required.
 - [Application layer](docs/APPLICATION_LAYER.md)
 - [Composition root](docs/COMPOSITION_ROOT.md)
 - [Grocy read adapter](docs/GROCY_READ_ADAPTER.md)
+- [Home Assistant integration](docs/HOME_ASSISTANT.md)
 - [Dashboard and command framework](docs/COMMAND_FRAMEWORK.md)
 - [Integration contract](docs/INTEGRATION_CONTRACT.md)
 - [Dashboard contract](docs/DASHBOARD_CONTRACT.md)
@@ -46,6 +48,8 @@ tools/casita/domain/      Household domain models
 tools/casita/integrations Integration contracts
 tools/casita/integrations/grocy
                           Grocy client and domain translation
+tools/casita/integrations/home_assistant
+                          Read-only Home Assistant state translation
 tools/casita/application/ Household services and dashboard assembly
 tools/casita/bootstrap/   Application construction and object lifetime
 tools/casita/dashboard/   Internal dashboard contract

@@ -10,7 +10,10 @@ variable names remain unchanged.
 | `CASITA_API_SESSION_SECRET` | required | Cookie secret, 32+ characters |
 | `CASITA_API_SESSION_TTL_SECONDS` | `86400` | Session lifetime |
 | `CASITA_API_COOKIE_SECURE` | `1` | HTTPS-only cookie |
-| `CASITA_REQUEST_TIMEOUT_SECONDS` | `10` | Grocy request timeout |
+| `CASITA_REQUEST_TIMEOUT_SECONDS` | `10` | Integration timeout (0.1–60 seconds) |
+| `HOME_ASSISTANT_URL` | blank | Optional local Home Assistant base URL |
+| `HOME_ASSISTANT_TOKEN` | blank | Long-lived access token; never commit it |
+| `HOME_ASSISTANT_ENTITY_IDS` | blank | Comma-separated entity allowlist |
 | `CASITA_API_ALLOWED_ORIGINS` | blank | Explicit UI origins |
 | `CASITA_FRONTEND_BIND_ADDRESS` | `127.0.0.1` | Frontend host bind address |
 | `CASITA_FRONTEND_PORT` | `8085` | Frontend published port |
@@ -29,10 +32,12 @@ that the Shopping and Chores controls render. Automated tests use mocked Grocy
 responses and never modify household data. Test live writes only with
 household-approved disposable shopping data and a disposable Chore. Chore
 deactivation is safe for history; deletion is intentionally unavailable.
+Home Status is read-only and may be validated safely without changing any
+Home Assistant entity.
 
 Rollback is a normal Git/container rollback: stop the services, check out the
-prior known-good commit (`e4107ad61f8f597778da47a9658a88e2c7189d07` before
-Milestone 18), rebuild, and start Compose. No migration, volume, or persistent
+prior known-good commit (`c095cec5207330d8d86af7690520218820158f73` before
+Milestone 19), rebuild, and start Compose. No migration, volume, or persistent
 dashboard state needs reversal. Activity already confirmed by Grocy remains
 Grocy-owned and is not undone automatically.
 

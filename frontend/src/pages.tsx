@@ -72,10 +72,10 @@ function DeviceRow({ device, compact = false }: { device: Device; compact?: bool
   </div>;
 }
 
-export function HomeStatusPage({ dashboard }: PageProps) {
+export function HomeStatusPage({ dashboard, onManageEntities }: PageProps & { onManageEntities: () => void }) {
   const grouped = groupBy(dashboard.devices, (device) => device.kind || "device");
-  return <><PageHeading eyebrow="Local home telemetry" title="Home Status" detail="Read-only states from explicitly selected Home Assistant entities." action={active} />
-    {!dashboard.devices.length ? <Card title="Home Assistant" icon="status"><EmptyState title="No entities selected" detail="Configure HOME_ASSISTANT_ENTITY_IDS to show household-safe entities here." /></Card> : <div className="section-grid device-grid">{Array.from(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([kind, devices]) => <Card key={kind} title={kind.replaceAll("_", " ")} icon="status" action={<span className="muted">{devices.length}</span>}><div className="device-list">{devices.map((device) => <DeviceRow key={device.id} device={device} />)}</div></Card>)}</div>}
+  return <><PageHeading eyebrow="Local home telemetry" title="Home Status" detail="Read-only states from explicitly selected Home Assistant entities." action={<button type="button" className="primary-button compact" onClick={onManageEntities}>Manage Entities</button>} />
+    {!dashboard.devices.length ? <Card title="Home Assistant" icon="status"><EmptyState title="No entities selected" detail="Use Manage Entities to select which Home Assistant devices appear here." /></Card> : <div className="section-grid device-grid">{Array.from(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([kind, devices]) => <Card key={kind} title={kind.replaceAll("_", " ")} icon="status" action={<span className="muted">{devices.length}</span>}><div className="device-list">{devices.map((device) => <DeviceRow key={device.id} device={device} />)}</div></Card>)}</div>}
   </>;
 }
 

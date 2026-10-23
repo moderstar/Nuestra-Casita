@@ -1,10 +1,11 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { ApiRequestError, getDashboard, getDevices, login, logout, UnauthorizedError } from "./api";
 import { Icon, type IconName, StatusBadge } from "./components";
+import { HomeAssistantEntityManager } from "./HomeAssistantEntityManager";
 import { ChoresPage, HomePage, HomeStatusPage, InventoryPage, MealPlanPage, RecipesPage, ShoppingPage, TasksPage } from "./pages";
 import type { ApiEnvelope, DashboardSnapshot } from "./types";
 
-type PageName = "home" | "home-status" | "shopping" | "inventory" | "recipes" | "meal-plan" | "chores" | "tasks";
+type PageName = "home" | "home-status" | "home-assistant-settings" | "shopping" | "inventory" | "recipes" | "meal-plan" | "chores" | "tasks";
 type Theme = "system" | "light" | "dark";
 
 const nav: { id: PageName; label: string; icon: IconName }[] = [
@@ -24,6 +25,7 @@ export const DEVICE_POLL_INTERVAL_MS = 10_000;
 const pagePaths: Record<PageName, string> = {
   home: "/",
   "home-status": "/home-status",
+  "home-assistant-settings": "/settings/home-assistant",
   shopping: "/shopping",
   inventory: "/inventory",
   recipes: "/recipes",
@@ -109,7 +111,8 @@ function DashboardShell({ envelope, stale, refreshing, onRefresh, onLogout }: { 
 
   const pages: Record<PageName, React.ReactNode> = {
     home: <HomePage dashboard={dashboard} />,
-    "home-status": <HomeStatusPage dashboard={dashboard} />,
+    "home-status": <HomeStatusPage dashboard={dashboard} onManageEntities={() => selectPage("home-assistant-settings")} />,
+    "home-assistant-settings": <HomeAssistantEntityManager />,
     shopping: <ShoppingPage dashboard={dashboard} onRefresh={onRefresh} />,
     inventory: <InventoryPage dashboard={dashboard} />,
     recipes: <RecipesPage dashboard={dashboard} />,

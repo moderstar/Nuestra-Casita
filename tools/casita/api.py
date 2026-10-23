@@ -379,6 +379,53 @@ def create_dashboard_api(
             dependencies=[Depends(authenticate)],
         )
 
+    # Milestone 20: PostgreSQL-backed Home Assistant Entity Manager.
+    from casita.integrations.home_assistant.entity_manager_api import (
+        create_entity_manager_router,
+    )
+    from casita.integrations.home_assistant import HomeAssistantApiClient
+    from casita.persistence.entity_selections import EntitySelectionRepository
+    from psycopg.conninfo import make_conninfo
+    import os
+
+    database_keys = (
+        "CASITA_DATABASE_HOST",
+        "CASITA_DATABASE_PORT",
+        "CASITA_DATABASE_NAME",
+        "CASITA_DATABASE_USER",
+        "CASITA_DATABASE_PASSWORD",
+    )
+
+    if (
+        application.configuration.home_assistant_configured
+        and all(os.environ.get(key) for key in database_keys)
+    ):
+        entity_repository = EntitySelectionRepository(
+            make_conninfo(
+                host=os.environ["CASITA_DATABASE_HOST"],
+                port=os.environ["CASITA_DATABASE_PORT"],
+                dbname=os.environ["CASITA_DATABASE_NAME"],
+                user=os.environ["CASITA_DATABASE_USER"],
+                password=os.environ["CASITA_DATABASE_PASSWORD"],
+            )
+        )
+
+        entity_client = HomeAssistantApiClient(
+            application.configuration.home_assistant_url,
+            application.configuration.home_assistant_token,
+            timeout=application.configuration.request_timeout_seconds,
+        )
+
+        api.include_router(
+            create_entity_manager_router(
+                repository=entity_repository,
+                client=entity_client,
+                household_id=application.configuration.household_id,
+                authenticate=authenticate,
+                verify_csrf=verify_csrf,
+            )
+        )
+
     write_dependencies = [Depends(authenticate), Depends(verify_csrf)]
 
     @api.get("/api/v1/shopping-products", dependencies=[Depends(authenticate)])

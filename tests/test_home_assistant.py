@@ -281,31 +281,36 @@ class HomeAssistantConfigurationTests(TestCase):
                 load_configuration(strict=False)
 
     def test_composition_registers_devices_only_when_configured(self):
-        common = dict(
-            project_root=os.path.abspath("."), source=None,
-            grocy_url="http://grocy", grocy_api_key="hidden",
-            timezone="UTC", household_id="home", household_name="Our Home",
-        )
-        disabled = build_grocy_application(
-            configuration=ApplicationConfiguration(**common)
-        )
-        self.assertEqual(
-            disabled.integrations.integrations_for(Capability.DEVICES), ()
-        )
-        enabled = build_grocy_application(
-            configuration=ApplicationConfiguration(
-                **common,
-                home_assistant_url="http://home-assistant:8123",
-                home_assistant_token="hidden",
-                home_assistant_entity_ids=("sensor.kitchen_temperature",),
+        # Explicit configuration tests must not use the host's production database.
+        database_environment = {
+            key: value for key, value in os.environ.items()
+            if key not in ('CASITA_DATABASE_HOST', 'CASITA_DATABASE_PORT', 'CASITA_DATABASE_NAME', 'CASITA_DATABASE_USER', 'CASITA_DATABASE_PASSWORD')
+        }
+        with patch.dict(os.environ, database_environment, clear=True):
+            common = dict(
+                project_root=os.path.abspath("."), source=None,
+                grocy_url="http://grocy", grocy_api_key="hidden",
+                timezone="UTC", household_id="home", household_name="Our Home",
             )
-        )
-        devices = enabled.integrations.integrations_for(Capability.DEVICES)
-        self.assertEqual(
-            tuple(item.descriptor.key for item in devices),
-            ("home-assistant",),
-        )
-
+            disabled = build_grocy_application(
+                configuration=ApplicationConfiguration(**common)
+            )
+            self.assertEqual(
+                disabled.integrations.integrations_for(Capability.DEVICES), ()
+            )
+            enabled = build_grocy_application(
+                configuration=ApplicationConfiguration(
+                    **common,
+                    home_assistant_url="http://home-assistant:8123",
+                    home_assistant_token="hidden",
+                    home_assistant_entity_ids=("sensor.kitchen_temperature",),
+                )
+            )
+            devices = enabled.integrations.integrations_for(Capability.DEVICES)
+            self.assertEqual(
+                tuple(item.descriptor.key for item in devices),
+                ("home-assistant",),
+            )
 
 class HomeAssistantDashboardTests(TestCase):
     def configured_application(self, integration):

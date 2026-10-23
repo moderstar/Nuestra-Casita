@@ -9,6 +9,9 @@ services:
       CASITA_API_PORT: 8080
     expose:
       - "8080"
+    networks:
+      - default
+      - postgres
     read_only: true
     tmpfs:
       - /tmp
@@ -29,3 +32,8 @@ services:
       - /tmp
     security_opt:
       - no-new-privileges:true
+
+networks:
+  postgres:
+    external: true
+    name: n8n_n8n-network

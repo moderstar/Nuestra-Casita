@@ -1,6 +1,11 @@
 """Construct Nuestra Casita with the production Grocy integration."""
 
+import os
 from dataclasses import replace
+
+from psycopg.conninfo import make_conninfo
+
+from casita.persistence.entity_selections import EntitySelectionRepository
 
 from casita.application import (
     CatalogApplicationService,
@@ -142,6 +147,32 @@ def build_grocy_application(
     integrations = backend.integrations
     capability_owners = dict(backend.capability_owners)
     if config.home_assistant_configured:
+        database_keys = (
+            "CASITA_DATABASE_HOST",
+            "CASITA_DATABASE_PORT",
+            "CASITA_DATABASE_NAME",
+            "CASITA_DATABASE_USER",
+            "CASITA_DATABASE_PASSWORD",
+        )
+        database_values = [os.environ.get(key) for key in database_keys]
+
+        entity_ids_provider = None
+
+        if all(database_values):
+            connection_string = make_conninfo(
+                host=database_values[0],
+                port=database_values[1],
+                dbname=database_values[2],
+                user=database_values[3],
+                password=database_values[4],
+            )
+            repository = EntitySelectionRepository(connection_string)
+            repository.initialize(
+                config.household_id,
+                config.home_assistant_entity_ids,
+            )
+            entity_ids_provider = repository.enabled_entity_ids
+
         home_assistant = HomeAssistantReadAdapter(
             HomeAssistantApiClient(
                 config.home_assistant_url,
@@ -149,6 +180,7 @@ def build_grocy_application(
                 timeout=config.request_timeout_seconds,
             ),
             entity_ids=config.home_assistant_entity_ids,
+            entity_ids_provider=entity_ids_provider,
         )
         integrations = (*integrations, home_assistant)
         capability_owners[Capability.DEVICES] = (

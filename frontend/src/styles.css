@@ -255,3 +255,452 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+
+/* =========================================================
+   HOME ASSISTANT ENTITY MANAGER
+   Dedicated responsive management interface
+   ========================================================= */
+
+.ha-manager {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+
+.ha-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.ha-manager-header h1 {
+  margin: 8px 0;
+  font-size: clamp(1.7rem, 3vw, 2.3rem);
+}
+
+.ha-manager-header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.ha-manager-refresh,
+.ha-manager-pagination button,
+.ha-manager-new-room button {
+  padding: 10px 16px;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.ha-manager button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.ha-manager-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.ha-manager-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.ha-manager-summary strong {
+  font-size: 1.8rem;
+  line-height: 1.1;
+}
+
+.ha-manager-summary span {
+  color: var(--muted);
+  font-size: .85rem;
+}
+
+.ha-manager-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.ha-manager-filters label,
+.ha-manager-room > label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  font-size: .82rem;
+  font-weight: 600;
+}
+
+.ha-manager-filters input,
+.ha-manager-filters select,
+.ha-manager-room select,
+.ha-manager-new-room input {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: .9rem;
+}
+
+.ha-manager-list-header,
+.ha-manager-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ha-manager-list-header span,
+.ha-manager-pagination > span {
+  color: var(--muted);
+  font-size: .85rem;
+}
+
+.ha-manager-list {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.ha-manager-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 220px) 110px;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 20px;
+  min-width: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.ha-manager-row:last-child {
+  border-bottom: 0;
+}
+
+.ha-manager-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  min-width: 0;
+}
+
+.ha-manager-identity strong,
+.ha-manager-identity small {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.ha-manager-identity strong {
+  font-size: .95rem;
+}
+
+.ha-manager-identity small {
+  color: var(--muted);
+  font-size: .76rem;
+}
+
+.ha-manager-state {
+  display: inline-block;
+  max-width: 100%;
+  padding: 4px 9px;
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: .75rem;
+  overflow-wrap: anywhere;
+}
+
+.ha-manager-room {
+  min-width: 0;
+}
+
+.ha-manager-room select {
+  margin-top: 7px;
+}
+
+.ha-manager-toggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  justify-self: end;
+  cursor: pointer;
+  font-size: .82rem;
+}
+
+.ha-manager-toggle input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.ha-manager-new-room {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 7px;
+}
+
+.ha-manager-new-room input {
+  flex: 1 1 100%;
+}
+
+.ha-manager-new-room button {
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: .8rem;
+}
+
+.ha-manager-notice {
+  margin: 0;
+  color: var(--green);
+  font-size: .9rem;
+}
+
+.ha-manager-empty {
+  padding: 35px 20px;
+  text-align: center;
+  color: var(--muted);
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+}
+
+.ha-manager-pagination > div {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 800px) {
+  .ha-manager-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ha-manager-search {
+    grid-column: 1 / -1;
+  }
+
+  .ha-manager-row {
+    grid-template-columns: minmax(0, 1fr) minmax(130px, 180px);
+    gap: 14px;
+  }
+
+  .ha-manager-toggle {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 520px) {
+  .ha-manager-summary {
+    gap: 8px;
+  }
+
+  .ha-manager-summary > div {
+    padding: 14px 10px;
+  }
+
+  .ha-manager-summary strong {
+    font-size: 1.4rem;
+  }
+
+  .ha-manager-summary span {
+    font-size: .72rem;
+  }
+
+  .ha-manager-row {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px;
+  }
+
+  .ha-manager-room,
+  .ha-manager-toggle {
+    grid-column: 1;
+  }
+
+  .ha-manager-toggle {
+    justify-self: start;
+  }
+
+  .ha-manager-room select {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   HOME ASSISTANT BULK MANAGEMENT
+   ========================================================= */
+
+.ha-manager-bulk {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.ha-manager-bulk > span {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: .85rem;
+}
+
+.ha-manager-select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ha-manager-select-all input,
+.ha-manager-row-select input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.ha-manager-bulk button {
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: .82rem;
+  cursor: pointer;
+}
+
+.ha-manager-row {
+  grid-template-columns: 24px minmax(0, 1fr) minmax(160px, 220px) 110px;
+}
+
+.ha-manager-row-select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 800px) {
+  .ha-manager-row {
+    grid-template-columns: 24px minmax(0, 1fr) minmax(130px, 180px);
+  }
+
+  .ha-manager-row-select {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .ha-manager-identity {
+    grid-column: 2;
+  }
+
+  .ha-manager-room {
+    grid-column: 3;
+  }
+
+  .ha-manager-toggle {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 520px) {
+  .ha-manager-row {
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+
+  .ha-manager-identity {
+    grid-column: 2;
+  }
+
+  .ha-manager-room,
+  .ha-manager-toggle {
+    grid-column: 2;
+  }
+
+  .ha-manager-bulk {
+    align-items: stretch;
+  }
+
+  .ha-manager-bulk > span {
+    margin-right: 0;
+  }
+}
+
+/* Home Assistant bulk room assignment */
+
+.ha-manager-bulk-room {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1 1 100%;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.ha-manager-bulk-room input {
+  box-sizing: border-box;
+  flex: 1 1 220px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: .85rem;
+}
+
+.ha-manager-bulk-room button {
+  min-height: 40px;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .ha-manager-bulk-room {
+    align-items: stretch;
+  }
+
+  .ha-manager-bulk-room input {
+    flex-basis: 100%;
+  }
+
+  .ha-manager-bulk-room button {
+    width: 100%;
+  }
+}

@@ -134,3 +134,48 @@ export async function updateChore(choreId: string, input: ChoreDefinitionInput):
 export async function deactivateChore(choreId: string): Promise<void> {
   await request(`/api/v1/chores/${encodeURIComponent(choreId)}/deactivate`, { method: "POST" });
 }
+
+// Milestone 20 — Home Assistant Entity Manager
+
+export interface HomeAssistantEntity {
+  entity_id: string;
+  name: string;
+  domain: string;
+  state: string;
+  enabled: boolean;
+  room: string | null;
+}
+
+export async function getHomeAssistantEntities(
+  signal?: AbortSignal,
+): Promise<HomeAssistantEntity[]> {
+  const response = await request("/api/v1/home-assistant/entities", {
+    signal,
+  });
+
+  const data: { entities: HomeAssistantEntity[] } = await response.json();
+  return data.entities;
+}
+
+export async function updateHomeAssistantEntity(
+  entityId: string,
+  enabled: boolean,
+  room: string | null,
+): Promise<HomeAssistantEntity> {
+  const response = await request(
+    `/api/v1/home-assistant/entities/${encodeURIComponent(entityId)}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled, room }),
+    },
+  );
+
+  return response.json();
+}
+
+export async function getHomeAssistantRooms(): Promise<string[]> {
+  const response = await request("/api/v1/home-assistant/rooms");
+  const data: { rooms: string[] } = await response.json();
+  return data.rooms;
+}

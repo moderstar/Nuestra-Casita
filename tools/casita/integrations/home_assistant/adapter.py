@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from hashlib import sha256
-from typing import Any, Protocol
+from typing import Any, Callable, Protocol
 
 from casita.domain import Device, DeviceState, SourceReference
 from casita.integrations import (
@@ -55,9 +55,11 @@ class HomeAssistantReadAdapter:
         client: HomeAssistantReader,
         *,
         entity_ids: tuple[str, ...],
+        entity_ids_provider: Callable[[str], tuple[str, ...]] | None = None,
     ) -> None:
         self._client = client
         self._entity_ids = entity_ids
+        self._entity_ids_provider = entity_ids_provider
 
     def health(self) -> IntegrationHealth:
         """Report authenticated API availability without leaking details."""
@@ -83,11 +85,18 @@ class HomeAssistantReadAdapter:
 
         refreshed_at = datetime.now(timezone.utc)
         records: tuple[Device, ...] = ()
-        if Capability.DEVICES in request.capabilities and self._entity_ids:
-            records = self._map_states(
-                request.household_id,
-                self._client.get_states(),
+        if Capability.DEVICES in request.capabilities:
+            entity_ids = (
+                self._entity_ids_provider(request.household_id)
+                if self._entity_ids_provider is not None
+                else self._entity_ids
             )
+            if entity_ids:
+                records = self._map_states(
+                    request.household_id,
+                    self._client.get_states(),
+                    entity_ids=entity_ids,
+                )
         data = (
             CapabilityData(Capability.DEVICES, records, refreshed_at),
         ) if Capability.DEVICES in request.capabilities else ()
@@ -102,6 +111,8 @@ class HomeAssistantReadAdapter:
         self,
         household_id: str,
         rows: list[dict[str, Any]],
+        *,
+        entity_ids: tuple[str, ...] | None = None,
     ) -> tuple[Device, ...]:
         by_entity_id: dict[str, dict[str, Any]] = {}
         for row in rows:
@@ -122,7 +133,9 @@ class HomeAssistantReadAdapter:
 
         return tuple(
             self._device(household_id, entity_id, by_entity_id.get(entity_id))
-            for entity_id in self._entity_ids
+            for entity_id in (
+                self._entity_ids if entity_ids is None else entity_ids
+            )
         )
 
     @staticmethod
